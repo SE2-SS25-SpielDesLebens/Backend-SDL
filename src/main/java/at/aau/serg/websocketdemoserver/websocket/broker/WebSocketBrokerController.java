@@ -22,4 +22,19 @@ public class WebSocketBrokerController {
        return msg;
     }
 
+    //Test
+    @MessageMapping("/join")
+        @SendTo("/topic/join")
+        public StompMessage handleJoin(StompMessage msg) {
+
+           return msg;
+        }
+
+    //Test
+    @MessageMapping("/update")
+    @SendTo("/topic/update")
+    public StompMessage handleUpdate(StompMessage msg) {
+
+        return msg;
+    }
 }

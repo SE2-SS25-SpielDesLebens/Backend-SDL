@@ -21,5 +21,7 @@ public class WebSocketBrokerConfig implements WebSocketMessageBrokerConfigurer {
         registry.addEndpoint("/websocket-example-broker")
                 .setAllowedOrigins("*");
     }
+
+
 }
 
