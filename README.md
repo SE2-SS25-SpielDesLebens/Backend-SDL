@@ -3,24 +3,37 @@ Wir haben einen eigenen Server mit STOMP-basierter WebSocket-Kommunikation imple
 
 🚀 Was kann der Server aktuell?
 Funktion	Beschreibung
+
 ✅ Spielzüge übertragen	Spieler:innen senden ihren Zug an den Server – dieser broadcastet an alle
+
 ✅ Chat zwischen Spieler:innen	Chatnachrichten werden über WebSocket verteilt
+
 ✅ STOMP-Protokoll	Für strukturierte Kommunikation mit @MessageMapping
+
 ✅ SockJS-Fallback	Auch auf Geräten ohne echten WebSocket-Support nutzbar
+
 ❌ Persistenz	(noch nicht – kann aber später ergänzt werden)
+
 ❌ Authentifizierung	(optional nachrüstbar)
 
 
+
+
 ⚙️ So funktioniert es technisch
+
 📡 Verbindung:
+
 Die Clients (unsere Android-App) verbinden sich mit dem Server über:
 /websocket-example-broker
 
 📍 Entspricht in der App:
 
 val sockJsClient = SockJSClient(...)
+
 val stompClient = Stomp.over(sockJsClient)
+
 stompClient.connect("ws://<SERVER-IP>:8080/websocket-example-broker", ...)
+
 
 🔁 Nachrichtenfluss:
 1. Client sendet z. B. Spielzug an:
