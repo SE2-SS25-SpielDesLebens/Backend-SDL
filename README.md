@@ -14,50 +14,37 @@ Funktion	Beschreibung
 ⚙️ So funktioniert es technisch
 📡 Verbindung:
 Die Clients (unsere Android-App) verbinden sich mit dem Server über:
-
-bash
-Kopieren
-Bearbeiten
 /websocket-example-broker
+
 📍 Entspricht in der App:
 
-kotlin
-Kopieren
-Bearbeiten
 val sockJsClient = SockJSClient(...)
 val stompClient = Stomp.over(sockJsClient)
 stompClient.connect("ws://<SERVER-IP>:8080/websocket-example-broker", ...)
+
 🔁 Nachrichtenfluss:
 1. Client sendet z. B. Spielzug an:
-arduino
-Kopieren
-Bearbeiten
 /app/move
+
 2. Der Server empfängt über:
-java
-Kopieren
-Bearbeiten
 @MessageMapping("/move")
+
 3. Der Server sendet die Antwort an alle:
-bash
-Kopieren
-Bearbeiten
 /topic/game
+
 4. Alle Clients, die /topic/game abonniert haben, bekommen die Nachricht automatisch.
+
+
 📦 Datenformate (DTOs)
 📨 Vom Client gesendet: StompMessage
-json
-Kopieren
-Bearbeiten
+
 {
   "playerName": "Anna",
   "action": "würfelt 6",
   "messageText": ""
 }
+
 📤 Vom Server zurück: OutputMessage
-json
-Kopieren
-Bearbeiten
 {
   "playerName": "Anna",
   "content": "würfelt 6",
@@ -69,9 +56,6 @@ Bearbeiten
 🛠️ Wie ihr den Server lokal startet
 Projekt klonen:
 
-bash
-Kopieren
-Bearbeiten
 git clone https://github.com/SE2-SS25-SpielDesLebens/Backend-SDL.git
 In IntelliJ öffnen
 
@@ -79,7 +63,4 @@ Starte die Application.kt oder Application.java (Spring Boot)
 
 Der Server läuft unter:
 
-arduino
-Kopieren
-Bearbeiten
 http://localhost:8080
