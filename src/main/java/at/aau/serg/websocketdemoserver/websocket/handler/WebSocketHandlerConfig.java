@@ -1,4 +1,4 @@
-package at.aau.serg.websocketdemoserver.websocket.handler;
+/*package at.aau.serg.websocketdemoserver.websocket.handler;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
@@ -16,3 +16,4 @@ public class WebSocketHandlerConfig implements WebSocketConfigurer {
     }
 }
 
+ */

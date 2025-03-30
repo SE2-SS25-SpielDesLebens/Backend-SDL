@@ -1,6 +1,7 @@
 package at.aau.serg.websocketdemoserver.websocket.broker;
 
 import at.aau.serg.websocketdemoserver.messaging.dtos.StompMessage;
+import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 
@@ -15,6 +16,7 @@ public class WebSocketBrokerController {
         // TODO handle the messages here
         return "echo from broker: "+text;
     }
+
     @MessageMapping("/object")
     @SendTo("/topic/rcv-object")
     public StompMessage handleObject(StompMessage msg) {
@@ -22,19 +24,10 @@ public class WebSocketBrokerController {
        return msg;
     }
 
-    //Test
-    @MessageMapping("/join")
-        @SendTo("/topic/join")
-        public StompMessage handleJoin(StompMessage msg) {
 
-           return msg;
-        }
-
-    //Test
-    @MessageMapping("/update")
-    @SendTo("/topic/update")
-    public StompMessage handleUpdate(StompMessage msg) {
-
-        return msg;
+    @MessageExceptionHandler
+    @SendTo("/topic/errors")
+    public String sendException(Throwable exception) {
+        return exception.toString();
     }
 }

@@ -1,4 +1,4 @@
-package at.aau.serg.websocketdemoserver.websocket.handler;
+/*package at.aau.serg.websocketdemoserver.websocket.handler;
 
 import org.springframework.web.socket.*;
 
@@ -31,3 +31,5 @@ public class WebSocketHandlerImpl implements WebSocketHandler {
         return false;
     }
 }
+
+ */
