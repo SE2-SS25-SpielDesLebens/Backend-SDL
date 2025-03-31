@@ -1,0 +1,124 @@
+{
+  "jobs": [
+    {
+      "bezeichnung": "Lehrer",
+      "gehalt": 3000,
+      "bonusgehalt": 300,
+      "benoetigtHochschulreife": true
+    },
+    {
+      "bezeichnung": "Polizist",
+      "gehalt": 3000,
+      "bonusgehalt": 200,
+      "benoetigtHochschulreife": false
+    },
+    {
+      "bezeichnung": "Koch",
+      "gehalt": 2500,
+      "bonusgehalt": 200,
+      "benoetigtHochschulreife": false
+    },
+    {
+      "bezeichnung": "App-Entwickler",
+      "gehalt": 4000,
+      "bonusgehalt": 500,
+      "benoetigtHochschulreife": true
+    },
+    {
+      "bezeichnung": "Astronaut",
+      "gehalt": 6000,
+      "bonusgehalt": 800,
+      "benoetigtHochschulreife": true
+    },
+    {
+      "bezeichnung": "Musiker",
+      "gehalt": 2500,
+      "bonusgehalt": 300,
+      "benoetigtHochschulreife": false
+    },
+    {
+      "bezeichnung": "Influencer",
+      "gehalt": 2000,
+      "bonusgehalt": 400,
+      "benoetigtHochschulreife": false
+    },
+    {
+      "bezeichnung": "Vlogger",
+      "gehalt": 2200,
+      "bonusgehalt": 300,
+      "benoetigtHochschulreife": false
+    },
+    {
+      "bezeichnung": "Sportler",
+      "gehalt": 3500,
+      "bonusgehalt": 400,
+      "benoetigtHochschulreife": false
+    },
+    {
+      "bezeichnung": "Schauspieler",
+      "gehalt": 3500,
+      "bonusgehalt": 600,
+      "benoetigtHochschulreife": false
+    },
+    {
+      "bezeichnung": "Anwalt",
+      "gehalt": 5000,
+      "bonusgehalt": 700,
+      "benoetigtHochschulreife": true
+    },
+    {
+      "bezeichnung": "Arzt",
+      "gehalt": 6000,
+      "bonusgehalt": 1000,
+      "benoetigtHochschulreife": true
+    },
+    {
+      "bezeichnung": "Modedesigner",
+      "gehalt": 2800,
+      "bonusgehalt": 300,
+      "benoetigtHochschulreife": false
+    },
+    {
+      "bezeichnung": "Model",
+      "gehalt": 2000,
+      "bonusgehalt": 300,
+      "benoetigtHochschulreife": false
+    },
+    {
+      "bezeichnung": "Wissenschaftler",
+      "gehalt": 5000,
+      "bonusgehalt": 800,
+      "benoetigtHochschulreife": true
+    },
+    {
+      "bezeichnung": "Steuerberater",
+      "gehalt": 4000,
+      "bonusgehalt": 600,
+      "benoetigtHochschulreife": true
+    },
+    {
+      "bezeichnung": "Pilot",
+      "gehalt": 4500,
+      "bonusgehalt": 700,
+      "benoetigtHochschulreife": true
+    },
+    {
+      "bezeichnung": "Tierarzt",
+      "gehalt": 5000,
+      "bonusgehalt": 800,
+      "benoetigtHochschulreife": true
+    },
+    {
+      "bezeichnung": "Politiker",
+      "gehalt": 3500,
+      "bonusgehalt": 500,
+      "benoetigtHochschulreife": true
+    },
+    {
+      "bezeichnung": "Ingenieur",
+      "gehalt": 4500,
+      "bonusgehalt": 600,
+      "benoetigtHochschulreife": true
+    }
+  ]
+}
