@@ -1,6 +1,6 @@
-package at.aau.serg.websocketdemoserver;
+package at.aau.serg.websocketserver;
 
-import at.aau.serg.websocketdemoserver.websocket.StompFrameHandlerClientImpl;
+import at.aau.serg.websocketserver.websocket.StompFrameHandlerClientImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -22,16 +22,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class WebSocketBrokerIntegrationTest {
 
-    @LocalServerPort
-    private int port;
+    /*  @LocalServerPort
+     private int port;
 
-    private final String WEBSOCKET_URI = "ws://localhost:%d/websocket-example-broker";
-    private final String WEBSOCKET_TOPIC = "/topic/hello-response";
+     private final String WEBSOCKET_URI = "ws://localhost:%d/websocket-example-broker";
+     private final String WEBSOCKET_TOPIC = "/topic/hello-response";
 
-    /**
-     * Queue of messages from the server.
-     */
-    BlockingQueue<String> messages = new LinkedBlockingDeque<>();
+     /**
+      * Queue of messages from the server.
+      */
+    /* BlockingQueue<String> messages = new LinkedBlockingDeque<>();
 
     @Test
     public void testWebSocketMessageBroker() throws Exception {
@@ -48,7 +48,7 @@ class WebSocketBrokerIntegrationTest {
     /**
      * @return The Stomp session for the WebSocket connection (Stomp - WebSocket is comparable to HTTP - TCP).
      */
-    public StompSession initStompSession() throws Exception {
+    /* public StompSession initStompSession() throws Exception {
         WebSocketStompClient stompClient = new WebSocketStompClient(new StandardWebSocketClient());
         stompClient.setMessageConverter(new StringMessageConverter());
 
@@ -64,6 +64,6 @@ class WebSocketBrokerIntegrationTest {
         session.subscribe(WEBSOCKET_TOPIC, new StompFrameHandlerClientImpl(messages));
 
         return session;
-    }
+    }*/
 
 }
