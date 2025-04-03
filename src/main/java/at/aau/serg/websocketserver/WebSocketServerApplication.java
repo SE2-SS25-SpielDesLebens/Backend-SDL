@@ -1,13 +1,13 @@
-package at.aau.serg.websocketdemoserver;
+package at.aau.serg.websocketserver;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class WebSocketDemoServerApplication {
+public class WebSocketServerApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(WebSocketDemoServerApplication.class, args);
+        SpringApplication.run(WebSocketServerApplication.class, args);
     }
 
 }
