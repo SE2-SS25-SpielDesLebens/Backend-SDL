@@ -1,21 +1,79 @@
-# WebSocket Server demo project 
+🎮 WebSocket-Server für Spiel des Lebens – Überblick
+Wir haben einen eigenen Server mit STOMP-basierter WebSocket-Kommunikation implementiert. Dieser dient als Kommunikationsschnittstelle zwischen den Spieler:innen der Android-App. Jeder Spielerzug, Chat oder Schummelversuch wird darüber synchronisiert.
 
-This repository contains two implementations for WebSocket communication in Java Spring Boot. The first implementation utilizes a broker with STOMP protocol in the package `at.aau.serg.websocketserver.websocket.broker`, and the second implementation uses a basic WebSocket handler in the package `at.aau.serg.websocketserver.websocket.handler`. Additionally, integration tests have been provided for each implementation.
+🚀 Was kann der Server aktuell?
+Funktion	Beschreibung
 
-## Broker Implementation with STOMP Protocol
+✅ Spielzüge übertragen	Spieler:innen senden ihren Zug an den Server – dieser broadcastet an alle
 
-The `at.aau.serg.websocketserver.websocket.broker` package contains a WebSocket implementation that utilizes a broker with the STOMP protocol. STOMP (Simple Text Oriented Messaging Protocol) is a lightweight messaging protocol that defines the format and rules for data exchange. 
+✅ Chat zwischen Spieler:innen	Chatnachrichten werden über WebSocket verteilt
 
-To explore the code for the broker implementation, navigate to the `at.aau.serg.websocketserver.websocket.broker` package [here](./src/main/java/at/aau/serg/websocketserver/websocket/broker).
+✅ STOMP-Protokoll	Für strukturierte Kommunikation mit @MessageMapping
 
-## Basic WebSocket Handler Implementation
+✅ SockJS-Fallback	Auch auf Geräten ohne echten WebSocket-Support nutzbar
 
-The `at.aau.serg.websocketserver.websocket.handler` package contains a basic WebSocket implementation that utilizes a simple WebSocket handler. This implementation is straightforward and suitable for scenarios where a lightweight solution is preferred without the overhead of a full-fledged broker like STOMP.
+❌ Persistenz	(noch nicht – kann aber später ergänzt werden)
 
-To explore the code for the basic WebSocket handler implementation, navigate to the `at.aau.serg.websocketserver.websocket.handler` package [here](./src/main/java/at/aau/serg/websocketserver/websocket/handler).
+❌ Authentifizierung	(optional nachrüstbar)
 
-## Integration Tests
 
-Integration tests have been provided for both implementations. These tests focus on understanding the functionality of connecting, sending, and receiving messages via WebSocket communication. They serve as valuable resources for understanding how to effectively use WebSocket communication in Spring Boot applications.
 
-To explore the integration tests, navigate to the respective test classes for the broker and handler implementations.
+
+⚙️ So funktioniert es technisch
+
+📡 Verbindung:
+
+Die Clients (unsere Android-App) verbinden sich mit dem Server über:
+/websocket-example-broker
+
+📍 Entspricht in der App:
+
+val sockJsClient = SockJSClient(...)
+
+val stompClient = Stomp.over(sockJsClient)
+
+stompClient.connect("ws://<SERVER-IP>:8080/websocket-example-broker", ...)
+
+
+🔁 Nachrichtenfluss:
+1. Client sendet z. B. Spielzug an:
+/app/move
+
+2. Der Server empfängt über:
+@MessageMapping("/move")
+
+3. Der Server sendet die Antwort an alle:
+/topic/game
+
+4. Alle Clients, die /topic/game abonniert haben, bekommen die Nachricht automatisch.
+
+
+📦 Datenformate (DTOs)
+📨 Vom Client gesendet: StompMessage
+
+{
+  "playerName": "Anna",
+  "action": "würfelt 6",
+  "messageText": ""
+}
+
+📤 Vom Server zurück: OutputMessage
+{
+  "playerName": "Anna",
+  "content": "würfelt 6",
+  "timestamp": "2025-03-29T12:34:56"
+}
+
+
+
+🛠️ Wie ihr den Server lokal startet
+Projekt klonen:
+
+git clone https://github.com/SE2-SS25-SpielDesLebens/Backend-SDL.git
+In IntelliJ öffnen
+
+Starte die Application.kt oder Application.java (Spring Boot)
+
+Der Server läuft unter:
+
+http://localhost:8080
