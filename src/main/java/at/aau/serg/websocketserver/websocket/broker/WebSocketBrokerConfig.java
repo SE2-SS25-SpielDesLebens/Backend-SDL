@@ -1,4 +1,4 @@
-package at.aau.serg.websocketdemoserver.websocket.broker;
+package at.aau.serg.websocketserver.websocket.broker;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
@@ -12,14 +12,15 @@ public class WebSocketBrokerConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
-        config.enableSimpleBroker("/topic");
-        config.setApplicationDestinationPrefixes("/app");
+        config.enableSimpleBroker("/topic"); // Ziel für @SendTo
+        config.setApplicationDestinationPrefixes("/app"); // Prefix für @MessageMapping
     }
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/websocket-example-broker")
-                .setAllowedOrigins("*");
+        registry.addEndpoint("/websocket-broker")
+                .setAllowedOriginPatterns("*")
+                .withSockJS(); // SockJS-Fallback aktivieren
     }
 }
 
