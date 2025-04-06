@@ -1,0 +1,22 @@
+📍 Schritt-für-Schritt
+🔐 1.1 Mit SSH einloggen:
+ssh -p 53200 grp-13@se2-demo.aau.at
+
+🔍 1.2 Den Java-Prozess finden:
+ps aux | grep WebSocket
+Du bekommst z.B
+grp-13  12345  0.5  ... java -jar WebSocket-Server-0.0.1-SNAPSHOT.jar --server.port=53217
+👉 Die Zahl 12345 ist die Prozess-ID (PID)
+
+🛑 1.3 Server stoppen:
+kill 12345
+→ Der Server ist jetzt gestoppt.
+
+🚀 2. Server wieder starten
+🔐 2.1 Wieder einloggen:
+ssh -p 53200 grp-13@se2-demo.aau.at
+
+▶️ 2.2 Server starten (mit nohup):
+nohup java -jar WebSocket-Server-0.0.1-SNAPSHOT.jar --server.port=53217 > backend.log 2>&1 &
+→ Jetzt läuft dein Server wieder dauerhaft im Hintergrund.
+
