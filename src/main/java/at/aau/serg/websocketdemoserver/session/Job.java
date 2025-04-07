@@ -50,9 +50,9 @@ public class Job {
     public String toString() {
         return "Job{" +
                 "bezeichnung='" + bezeichnung + '\'' +
-                ", gehalt=" + gehalt +
-                ", bonusgehalt=" + bonusgehalt +
-                ", benoetigtHochschulreife=" + benoetigtHochschulreife +
+                ", gehalt=" + gehalt + '\'' +
+                ", bonusgehalt=" + bonusgehalt + '\'' +
+                ", Hochschulreife=" + benoetigtHochschulreife +
                 '}';
     }
 }

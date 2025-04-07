@@ -7,20 +7,27 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
+import java.util.stream.Collectors;
+
 
 public class JobRepository {
-    private final List<Job> jobs = new ArrayList<>();
 
+    private final List<Job> jobs = new ArrayList<>();
+    private final Random random = new Random();
+
+    /**
+     * Lädt die Jobs aus der JSON-Datei "jobs.json" und speichert sie in der internen Liste.
+     * Erwartet wird ein JSON-Objekt, das ein Array unter dem Schlüssel "jobs" enthält.
+     */
     public void loadJobs() throws Exception {
         InputStream inputStream = getClass().getClassLoader().getResourceAsStream("jobs.json");
         if (inputStream == null) {
             throw new IllegalStateException("jobs.json nicht gefunden!");
         }
-
         ObjectMapper mapper = new ObjectMapper();
         JsonNode rootNode = mapper.readTree(inputStream);
         JsonNode jobsNode = rootNode.get("jobs");
-
         if (jobsNode != null && jobsNode.isArray()) {
             for (JsonNode jobNode : jobsNode) {
                 Job job = new Job(
@@ -34,26 +41,33 @@ public class JobRepository {
         }
     }
 
-    public List<Job> getJobs() {
-        return jobs;
+    /**
+     * Gibt ein Array aller geladenen Jobs zurück.
+     */
+    public Job[] getJobArray() {
+        return jobs.toArray(new Job[0]);
     }
 
-    public Optional<Job> getAvailableJob(String bezeichnung) {
-        return jobs.stream()
-                .filter(job -> job.getBezeichnung().equalsIgnoreCase(bezeichnung) && !job.isTaken())
-                .findFirst();
+    /**
+     * Sucht einen zufälligen, noch nicht vergebenen Job, markiert ihn als vergeben und gibt ihn zurück.
+     * Falls kein freier Job vorhanden ist, wird ein leeres Optional zurückgegeben.
+     */
+    public Optional<Job> getRandomJob() {
+        List<Job> availableJobs = jobs.stream()
+                .filter(job -> !job.isTaken())
+                .collect(Collectors.toList());
+        if (availableJobs.isEmpty()) {
+            return Optional.empty();
+        }
+        Job randomJob = availableJobs.get(random.nextInt(availableJobs.size()));
+        randomJob.assignJob();
+        return Optional.of(randomJob);
     }
 
-    public boolean assignJob(String bezeichnung) {
-        Optional<Job> job = getAvailableJob(bezeichnung);
-        job.ifPresent(Job::assignJob);
-        return job.isPresent();
-    }
-
-    public void releaseJob(String bezeichnung) {
-        jobs.stream()
-                .filter(job -> job.getBezeichnung().equalsIgnoreCase(bezeichnung))
-                .findFirst()
-                .ifPresent(Job::releaseJob);
+    /**
+     * Gibt den übergebenen Job wieder frei.
+     */
+    public void releaseJob(Job job) {
+        job.releaseJob();
     }
 }
