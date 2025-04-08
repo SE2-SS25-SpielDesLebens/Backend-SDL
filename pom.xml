@@ -22,6 +22,10 @@
         <sonar.organization>se2-ss25-spieldeslebens</sonar.organization>
         <sonar.projectKey>SE2-SS25-SpielDesLebens_Backend-SDL</sonar.projectKey>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+        <sonar.exclusions>
+            src/main/java/at/aau/serg/websocketserver/messaging/dtos/StompMessage.java,
+            src/main/java/at/aau/serg/websocketserver/websocket/broker/WebSocketBrokerController.java
+        </sonar.exclusions>
     </properties>
 
     <dependencies>
