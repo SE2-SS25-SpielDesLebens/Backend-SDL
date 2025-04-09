@@ -1,4 +1,5 @@
-package at.aau.serg.websocketdemoserver.game;
+package at.aau.serg.websocketserver.websocket.broker;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Player {
@@ -11,8 +12,13 @@ public class Player {
     private int children;
     private String education;
     private String relationship;
+    private String career;
 
-    public Player(String name, int id, int money, int investments, int salary, int children, String education, String relationship) {
+    // ⚠️ Wichtig: No-Args-Konstruktor (für Jackson!)
+    public Player() {
+    }
+
+    public Player(String name, int id, int money, int investments, int salary, int children, String education, String relationship, String career) {
         this.name = name;
         this.id = id;
         this.money = money;
@@ -21,6 +27,7 @@ public class Player {
         this.children = children;
         this.education = education;
         this.relationship = relationship;
+        this.career = career;
     }
 
     @JsonProperty("id") public int getId() { return id; }
@@ -31,6 +38,5 @@ public class Player {
     @JsonProperty("children") public int getChildren() { return children; }
     @JsonProperty("education") public String getEducation() { return education; }
     @JsonProperty("relationship") public String getRelationship() { return relationship; }
-
-
+    @JsonProperty("career") public String getCareer() { return career; }
 }
