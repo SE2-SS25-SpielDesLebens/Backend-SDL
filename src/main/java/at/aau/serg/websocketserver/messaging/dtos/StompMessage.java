@@ -1,23 +1,20 @@
 package at.aau.serg.websocketserver.messaging.dtos;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-@Data
-@AllArgsConstructor
-@NoArgsConstructor // Wichtig für Deserialisierung durch Jackson!
 public class StompMessage {
+
         private String playerName;
         private String action;
         private String messageText;
 
-        public String getAction() {
-                return action;
+        // No-Args-Konstruktor (für Jackson, Deserialisierung etc.)
+        public StompMessage() {
         }
 
-        public void setAction(String action) {
+        // All-Args-Konstruktor
+        public StompMessage(String playerName, String action, String messageText) {
+                this.playerName = playerName;
                 this.action = action;
+                this.messageText = messageText;
         }
 
         public String getPlayerName() {
@@ -26,6 +23,14 @@ public class StompMessage {
 
         public void setPlayerName(String playerName) {
                 this.playerName = playerName;
+        }
+
+        public String getAction() {
+                return action;
+        }
+
+        public void setAction(String action) {
+                this.action = action;
         }
 
         public String getMessageText() {
