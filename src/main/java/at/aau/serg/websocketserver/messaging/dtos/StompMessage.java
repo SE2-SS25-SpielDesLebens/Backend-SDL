@@ -5,16 +5,16 @@ public class StompMessage {
         private String playerName;
         private String action;
         private String messageText;
+        private String gameId; // ➕ NEU
 
-        // No-Args-Konstruktor (für Jackson, Deserialisierung etc.)
         public StompMessage() {
         }
 
-        // All-Args-Konstruktor
-        public StompMessage(String playerName, String action, String messageText) {
+        public StompMessage(String playerName, String action, String messageText, String gameId) {
                 this.playerName = playerName;
                 this.action = action;
                 this.messageText = messageText;
+                this.gameId = gameId;
         }
 
         public String getPlayerName() {
@@ -39,5 +39,13 @@ public class StompMessage {
 
         public void setMessageText(String messageText) {
                 this.messageText = messageText;
+        }
+
+        public String getGameId() {
+                return gameId;
+        }
+
+        public void setGameId(String gameId) {
+                this.gameId = gameId;
         }
 }
