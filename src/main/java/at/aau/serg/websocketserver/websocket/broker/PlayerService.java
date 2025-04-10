@@ -23,7 +23,6 @@ public class PlayerService {
         return players.stream().filter(player -> player.getId() == id).findFirst();
     }
 
-    // Aktualisiert die Daten eines bestimmten Spielers
     public boolean updatePlayer(int id, Player updatedPlayer) {
         for (int i = 0; i < players.size(); i++) {
             if (players.get(i).getId() == id) {
@@ -31,6 +30,6 @@ public class PlayerService {
                 return true;
             }
         }
-        return false;  // Gibt false zurück,
+        return false;
     }
 }

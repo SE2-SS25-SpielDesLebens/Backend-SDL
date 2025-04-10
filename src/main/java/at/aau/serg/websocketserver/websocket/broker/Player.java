@@ -4,19 +4,15 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Player {
 
-    private String name;
-    private int id;
-    private int money;
-    private int investments;
-    private int salary;
-    private int children;
-    private String education;
-    private String relationship;
-    private String career;
-
-    // ⚠️ Wichtig: No-Args-Konstruktor (für Jackson!)
-    public Player() {
-    }
+    private final String name;
+    private final int id;
+    private final int money;
+    private final int investments;
+    private final int salary;
+    private final int children;
+    private final String education;
+    private final String relationship;
+    private final String career;
 
     public Player(String name, int id, int money, int investments, int salary, int children, String education, String relationship, String career) {
         this.name = name;
