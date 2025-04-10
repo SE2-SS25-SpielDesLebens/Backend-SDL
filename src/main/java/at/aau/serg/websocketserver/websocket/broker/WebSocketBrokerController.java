@@ -11,10 +11,10 @@ import java.time.LocalDateTime;
 @Controller
 public class WebSocketBrokerController {
 
-    @MessageMapping("/move") // z.B. von Client: /app/move
-    @SendTo("/topic/game")
+    @MessageMapping("/move")
+    @SendTo("/topic/game") // optional: dynamisch mit gameId (siehe Kommentar unten)
     public OutputMessage handleMove(StompMessage message) {
-        System.out.println("[MOVE] " + message.getPlayerName() + ": " + message.getAction());
+        System.out.println("[MOVE] [" + message.getGameId() + "] " + message.getPlayerName() + ": " + message.getAction());
         return new OutputMessage(
                 message.getPlayerName(),
                 message.getAction(),
@@ -27,16 +27,17 @@ public class WebSocketBrokerController {
     public OutputMessage handleLobby(StompMessage message) {
         String action = message.getAction();
         String content;
+        String gameId = message.getGameId();
 
         if (action == null) {
             content = "❌ Keine Aktion angegeben.";
         } else {
             switch (action) {
                 case "createLobby":
-                    content = "Lobby von " + message.getPlayerName() + " erstellt.";
+                    content = "🆕 Lobby [" + gameId + "] von " + message.getPlayerName() + " erstellt.";
                     break;
                 case "joinLobby":
-                    content = message.getPlayerName() + " ist der Lobby beigetreten.";
+                    content = "✅ " + message.getPlayerName() + " ist Lobby [" + gameId + "] beigetreten.";
                     break;
                 default:
                     content = "Unbekannte Lobby-Aktion.";
@@ -44,7 +45,7 @@ public class WebSocketBrokerController {
             }
         }
 
-        System.out.println("[LOBBY] " + message.getPlayerName() + ": " + content);
+        System.out.println("[LOBBY] [" + gameId + "] " + message.getPlayerName() + ": " + content);
 
         return new OutputMessage(
                 message.getPlayerName(),
@@ -56,7 +57,7 @@ public class WebSocketBrokerController {
     @MessageMapping("/chat")
     @SendTo("/topic/chat")
     public OutputMessage handleChat(StompMessage message) {
-        System.out.println("[CHAT] " + message.getPlayerName() + ": " + message.getMessageText());
+        System.out.println("[CHAT] [" + message.getGameId() + "] " + message.getPlayerName() + ": " + message.getMessageText());
         return new OutputMessage(
                 message.getPlayerName(),
                 message.getMessageText(),

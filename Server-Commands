@@ -20,3 +20,36 @@ ssh -p 53200 grp-13@se2-demo.aau.at
 nohup java -jar WebSocket-Server-0.0.1-SNAPSHOT.jar --server.port=53217 > backend.log 2>&1 &
 → Jetzt läuft dein Server wieder dauerhaft im Hintergrund.
 
+
+
+
+## 🔧 Backend bauen (lokal)
+./mvnw clean package
+
+2. Datei auf den Server hochladen (lokal)
+scp -P 53200 target/WebSocket-Server-0.0.1-SNAPSHOT.jar grp-13@se2-demo.aau.at:~/backend/
+
+3. Mit dem Server verbinden (über SSH)
+ssh -p 53200 grp-13@se2-demo.aau.at
+
+4. Backend auf dem Server starten
+nohup java -jar websocketserver-0.0.1-SNAPSHOT.jar --server.port=53217 > log.txt &
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
