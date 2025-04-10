@@ -24,7 +24,7 @@
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
         <sonar.exclusions>
 
-            src/main/java/at/aau/serg/websocketserver/messaging/dtos/WebSocketServerApplication.java
+            src/main/java/at/aau/serg/websocketserver/messaging/dtos/WebSocketServerApplication.java,
             src/main/java/at/aau/serg/websocketserver/messaging/dtos/WebSocketBrokerController.java
 
         </sonar.exclusions>
