@@ -1,4 +1,4 @@
-# WebSocket Server demo project 
+git pull# WebSocket Server demo project 
 
 This repository contains two implementations for WebSocket communication in Java Spring Boot. The first implementation utilizes a broker with STOMP protocol in the package `at.aau.serg.websocketserver.websocket.broker`, and the second implementation uses a basic WebSocket handler in the package `at.aau.serg.websocketserver.websocket.handler`. Additionally, integration tests have been provided for each implementation.
 

@@ -1,11 +1,13 @@
 package at.aau.serg.websocketserver.websocket.broker;
 
+import at.aau.serg.websocketserver.messaging.dtos.JobMessage;
 import at.aau.serg.websocketserver.messaging.dtos.OutputMessage;
 import at.aau.serg.websocketserver.messaging.dtos.StompMessage;
 import at.aau.serg.websocketdemoserver.session.Job;
 import at.aau.serg.websocketdemoserver.session.JobRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
 
@@ -50,16 +52,16 @@ public class WebSocketBrokerController {
      * Sie holt einen zufälligen, noch nicht vergebenen Job, markiert ihn als vergeben und sendet
      * die Job-Informationen an das Topic "/topic/job".
      */
-    @MessageMapping("/job/request")
-    @SendTo("/topic/job")
-    public OutputMessage handleJobRequest(StompMessage message) {
+    @MessageMapping("/getJob")
+    @SendTo("/topic/getJob")
+    public JobMessage handleJobRequest(@Payload StompMessage message) {
         Optional<Job> jobOpt = jobRepository.getRandomJob();
         if (jobOpt.isPresent()) {
             Job job = jobOpt.get();
             String jobInfo = "Job assigned: " + job.getBezeichnung();
-            return new OutputMessage(message.getPlayerName(), jobInfo, LocalDateTime.now().toString());
+            return new JobMessage(message(message.getPlayerName(), jobInfo, LocalDateTime.now().toString());
         } else {
-            return new OutputMessage(message.getPlayerName(), "Kein Job verfügbar", LocalDateTime.now().toString());
+            return new JobMessage(message.getPlayerName(), "Kein Job verfügbar", LocalDateTime.now().toString());
         }
     }
 }
