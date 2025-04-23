@@ -4,55 +4,50 @@ import lombok.Data;
 
 @Data
 public class Job {
-    private String bezeichnung;
-    private int gehalt;
-    private int bonusgehalt;
-    private boolean benoetigtHochschulreife;
-    private boolean isTaken; // Neu: Gibt an, ob der Job vergeben ist
+    private int jobId;
+    private String title;
+    private int salary;
+    private int bonusSalary;
+    private boolean requiresDegree;
+    private boolean isTaken;
+    private String assignedToPlayerName;
 
-    /**
-     * Standardkonstruktor (z. B. für JSON-Deserialisierung)
-     */
     public Job() {
     }
 
-    /**
-     * Konstruktor zum Erstellen eines Job-Objekts mit Bezeichnung, Grundgehalt,
-     * Bonusgehalt und Information, ob eine Hochschulreife benötigt wird.
-     *
-     * @param bezeichnung              Name bzw. Titel des Jobs (z. B. "Ingenieur")
-     * @param gehalt                   Festes Grundgehalt
-     * @param bonusgehalt              Bonusgehalt
-     * @param benoetigtHochschulreife  true, wenn Hochschulreife für den Job erforderlich ist
-     */
-    public Job(String bezeichnung, int gehalt, int bonusgehalt, boolean benoetigtHochschulreife) {
-        this.bezeichnung = bezeichnung;
-        this.gehalt = gehalt;
-        this.bonusgehalt = bonusgehalt;
-        this.benoetigtHochschulreife = benoetigtHochschulreife;
-        this.isTaken = false; // Standardmäßig ist der Job verfügbar
+    public Job(int jobId, String title, int salary, int bonusSalary, boolean requiresDegree) {
+        this.jobId = jobId;
+        this.title = title;
+        this.salary = salary;
+        this.bonusSalary = bonusSalary;
+        this.requiresDegree = requiresDegree;
+        this.isTaken = false;
+        this.assignedToPlayerName = null;
     }
 
-    public boolean assignJob() {
+    public boolean assignJobTo(String playerName) {
         if (!isTaken) {
             isTaken = true;
+            assignedToPlayerName = playerName;
             return true;
         }
         return false;
     }
 
-
     public void releaseJob() {
         isTaken = false;
+        assignedToPlayerName = null;
     }
 
     @Override
     public String toString() {
         return "Job{" +
-                "bezeichnung='" + bezeichnung + '\'' +
-                ", gehalt=" + gehalt + '\'' +
-                ", bonusgehalt=" + bonusgehalt + '\'' +
-                ", Hochschulreife=" + benoetigtHochschulreife +
+                "Bezeichnung='" + title + '\'' +
+                ", Gehalt=" + salary +
+                ", Bonusgehalt=" + bonusSalary +
+                ", Hochschulreife benötigt=" + requiresDegree +
+                ", Vergeben=" + isTaken +
+                ", Zugewiesen an='" + assignedToPlayerName + '\'' +
                 '}';
     }
 }

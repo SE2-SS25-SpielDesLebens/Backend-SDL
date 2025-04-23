@@ -13,6 +13,7 @@ import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Controller
@@ -82,21 +83,37 @@ public class WebSocketBrokerController {
         );
     }
 
-    /**
-     * Diese Methode wird aufgerufen, wenn das Frontend eine Nachricht an "/app/job/request" sendet.
-     * Sie holt einen zufälligen, noch nicht vergebenen Job, markiert ihn als vergeben und sendet
-     * die Job-Informationen an das Topic "/topic/job".
-     */
     @MessageMapping("/getJob")
     @SendTo("/topic/getJob")
     public JobMessage handleJobRequest(@Payload StompMessage message) {
-        Optional<Job> jobOpt = jobRepository.getRandomJob();
+        List<Job> availableJobs = jobRepository.getTwoAvailableJobs(); // zufällige Liste
+        Optional<Job> jobOpt = availableJobs.stream().findFirst();     // nimm den ersten
+
         if (jobOpt.isPresent()) {
             Job job = jobOpt.get();
-            String jobInfo = "Job assigned: " + job.getBezeichnung();
-            return new JobMessage(message(message.getPlayerName(), jobInfo, LocalDateTime.now().toString());
+            return new JobMessage(
+                    job.getJobId(),
+                    job.getTitle(),
+                    job.getSalary(),
+                    job.getBonusSalary(),
+                    job.isRequiresDegree(),
+                    job.isTaken(),
+                    job.getAssignedToPlayerName(),
+                    message.getPlayerName(),
+                    LocalDateTime.now().toString()
+            );
         } else {
-            return new JobMessage(message.getPlayerName(), "Kein Job verfügbar", LocalDateTime.now().toString());
+            return new JobMessage(
+                    0,
+                    "Kein Job verfügbar",
+                    0,
+                    0,
+                    false,
+                    false,
+                    null,
+                    message.getPlayerName(),
+                    LocalDateTime.now().toString()
+            );
         }
     }
 }
