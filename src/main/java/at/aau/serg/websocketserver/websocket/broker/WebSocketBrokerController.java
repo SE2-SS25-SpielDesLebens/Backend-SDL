@@ -1,15 +1,13 @@
 package at.aau.serg.websocketserver.websocket.broker;
 
+import at.aau.serg.websocketdemoserver.session.Job;
 import at.aau.serg.websocketserver.messaging.dtos.JobMessage;
 import at.aau.serg.websocketserver.messaging.dtos.OutputMessage;
 import at.aau.serg.websocketserver.messaging.dtos.StompMessage;
-import at.aau.serg.websocketdemoserver.session.Job;
 import at.aau.serg.websocketdemoserver.session.JobRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
-
 import org.springframework.stereotype.Controller;
 
 import java.time.LocalDateTime;
@@ -29,7 +27,7 @@ public class WebSocketBrokerController {
         }
     }
 
-    @MessageMapping("/move") // z.B. vom Client: /app/move
+    @MessageMapping("/move")
     @SendTo("/topic/game")
     public OutputMessage handleMove(StompMessage message) {
         System.out.println("[MOVE] [" + message.getGameId() + "] " + message.getPlayerName() + ": " + message.getAction());
@@ -85,27 +83,49 @@ public class WebSocketBrokerController {
 
     @MessageMapping("/getJob")
     @SendTo("/topic/getJob")
-    public JobMessage handleJobRequest(@Payload StompMessage message) {
-        List<Job> availableJobs = jobRepository.getTwoAvailableJobs(); // zufällige Liste
-        Optional<Job> jobOpt = availableJobs.stream().findFirst();     // nimm den ersten
+    public List<JobMessage> handleJobRequest(@Payload StompMessage message) {
+        return jobRepository.getTwoAvailableJobMessages(message.getPlayerName());
+    }
+
+    @MessageMapping("/acceptJob")
+    @SendTo("/topic/jobTaken")
+    public JobMessage acceptJob(@Payload JobMessage message) {
+        Optional<Job> jobOpt = jobRepository.findJobById(message.getJobId());
 
         if (jobOpt.isPresent()) {
             Job job = jobOpt.get();
-            return new JobMessage(
-                    job.getJobId(),
-                    job.getTitle(),
-                    job.getSalary(),
-                    job.getBonusSalary(),
-                    job.isRequiresDegree(),
-                    job.isTaken(),
-                    job.getAssignedToPlayerName(),
-                    message.getPlayerName(),
-                    LocalDateTime.now().toString()
-            );
+
+            if (!job.isTaken()) {
+                job.assignJobTo(message.getPlayerName());
+
+                return new JobMessage(
+                        job.getJobId(),
+                        job.getTitle(),
+                        job.getSalary(),
+                        job.getBonusSalary(),
+                        job.isRequiresDegree(),
+                        true,
+                        job.getAssignedToPlayerName(),
+                        message.getPlayerName(),
+                        LocalDateTime.now().toString()
+                );
+            } else {
+                return new JobMessage(
+                        job.getJobId(),
+                        job.getTitle() + " (bereits vergeben)",
+                        job.getSalary(),
+                        job.getBonusSalary(),
+                        job.isRequiresDegree(),
+                        true,
+                        job.getAssignedToPlayerName(),
+                        message.getPlayerName(),
+                        LocalDateTime.now().toString()
+                );
+            }
         } else {
             return new JobMessage(
-                    0,
-                    "Kein Job verfügbar",
+                    -1,
+                    "❌ Job nicht gefunden",
                     0,
                     0,
                     false,
@@ -116,4 +136,7 @@ public class WebSocketBrokerController {
             );
         }
     }
+
+
+
 }
