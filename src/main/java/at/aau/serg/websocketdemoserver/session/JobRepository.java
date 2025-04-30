@@ -1,11 +1,9 @@
 package at.aau.serg.websocketdemoserver.session;
 
-import at.aau.serg.websocketserver.messaging.dtos.JobMessage;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.InputStream;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -14,6 +12,9 @@ public class JobRepository {
     private final List<Job> jobs = new ArrayList<>();
     private final Random random = new Random();
 
+    /**
+     * Lädt alle Jobs aus src/main/resources/jobs.json.
+     */
     public void loadJobs() throws Exception {
         InputStream inputStream = getClass().getClassLoader().getResourceAsStream("jobs.json");
         if (inputStream == null) {
@@ -43,36 +44,27 @@ public class JobRepository {
         return jobs.toArray(new Job[0]);
     }
 
+    /**
+     * Liefert zwei zufällige, unvergebene Jobs.
+     */
     public List<Job> getTwoAvailableJobs() {
         List<Job> availableJobs = jobs.stream()
                 .filter(job -> !job.isTaken())
                 .collect(Collectors.toList());
-        Collections.shuffle(availableJobs);
+        Collections.shuffle(availableJobs, random);
         return availableJobs.stream().limit(2).collect(Collectors.toList());
     }
 
-    // 🔹 Neue Methode: Wandelt die 2 zufälligen Jobs in JobMessages um
-    public List<JobMessage> getTwoAvailableJobMessages(String playerName) {
-        return getTwoAvailableJobs().stream()
-                .map(job -> new JobMessage(
-                        job.getJobId(),
-                        job.getTitle(),
-                        job.getSalary(),
-                        job.getBonusSalary(),
-                        job.isRequiresDegree(),
-                        job.isTaken(),
-                        job.getAssignedToPlayerName(),
-                        playerName,
-                        LocalDateTime.now().toString()
-                ))
-                .collect(Collectors.toList());
-    }
-
+    /**
+     * Weist einem Spieler einen neuen Job zu und gibt ggf. den alten frei.
+     */
     public boolean assignJobToPlayer(String playerName, Job newJob) {
+        // alten Job frei machen
         jobs.stream()
                 .filter(job -> playerName.equals(job.getAssignedToPlayerName()))
                 .forEach(Job::releaseJob);
 
+        // neuen Job zuweisen
         return newJob.assignJobTo(playerName);
     }
 
@@ -90,5 +82,36 @@ public class JobRepository {
         return jobs.stream()
                 .filter(job -> job.getTitle().equalsIgnoreCase(title))
                 .findFirst();
+    }
+
+    /**
+     * Für neue Spieler: zwei zufällige, verfügbare Jobs.
+     * Für Spieler mit bestehendem Job: zuerst den aktuellen Job, dann einen weiteren zufällig ausgewählten.
+     */
+    public List<Job> getJobsForPlayer(String playerName) {
+        Optional<Job> currentJob = jobs.stream()
+                .filter(job -> playerName.equals(job.getAssignedToPlayerName()))
+                .findFirst();
+
+        // Liste aller unvergebenen Jobs zufällig mischen
+        List<Job> available = jobs.stream()
+                .filter(job -> !job.isTaken())
+                .collect(Collectors.toList());
+        Collections.shuffle(available, random);
+
+        if (currentJob.isPresent()) {
+            List<Job> result = new ArrayList<>();
+            // aktuellen Job immer zuerst
+            result.add(currentJob.get());
+            // dann den ersten aus der gemischten Liste (falls vorhanden)
+            available.remove(currentJob.get());
+            if (!available.isEmpty()) {
+                result.add(available.get(0));
+            }
+            return result;
+        }
+
+        // neuer Spieler: zwei aus der gemischten Liste
+        return available.stream().limit(2).collect(Collectors.toList());
     }
 }
