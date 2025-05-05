@@ -172,14 +172,17 @@ public class WebSocketBrokerController {
     }
 
     @MessageMapping("/game/start")
-    @SendTo("/topic/game")
+    @SendTo("/topic/game/start")
     public OutputMessage handleGameStart(StompMessage message) {
-        String gameId = message.getGameId();
+        String gameId = message.getGameId(); // ✅ dynamisch aus Nachricht
+
         createJobRepositoryForGame(gameId);
+
         return new OutputMessage(
                 "System",
                 "Spiel [" + gameId + "] gestartet.",
                 LocalDateTime.now().toString()
         );
     }
+
 }
