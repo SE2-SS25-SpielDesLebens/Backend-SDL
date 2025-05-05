@@ -13,7 +13,7 @@ public class JobRepository {
     private final Random random = new Random();
 
     /**
-     * Lädt alle Jobs aus src/main/resources/jobs.json.
+     * Lädt alle Jobs aus jobs.json.
      */
     public void loadJobs() throws Exception {
         InputStream inputStream = getClass().getClassLoader().getResourceAsStream("jobs.json");
@@ -40,78 +40,50 @@ public class JobRepository {
         }
     }
 
-    public Job[] getJobArray() {
-        return jobs.toArray(new Job[0]);
+    /**
+     * Gibt das aktuelle Job-Objekt eines Spielers zurück (falls vorhanden).
+     */
+    public Optional<Job> getCurrentJobForPlayer(String playerName) {
+        return jobs.stream()
+                .filter(job -> playerName.equals(job.getAssignedToPlayerName()))
+                .findFirst();
     }
 
     /**
-     * Liefert zwei zufällige, unvergebene Jobs.
+     * Gibt eine bestimmte Anzahl zufälliger verfügbarer Jobs zurück,
+     * die dem Bildungsstatus des Spielers entsprechen.
      */
-    public List<Job> getTwoAvailableJobs() {
+    public List<Job> getRandomAvailableJobs(boolean hasDegree, int count) {
         List<Job> availableJobs = jobs.stream()
                 .filter(job -> !job.isTaken())
+                .filter(job -> job.isRequiresDegree() == hasDegree)
                 .collect(Collectors.toList());
+
         Collections.shuffle(availableJobs, random);
-        return availableJobs.stream().limit(2).collect(Collectors.toList());
+        return availableJobs.stream().limit(count).collect(Collectors.toList());
     }
 
     /**
-     * Weist einem Spieler einen neuen Job zu und gibt ggf. den alten frei.
+     * Findet einen Job anhand der ID.
      */
-    public boolean assignJobToPlayer(String playerName, Job newJob) {
-        // alten Job frei machen
-        jobs.stream()
-                .filter(job -> playerName.equals(job.getAssignedToPlayerName()))
-                .forEach(Job::releaseJob);
-
-        // neuen Job zuweisen
-        return newJob.assignJobTo(playerName);
-    }
-
-    public void releaseJob(Job job) {
-        job.releaseJob();
-    }
-
     public Optional<Job> findJobById(int jobId) {
         return jobs.stream()
                 .filter(job -> job.getJobId() == jobId)
                 .findFirst();
     }
 
-    public Optional<Job> findJobByTitle(String title) {
-        return jobs.stream()
-                .filter(job -> job.getTitle().equalsIgnoreCase(title))
-                .findFirst();
+    /**
+     * Weist einem Spieler einen neuen Job zu und gibt ggf. den alten frei.
+     */
+    public boolean assignJobToPlayer(String playerName, Job newJob) {
+        getCurrentJobForPlayer(playerName).ifPresent(Job::releaseJob);
+        return newJob.assignJobTo(playerName);
     }
 
     /**
-     * Für neue Spieler: zwei zufällige, verfügbare Jobs.
-     * Für Spieler mit bestehendem Job: zuerst den aktuellen Job, dann einen weiteren zufällig ausgewählten.
+     * Gibt einen Job explizit frei.
      */
-    public List<Job> getJobsForPlayer(String playerName) {
-        Optional<Job> currentJob = jobs.stream()
-                .filter(job -> playerName.equals(job.getAssignedToPlayerName()))
-                .findFirst();
-
-        // Liste aller unvergebenen Jobs zufällig mischen
-        List<Job> available = jobs.stream()
-                .filter(job -> !job.isTaken())
-                .collect(Collectors.toList());
-        Collections.shuffle(available, random);
-
-        if (currentJob.isPresent()) {
-            List<Job> result = new ArrayList<>();
-            // aktuellen Job immer zuerst
-            result.add(currentJob.get());
-            // dann den ersten aus der gemischten Liste (falls vorhanden)
-            available.remove(currentJob.get());
-            if (!available.isEmpty()) {
-                result.add(available.get(0));
-            }
-            return result;
-        }
-
-        // neuer Spieler: zwei aus der gemischten Liste
-        return available.stream().limit(2).collect(Collectors.toList());
+    public void releaseJob(Job job) {
+        job.releaseJob();
     }
 }

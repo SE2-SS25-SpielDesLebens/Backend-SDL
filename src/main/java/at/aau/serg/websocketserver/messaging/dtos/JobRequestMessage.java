@@ -1,9 +1,14 @@
 package at.aau.serg.websocketserver.messaging.dtos;
 
+import lombok.Getter;
+import lombok.Setter;
+
 /**
  * Nachricht für Job-Anfragen und -Akzeptanz: kennzeichnet Lobby, Spieler,
  * (optionalen) gewählten Job und Hochschulreife.
  */
+@Getter
+@Setter
 public class JobRequestMessage {
     private String playerName;
     private String gameId;
@@ -18,38 +23,10 @@ public class JobRequestMessage {
         this.hasDegree = hasDegree;
         this.jobId = jobId;
     }
-
-    public String getPlayerName() {
-        return playerName;
-    }
-
-    public void setPlayerName(String playerName) {
-        this.playerName = playerName;
-    }
-
-    public String getGameId() {
-        return gameId;
-    }
-
-    public void setGameId(String gameId) {
-        this.gameId = gameId;
-    }
-
     public boolean hasDegree() {
         return hasDegree;
     }
 
-    public void setHasDegree(boolean hasDegree) {
-        this.hasDegree = hasDegree;
-    }
-
-    public Integer getJobId() {
-        return jobId;
-    }
-
-    public void setJobId(Integer jobId) {
-        this.jobId = jobId;
-    }
 }
 
 

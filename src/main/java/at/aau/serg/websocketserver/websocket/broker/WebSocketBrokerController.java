@@ -1,4 +1,3 @@
-// Backend: WebSocketBrokerController.java
 package at.aau.serg.websocketserver.websocket.broker;
 
 import at.aau.serg.websocketserver.messaging.dtos.JobMessage;
@@ -82,55 +81,43 @@ public class WebSocketBrokerController {
     }
 
     /**
-     * Behandelt Job-Anfragen und -Akzeptanzen.
-     * Sendet an /topic/{gameId}/jobs/{playerName}.
+     * Wird einmalig beim Spielstart aufgerufen.
      */
-    @MessageMapping("/jobs")
-    public void handleJobFlow(@Payload JobRequestMessage msg) {
-        String gameId       = msg.getGameId();
-        String playerName   = msg.getPlayerName();
-        boolean hasDegree   = msg.hasDegree();
-        Integer chosenJobId = msg.getJobId();
+    public void createJobRepositoryForGame(String gameId) {
+        JobRepository repo = new JobRepository();
+        try {
+            repo.loadJobs();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        jobRepositories.put(gameId, repo);
+    }
 
-        JobRepository repo = jobRepositories.computeIfAbsent(gameId, id -> {
-            JobRepository r = new JobRepository();
-            try { r.loadJobs(); } catch (Exception e) { e.printStackTrace(); }
-            return r;
-        });
+    /**
+     * Spieler fragt Jobs an (aktuell oder neue Auswahl).
+     */
+    @MessageMapping("/jobs/request")
+    public void handleJobRequest(@Payload JobRequestMessage msg) {
+        String gameId = msg.getGameId();
+        String playerName = msg.getPlayerName();
+        boolean hasDegree = msg.hasDegree();
 
-        List<Job> responseJobs;
-        if (chosenJobId == null) {
-            // Erst-Anfrage: bestehenden Job (falls vergeben) + Zufalls-Option(en)
-            Optional<Job> current = Arrays.stream(repo.getJobArray())
-                    .filter(j -> playerName.equals(j.getAssignedToPlayerName()))
-                    .findFirst();
-            List<Job> candidates = Arrays.stream(repo.getJobArray())
-                    .filter(j -> !j.isTaken())
-                    .filter(j -> hasDegree || !j.isRequiresDegree())
-                    .collect(Collectors.toList());
-            Collections.shuffle(candidates);
-            responseJobs = new ArrayList<>();
-            current.ifPresent(responseJobs::add);
-            if (responseJobs.isEmpty()) {
-                // neuer Spieler: 2 Optionen
-                responseJobs.addAll(candidates.stream().limit(2).toList());
-            } else if (!candidates.isEmpty()) {
-                // bereits zugewiesen: 1 Zusatz-Option
-                responseJobs.add(candidates.get(0));
-            }
+        JobRepository repo = jobRepositories.get(gameId);
+        if (repo == null) throw new IllegalStateException("Kein JobRepository für Game ID " + gameId);
+
+        List<Job> jobsToSend = new ArrayList<>();
+        Optional<Job> current = repo.getCurrentJobForPlayer(playerName);
+
+        if (current.isPresent()) {
+            jobsToSend.add(current.get());
+            List<Job> random = repo.getRandomAvailableJobs(hasDegree, 1);
+            random.remove(current.get());
+            jobsToSend.addAll(random);
         } else {
-            // Akzeptanz: Job zuweisen und nur diesen zurückgeben
-            responseJobs = new ArrayList<>();
-            repo.findJobById(chosenJobId).ifPresent(job -> {
-                if (!job.isRequiresDegree() || hasDegree) {
-                    repo.assignJobToPlayer(playerName, job);
-                }
-                responseJobs.add(job);
-            });
+            jobsToSend = repo.getRandomAvailableJobs(hasDegree, 2);
         }
 
-        // DTO-Mapping
-        List<JobMessage> dtos = responseJobs.stream()
+        List<JobMessage> dtos = jobsToSend.stream()
                 .map(j -> new JobMessage(
                         j.getJobId(),
                         j.getTitle(),
@@ -142,5 +129,57 @@ public class WebSocketBrokerController {
 
         String dest = "/topic/" + gameId + "/jobs/" + playerName;
         messagingTemplate.convertAndSend(dest, dtos);
+    }
+
+    /**
+     * Spieler akzeptiert einen konkreten Job.
+     */
+    @MessageMapping("/jobs/select")
+    public void handleJobSelection(@Payload JobRequestMessage msg) {
+        String gameId = msg.getGameId();
+        String playerName = msg.getPlayerName();
+        boolean hasDegree = msg.hasDegree();
+        Integer chosenJobId = msg.getJobId();
+
+        if (chosenJobId == null) {
+            throw new IllegalArgumentException("JobId darf bei der Auswahl nicht null sein.");
+        }
+
+        JobRepository repo = jobRepositories.get(gameId);
+        if (repo == null) {
+            throw new IllegalStateException("Kein JobRepository für Game ID " + gameId + " gefunden.");
+        }
+
+        Optional<Job> selectedJob = repo.findJobById(chosenJobId);
+        if (selectedJob.isEmpty()) return;
+
+        Job job = selectedJob.get();
+        if (job.isRequiresDegree() == hasDegree) {
+            repo.assignJobToPlayer(playerName, job);
+        }
+
+        List<JobMessage> dtos = List.of(new JobMessage(
+                job.getJobId(),
+                job.getTitle(),
+                job.getSalary(),
+                job.getBonusSalary(),
+                job.isRequiresDegree(),
+                job.isTaken()
+        ));
+
+        String dest = "/topic/" + gameId + "/jobs/" + playerName;
+        messagingTemplate.convertAndSend(dest, dtos);
+    }
+
+    @MessageMapping("/game/start")
+    @SendTo("/topic/game")
+    public OutputMessage handleGameStart(StompMessage message) {
+        String gameId = message.getGameId();
+        createJobRepositoryForGame(gameId);
+        return new OutputMessage(
+                "System",
+                "Spiel [" + gameId + "] gestartet.",
+                LocalDateTime.now().toString()
+        );
     }
 }
