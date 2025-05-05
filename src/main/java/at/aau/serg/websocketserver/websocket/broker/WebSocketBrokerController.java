@@ -1,3 +1,4 @@
+// Backend: WebSocketBrokerController.java
 package at.aau.serg.websocketserver.websocket.broker;
 
 import at.aau.serg.websocketserver.messaging.dtos.JobMessage;
@@ -14,8 +15,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -82,21 +82,15 @@ public class WebSocketBrokerController {
     }
 
     /**
-     * Job-Anfrage oder -Akzeptanz:
-     * - jobId == null: liefert verfügbare Jobs
-     * - jobId != null: weist Job zu und liefert aktualisierte Liste
+     * Behandelt Job-Anfragen und -Akzeptanzen.
+     * Sendet an /topic/{gameId}/jobs/{playerName}.
      */
     @MessageMapping("/jobs")
-    public void handleJobFlow(@Payload JobRequestMessage message) {
-        String gameId     = message.getGameId();
-        String playerName = message.getPlayerName();
-        boolean hasDegree = message.hasDegree();
-        Integer chosenJob = message.getJobId();
-
-        System.out.println((chosenJob == null ? "[JOB REQUEST] " : "[JOB ACCEPT] ")
-                + "[Spiel " + gameId + "] Spieler: " + playerName
-                + ", Hochschulreife: " + hasDegree
-                + (chosenJob == null ? "" : ", JobId: " + chosenJob)); // TODO: Testausgabe, später auskommentieren
+    public void handleJobFlow(@Payload JobRequestMessage msg) {
+        String gameId       = msg.getGameId();
+        String playerName   = msg.getPlayerName();
+        boolean hasDegree   = msg.hasDegree();
+        Integer chosenJobId = msg.getJobId();
 
         JobRepository repo = jobRepositories.computeIfAbsent(gameId, id -> {
             JobRepository r = new JobRepository();
@@ -104,23 +98,49 @@ public class WebSocketBrokerController {
             return r;
         });
 
-        // Bei Wahl eines Jobs: zuweisen
-        if (chosenJob != null) {
-            repo.findJobById(chosenJob).ifPresent(job -> {
+        List<Job> responseJobs;
+        if (chosenJobId == null) {
+            // Erst-Anfrage: bestehenden Job (falls vergeben) + Zufalls-Option(en)
+            Optional<Job> current = Arrays.stream(repo.getJobArray())
+                    .filter(j -> playerName.equals(j.getAssignedToPlayerName()))
+                    .findFirst();
+            List<Job> candidates = Arrays.stream(repo.getJobArray())
+                    .filter(j -> !j.isTaken())
+                    .filter(j -> hasDegree || !j.isRequiresDegree())
+                    .collect(Collectors.toList());
+            Collections.shuffle(candidates);
+            responseJobs = new ArrayList<>();
+            current.ifPresent(responseJobs::add);
+            if (responseJobs.isEmpty()) {
+                // neuer Spieler: 2 Optionen
+                responseJobs.addAll(candidates.stream().limit(2).toList());
+            } else if (!candidates.isEmpty()) {
+                // bereits zugewiesen: 1 Zusatz-Option
+                responseJobs.add(candidates.get(0));
+            }
+        } else {
+            // Akzeptanz: Job zuweisen und nur diesen zurückgeben
+            responseJobs = new ArrayList<>();
+            repo.findJobById(chosenJobId).ifPresent(job -> {
                 if (!job.isRequiresDegree() || hasDegree) {
                     repo.assignJobToPlayer(playerName, job);
                 }
+                responseJobs.add(job);
             });
         }
 
-        // Liste verfügbarer bzw. bestehender Jobs senden
-        List<Job> jobs = repo.getJobsForPlayer(playerName);
-        List<JobMessage> response = jobs.stream()
+        // DTO-Mapping
+        List<JobMessage> dtos = responseJobs.stream()
                 .map(j -> new JobMessage(
-                        j.getJobId(), j.getTitle(), j.getSalary(), j.getBonusSalary(), j.isRequiresDegree(), j.isTaken()
-                ))
+                        j.getJobId(),
+                        j.getTitle(),
+                        j.getSalary(),
+                        j.getBonusSalary(),
+                        j.isRequiresDegree(),
+                        j.isTaken()))
                 .collect(Collectors.toList());
 
-        messagingTemplate.convertAndSend("/topic/" + gameId + "/jobs", response);
+        String dest = "/topic/" + gameId + "/jobs/" + playerName;
+        messagingTemplate.convertAndSend(dest, dtos);
     }
 }
