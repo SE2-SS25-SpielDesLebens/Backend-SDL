@@ -4,9 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * Sendet Job-Informationen ohne Spielerkontext.
- */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -17,4 +14,5 @@ public class JobMessage {
     private int bonusSalary;
     private boolean requiresDegree;
     private boolean taken;
+    private int gameId;
 }

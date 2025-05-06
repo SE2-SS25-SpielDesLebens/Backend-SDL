@@ -1,4 +1,4 @@
-package at.aau.serg.websocketdemoserver.session;
+package at.aau.serg.websocketserver.session;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -77,7 +77,7 @@ public class JobRepository {
      */
     public boolean assignJobToPlayer(String playerName, Job newJob) {
         getCurrentJobForPlayer(playerName).ifPresent(Job::releaseJob);
-        return newJob.assignJobTo(playerName);
+        return true;
     }
 
     /**

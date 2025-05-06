@@ -2,11 +2,11 @@ package at.aau.serg.websocketserver.websocket.broker;
 
 import at.aau.serg.websocketserver.messaging.dtos.JobMessage;
 import at.aau.serg.websocketserver.messaging.dtos.JobRequestMessage;
-import at.aau.serg.websocketdemoserver.session.Job;
-import at.aau.serg.websocketdemoserver.session.JobRepository;
 import at.aau.serg.websocketserver.messaging.dtos.OutputMessage;
 import at.aau.serg.websocketserver.messaging.dtos.StompMessage;
-import org.springframework.beans.factory.annotation.Autowired;
+import at.aau.serg.websocketserver.session.Job;
+import at.aau.serg.websocketserver.session.JobService;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
@@ -14,17 +14,22 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
 import java.time.LocalDateTime;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Controller
 public class WebSocketBrokerController {
 
-    private final Map<String, JobRepository> jobRepositories = new ConcurrentHashMap<>();
+    private final JobService jobService;
+    private final SimpMessagingTemplate messagingTemplate;
 
-    @Autowired
-    private SimpMessagingTemplate messagingTemplate;
+    public WebSocketBrokerController(JobService jobService,
+                                     SimpMessagingTemplate messagingTemplate) {
+        this.jobService = jobService;
+        this.messagingTemplate = messagingTemplate;
+    }
 
     @MessageMapping("/move")
     @SendTo("/topic/game") // optional: dynamisch mit gameId (siehe Kommentar unten)
@@ -81,33 +86,32 @@ public class WebSocketBrokerController {
     }
 
     /**
-     * Wird einmalig beim Spielstart aufgerufen.
+     * Wird aufgerufen, wenn ein Spiel startet. Legt über JobService
+     * das Repository für diese gameId an.
      */
-    public void createJobRepositoryForGame(String gameId) {
-        JobRepository repo = new JobRepository();
-        try {
-            repo.loadJobs();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        jobRepositories.put(gameId, repo);
+
+    @MessageMapping("/game/start/{gameId}")
+    public void handleGameStart(@DestinationVariable int gameId) {
+        // Erstelle oder lade das Repo für diese gameId
+        jobService.getOrCreateRepository(gameId);
+        // kein convertAndSend, es wird nichts zurückgeschickt
     }
 
+
     /**
-     * Spieler fragt Jobs an (aktuell oder neue Auswahl).
+     * Spieler fragt Jobs an: Holt sich das korrekte Repository
+     * über JobService und sendet zwei Jobs zurück.
      */
-    @MessageMapping("/jobs/request")
-    public void handleJobRequest(@Payload JobRequestMessage msg) {
-        String gameId = msg.getGameId();
-        String playerName = msg.getPlayerName();
+    @MessageMapping("/jobs/{gameId}/{playerName}/request")
+    public void handleJobRequest(@DestinationVariable int gameId,
+                                 @DestinationVariable String playerName,
+                                 @Payload JobRequestMessage msg) {
         boolean hasDegree = msg.hasDegree();
 
-        JobRepository repo = jobRepositories.get(gameId);
-        if (repo == null) throw new IllegalStateException("Kein JobRepository für Game ID " + gameId);
-
+        var repo = jobService.getOrCreateRepository(gameId);
         List<Job> jobsToSend = new ArrayList<>();
-        Optional<Job> current = repo.getCurrentJobForPlayer(playerName);
 
+        Optional<Job> current = repo.getCurrentJobForPlayer(playerName);
         if (current.isPresent()) {
             jobsToSend.add(current.get());
             List<Job> random = repo.getRandomAvailableJobs(hasDegree, 1);
@@ -124,65 +128,25 @@ public class WebSocketBrokerController {
                         j.getSalary(),
                         j.getBonusSalary(),
                         j.isRequiresDegree(),
-                        j.isTaken()))
+                        j.isTaken(),
+                        gameId
+                ))
                 .collect(Collectors.toList());
 
-        String dest = "/topic/" + gameId + "/jobs/" + playerName;
+        String dest = String.format("/topic/%d/jobs/%s", gameId, playerName);
         messagingTemplate.convertAndSend(dest, dtos);
     }
 
     /**
-     * Spieler akzeptiert einen konkreten Job.
+     * Spieler wählt einen Job aus: Repository-Zugriff über JobService.
      */
-    @MessageMapping("/jobs/select")
-    public void handleJobSelection(@Payload JobRequestMessage msg) {
-        String gameId = msg.getGameId();
-        String playerName = msg.getPlayerName();
-        boolean hasDegree = msg.hasDegree();
-        Integer chosenJobId = msg.getJobId();
-
-        if (chosenJobId == null) {
-            throw new IllegalArgumentException("JobId darf bei der Auswahl nicht null sein.");
-        }
-
-        JobRepository repo = jobRepositories.get(gameId);
-        if (repo == null) {
-            throw new IllegalStateException("Kein JobRepository für Game ID " + gameId + " gefunden.");
-        }
-
-        Optional<Job> selectedJob = repo.findJobById(chosenJobId);
-        if (selectedJob.isEmpty()) return;
-
-        Job job = selectedJob.get();
-        if (job.isRequiresDegree() == hasDegree) {
-            repo.assignJobToPlayer(playerName, job);
-        }
-
-        List<JobMessage> dtos = List.of(new JobMessage(
-                job.getJobId(),
-                job.getTitle(),
-                job.getSalary(),
-                job.getBonusSalary(),
-                job.isRequiresDegree(),
-                job.isTaken()
-        ));
-
-        String dest = "/topic/" + gameId + "/jobs/" + playerName;
-        messagingTemplate.convertAndSend(dest, dtos);
+    @MessageMapping("/jobs/{gameId}/{playerName}/select")
+    public void handleJobSelection(@DestinationVariable int gameId,
+                                   @DestinationVariable String playerName,
+                                   @Payload JobMessage msg) {
+        int chosenJobId = msg.getJobId();
+        var repo = jobService.getOrCreateRepository(gameId);
+        repo.findJobById(chosenJobId)
+                .ifPresent(job -> repo.assignJobToPlayer(playerName, job));
     }
-
-    @MessageMapping("/game/start")
-    @SendTo("/topic/game/start")
-    public OutputMessage handleGameStart(StompMessage message) {
-        String gameId = message.getGameId(); // ✅ dynamisch aus Nachricht
-
-        createJobRepositoryForGame(gameId);
-
-        return new OutputMessage(
-                "System",
-                "Spiel [" + gameId + "] gestartet.",
-                LocalDateTime.now().toString()
-        );
-    }
-
 }

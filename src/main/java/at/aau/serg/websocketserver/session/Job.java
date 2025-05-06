@@ -1,4 +1,4 @@
-package at.aau.serg.websocketdemoserver.session;
+package at.aau.serg.websocketserver.session;
 
 import lombok.Data;
 
