@@ -106,8 +106,11 @@ public class WebSocketBrokerController {
     public void handleJobRequest(@DestinationVariable int gameId,
                                  @DestinationVariable String playerName,
                                  @Payload JobRequestMessage msg) {
-        boolean hasDegree = msg.hasDegree();
+        System.out.println("[JOB_REQUEST] Spiel " + gameId +
+                ", Spieler " + playerName +
+                ", hasDegree=" + msg.hasDegree());
 
+        boolean hasDegree = msg.hasDegree();
         var repo = jobService.getOrCreateRepository(gameId);
         List<Job> jobsToSend = new ArrayList<>();
 
@@ -131,10 +134,19 @@ public class WebSocketBrokerController {
                         j.isTaken(),
                         gameId
                 ))
-                .collect(Collectors.toList());
+                .toList();
 
         String dest = String.format("/topic/%d/jobs/%s", gameId, playerName);
         messagingTemplate.convertAndSend(dest, dtos);
+
+        // NEU: Ausgabe nachdem die beiden Jobs verschickt wurden
+        System.out.println("[JOB_RESPONSE] Spiel " + gameId +
+                ", Spieler " + playerName +
+                ", gesendete Jobs: " +
+                dtos.stream()
+                        .map(JobMessage::getTitle)
+                        .reduce((a, b) -> a + " + " + b)
+                        .orElse("<keine>"));
     }
 
     /**
@@ -144,9 +156,28 @@ public class WebSocketBrokerController {
     public void handleJobSelection(@DestinationVariable int gameId,
                                    @DestinationVariable String playerName,
                                    @Payload JobMessage msg) {
-        int chosenJobId = msg.getJobId();
+        System.out.println("[JOB_SELECT_REQUEST] Spiel " + gameId +
+                ", Spieler " + playerName +
+                ", gewählter JobId=" + msg.getJobId());
+
         var repo = jobService.getOrCreateRepository(gameId);
-        repo.findJobById(chosenJobId)
-                .ifPresent(job -> repo.assignJobToPlayer(playerName, job));
+        Optional<Job> currentOpt = repo.getCurrentJobForPlayer(playerName);
+
+        // Neu: Wenn der aktuelle Job bereits dieser ist, nichts tun
+        if (currentOpt.isPresent() && currentOpt.get().getJobId() == msg.getJobId()) {
+            System.out.println("[JOB_SELECT_SKIP] Spieler " + playerName +
+                    " hat JobId=" + msg.getJobId() + " bereits zugewiesen – überspringe");
+            return;
+        }
+
+        // Sonst ganz normal zuweisen
+        repo.findJobById(msg.getJobId())
+                .ifPresent(job -> {
+                    repo.assignJobToPlayer(playerName, job);
+                    System.out.println("[JOB_SELECT] Spiel " + gameId +
+                            ", Spieler " + playerName +
+                            " erhält neuen Job: " + job.getTitle() +
+                            " (ID " + job.getJobId() + ")");
+                });
     }
 }
