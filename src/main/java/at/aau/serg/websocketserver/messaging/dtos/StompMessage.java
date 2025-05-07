@@ -7,5 +7,4 @@ public class StompMessage {
         private String playerName;
         private String action;
         private String messageText;
-        private String gameId;
 }
