@@ -27,6 +27,11 @@
             src/main/java/at/aau/serg/websocketserver/websocket/broker/WebSocketBrokerConfig.java,
             src/main/java/at/aau/serg/websocketserver/messaging/dtos/WebSocketServerApplication.java,
             src/main/java/at/aau/serg/websocketserver/websocket/broker/WebSocketBrokerController.java
+            src/main/java/at/aau/serg/websocketserver/session/Job
+            src/main/java/at/aau/serg/websocketserver/session/JobRepository
+            src/main/java/at/aau/serg/websocketserver/session/JobService
+            src/main/java/at/aau/serg/websocketserver/messaging/dtos/JobMessage.java
+            src/main/java/at/aau/serg/websocketserver/messaging/dtos/JobRequestMessage.java
         </sonar.exclusions>
     </properties>
 
