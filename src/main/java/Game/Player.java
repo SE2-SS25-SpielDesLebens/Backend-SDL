@@ -11,13 +11,15 @@ public class Player {
     private String job;
     private String academicJob;
     private String house;
+    private int houseValue;
     private boolean married;
     private int childrenCount;
     private boolean retired;
+    private String carColor;
 
     public Player(String id) {
         this.id = id;
-        this.money = 10000; // Startkapital
+        this.money = 0; // Startkapital
         this.debts = 0;
         this.lifeCards = new ArrayList<>();
         this.shareJoyCards = new ArrayList<>();
@@ -26,71 +28,124 @@ public class Player {
         this.retired = false;
     }
 
-    // Getter und Setter Methoden
+    // ───────────── Getter / Setter ─────────────
+
     public String getId() {
         return id;
     }
+
     public int getMoney() {
         return money;
     }
+
     public void addMoney(int amount) {
         money += amount;
     }
+
     public void removeMoney(int amount) {
         money -= amount;
     }
-    public void addDebt() {
-        debts += 1;
-    }
+
     public int getDebts() {
         return debts;
     }
+
+    public void addDebt() {
+        debts += 1;
+    }
+
+    public void resetDebts() {
+        this.debts = 0;
+    }
+
     public List<String> getLifeCards() {
         return lifeCards;
     }
+
     public void addLifeCard(String card) {
         lifeCards.add(card);
     }
+
     public List<String> getShareJoyCards() {
         return shareJoyCards;
     }
+
     public void addShareJoyCard(String card) {
         shareJoyCards.add(card);
     }
+
     public String getJob() {
         return job;
     }
+
     public void setJob(String job) {
         this.job = job;
     }
+
     public String getAcademicJob() {
         return academicJob;
     }
+
     public void setAcademicJob(String academicJob) {
         this.academicJob = academicJob;
     }
+
+    public void clearJob() {
+        this.job = null;
+        this.academicJob = null;
+    }
+
     public String getHouse() {
         return house;
     }
+
     public void setHouse(String house) {
         this.house = house;
     }
+
+    public int getHouseValue() {
+        return houseValue;
+    }
+
+    public void setHouseValue(int value) {
+        this.houseValue = value;
+    }
+
+    public void removeHouse() {
+        this.house = null;
+        this.houseValue = 0;
+    }
+
     public boolean isMarried() {
         return married;
     }
+
     public void marry() {
         this.married = true;
     }
-    public int getChildrenCount() {
+
+    public int getChildren() {
         return childrenCount;
     }
+
     public void addChild() {
         this.childrenCount++;
     }
+
     public boolean isRetired() {
         return retired;
     }
+
     public void retire() {
         this.retired = true;
     }
+
+    public String getCarColor() {
+        return carColor;
+    }
+
+    public void setCarColor(String color) {
+        this.carColor = color;
+    }
 }
+
