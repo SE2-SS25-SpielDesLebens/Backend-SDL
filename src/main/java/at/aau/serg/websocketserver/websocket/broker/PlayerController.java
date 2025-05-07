@@ -26,6 +26,13 @@ public class PlayerController {
         return ResponseEntity.ok(players);
     }
 
+    @PostMapping
+    public ResponseEntity<String> createPlayer(@RequestBody Player player) {
+        playerService.addPlayer(player);
+        return ResponseEntity.ok("Player created successfully");
+    }
+
+
 
     @GetMapping("/{id}")
     public ResponseEntity<Player> getPlayerById(@PathVariable int id) {

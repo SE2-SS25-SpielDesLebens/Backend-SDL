@@ -13,8 +13,10 @@ public class Player {
     private final String education;
     private final String relationship;
     private final String career;
+    private final int JobID;
+    private final int HouseID;
 
-    public Player(String name, int id, int money, int investments, int salary, int children, String education, String relationship, String career) {
+    public Player(String name, int id, int money, int investments, int salary, int children, String education, String relationship, String career, int jobID, int HouseID) {
         this.name = name;
         this.id = id;
         this.money = money;
@@ -24,6 +26,8 @@ public class Player {
         this.education = education;
         this.relationship = relationship;
         this.career = career;
+        this.JobID = jobID;
+        this.HouseID = HouseID;
     }
 
     @JsonProperty("id") public int getId() { return id; }
@@ -35,4 +39,6 @@ public class Player {
     @JsonProperty("education") public String getEducation() { return education; }
     @JsonProperty("relationship") public String getRelationship() { return relationship; }
     @JsonProperty("career") public String getCareer() { return career; }
+    @JsonProperty("jobId") public int getJobId() { return JobID; }
+    @JsonProperty("houseId") public int getHouseId() { return HouseID; }
 }
