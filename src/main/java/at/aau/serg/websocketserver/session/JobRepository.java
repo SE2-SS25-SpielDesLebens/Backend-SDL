@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 
 import java.io.InputStream;
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 /**
@@ -15,7 +16,6 @@ import java.util.stream.Collectors;
 public class JobRepository {
 
     private final List<Job> jobs = new ArrayList<>();
-    private final Random random = new Random();
 
     /**
      * Lädt alle Jobs aus jobs.json.
@@ -77,7 +77,8 @@ public class JobRepository {
                 .filter(job -> job.isRequiresDegree() == hasDegree)
                 .collect(Collectors.toList());
 
-        Collections.shuffle(availableJobs, random);
+        // ThreadLocalRandom ist performant und threadsicher
+        Collections.shuffle(availableJobs, ThreadLocalRandom.current());
         return availableJobs.stream().limit(count).collect(Collectors.toList());
     }
 
@@ -93,7 +94,7 @@ public class JobRepository {
     /**
      * Weist einem Spieler einen neuen Job zu und gibt ggf. den alten frei.
      */
-    public boolean assignJobToPlayer(String playerName, Job newJob) {
+    public void assignJobToPlayer(String playerName, Job newJob) {
         // Alten Job freigeben (mit Log)
         getCurrentJobForPlayer(playerName).ifPresent(old -> {
             System.out.println("[JobRepository] Spieler \"" + playerName +
@@ -111,7 +112,6 @@ public class JobRepository {
             System.out.println("[JobRepository] Zuweisung fehlgeschlagen für Job: \"" +
                     newJob.getTitle() + "\" (ID " + newJob.getJobId() + ")");
         }
-        return success;
     }
 
     /**
