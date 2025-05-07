@@ -1,8 +1,34 @@
 package at.aau.serg.websocketserver.websocket.broker.actioncard;
 
 public class ActionCard {
-    private String headline, action, imageName;
-    private String[] actions;
+    private int id;
+    private String handle, headline, action, imageName;
+    private String[] reactions;
+
+    public ActionCard(int id, String handle, String headline, String action, String imageName, String[] reactions) {
+        this.id = id;
+        this.handle = handle;
+        this.headline = headline;
+        this.action = action;
+        this.imageName = imageName;
+        this.reactions = reactions;
+    }
+
+    public String getHandle() {
+        return handle;
+    }
+
+    public void setHandle(String handle) {
+        this.handle = handle;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
 
     public String getHeadline() {
         return headline;
@@ -28,18 +54,11 @@ public class ActionCard {
         this.imageName = imageName;
     }
 
-    public String[] getActions() {
-        return actions;
+    public String[] getReactions() {
+        return reactions;
     }
 
-    public void setActions(String[] actions) {
-        this.actions = actions;
-    }
-
-    public ActionCard(String action, String imageName, String[] actions, String headline) {
-        this.action = action;
-        this.imageName = imageName;
-        this.actions = actions;
-        this.headline = headline;
+    public void setReactions(String[] reactions) {
+        this.reactions = reactions;
     }
 }
