@@ -23,4 +23,3 @@ public class WebSocketBrokerConfig implements WebSocketMessageBrokerConfigurer {
                 .withSockJS(); // SockJS-Fallback aktivieren
     }
 }
-
