@@ -82,4 +82,37 @@ public class PlayerService {
         System.out.println("👶 Spieler " + player.getName() + " hat nun " + updatedPlayer.getChildren() + " Kind(er).");
         return true;
     }
+
+    public boolean marryPlayer(int playerId) {
+        Optional<Player> optionalPlayer = getPlayerById(playerId);
+
+        if (optionalPlayer.isEmpty()) {
+            throw new IllegalArgumentException("Spieler mit ID " + playerId + " nicht gefunden.");
+        }
+
+        Player player = optionalPlayer.get();
+
+        if ("Verheiratet".equalsIgnoreCase(player.getRelationship())) {
+            throw new IllegalArgumentException("Spieler ist bereits verheiratet.");
+        }
+
+        Player updatedPlayer = new Player(
+                player.getName(),
+                player.getId(),
+                player.getMoney(),
+                player.getInvestments(),
+                player.getSalary(),
+                player.getChildren(),
+                player.getEducation(),
+                "Verheiratet",
+                player.getCareer(),
+                player.getJobId(),
+                player.getHouseId()
+        );
+
+        updatePlayer(player.getId(), updatedPlayer);
+        System.out.println("💍 Spieler " + player.getName() + " ist jetzt verheiratet.");
+        return true;
+    }
+
 }

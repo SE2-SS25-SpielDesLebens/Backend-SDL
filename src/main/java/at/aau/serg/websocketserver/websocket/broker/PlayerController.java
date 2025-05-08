@@ -60,5 +60,16 @@ public class PlayerController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @PutMapping("/{id}/marry")
+    public ResponseEntity<String> marryPlayer(@PathVariable int id) {
+        try {
+            playerService.marryPlayer(id);
+            return ResponseEntity.ok("Spieler erfolgreich verheiratet.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
 }
 
