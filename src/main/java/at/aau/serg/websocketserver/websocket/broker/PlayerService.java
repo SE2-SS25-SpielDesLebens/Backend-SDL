@@ -115,4 +115,37 @@ public class PlayerService {
         return true;
     }
 
+    public boolean investForPlayer(int playerId) {
+        Optional<Player> optionalPlayer = getPlayerById(playerId);
+        if (optionalPlayer.isEmpty()) {
+            throw new IllegalArgumentException("Spieler nicht gefunden.");
+        }
+
+        Player player = optionalPlayer.get();
+
+        int investAmount = 20000;
+        if (player.getMoney() < investAmount) {
+            throw new IllegalArgumentException("Nicht genug Geld für eine Investition.");
+        }
+
+        Player updatedPlayer = new Player(
+                player.getName(),
+                player.getId(),
+                player.getMoney() - investAmount,
+                player.getInvestments() + investAmount,
+                player.getSalary(),
+                player.getChildren(),
+                player.getEducation(),
+                player.getRelationship(),
+                player.getCareer(),
+                player.getJobId(),
+                player.getHouseId()
+        );
+
+        updatePlayer(player.getId(), updatedPlayer);
+        System.out.println("📈 Spieler " + player.getName() + " hat 20.000€ investiert.");
+        return true;
+    }
+
 }
+

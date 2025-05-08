@@ -71,5 +71,16 @@ public class PlayerController {
         }
     }
 
+    @PutMapping("/{id}/invest")
+    public ResponseEntity<String> invest(@PathVariable int id) {
+        try {
+            playerService.investForPlayer(id);
+            return ResponseEntity.ok("Investition erfolgreich!");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+
 }
 
