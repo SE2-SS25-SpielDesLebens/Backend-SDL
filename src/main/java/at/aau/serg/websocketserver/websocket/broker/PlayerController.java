@@ -50,4 +50,15 @@ public class PlayerController {
             return ResponseEntity.notFound().build();
         }
     }
+
+    @PutMapping("/{id}/add-child")
+    public ResponseEntity<String> addChild(@PathVariable int id) {
+        try {
+            playerService.addChildToPlayer(id);
+            return ResponseEntity.ok("Kind erfolgreich hinzugefügt.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }
+

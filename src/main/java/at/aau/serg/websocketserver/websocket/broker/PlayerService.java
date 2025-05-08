@@ -50,4 +50,36 @@ public class PlayerService {
         players.add(newPlayer);
         System.out.println("Neuer Spieler hinzugefügt: " + newPlayer.getName() + " mit ID " + newPlayer.getId());
     }
+
+    public boolean addChildToPlayer(int playerId) {
+        Optional<Player> optionalPlayer = getPlayerById(playerId);
+
+        if (optionalPlayer.isEmpty()) {
+            throw new IllegalArgumentException("Spieler mit ID " + playerId + " nicht gefunden.");
+        }
+
+        Player player = optionalPlayer.get();
+
+        if (player.getChildren() >= 4) {
+            throw new IllegalArgumentException("Ein Spieler darf maximal 4 Kinder haben.");
+        }
+
+        Player updatedPlayer = new Player(
+                player.getName(),
+                player.getId(),
+                player.getMoney(),
+                player.getInvestments(),
+                player.getSalary(),
+                player.getChildren() + 1,
+                player.getEducation(),
+                player.getRelationship(),
+                player.getCareer(),
+                player.getJobId(),
+                player.getHouseId()
+        );
+
+        updatePlayer(player.getId(), updatedPlayer);
+        System.out.println("👶 Spieler " + player.getName() + " hat nun " + updatedPlayer.getChildren() + " Kind(er).");
+        return true;
+    }
 }
