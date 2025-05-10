@@ -23,7 +23,7 @@
         <sonar.projectKey>SE2-SS25-SpielDesLebens_Backend-SDL</sonar.projectKey>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
         <sonar.exclusions>
-            src/main/java/at/aau/serg/websocketserver/messaging/dtos/OutputMessage.java ,
+            src/main/java/at/aau/serg/websocketserver/messaging/dtos/OutputMessage.java,
             src/main/java/at/aau/serg/websocketserver/websocket/broker/WebSocketBrokerConfig.java,
             src/main/java/at/aau/serg/websocketserver/messaging/dtos/WebSocketServerApplication.java,
             src/main/java/at/aau/serg/websocketserver/messaging/dtos/OutputMessage.java,

@@ -18,8 +18,13 @@ public class WebSocketBrokerConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
+        // SockJS-Fallback für Browser
         registry.addEndpoint("/websocket-broker")
                 .setAllowedOriginPatterns("*")
-                .withSockJS(); // SockJS-Fallback aktivieren
+                .withSockJS(); 
+                
+        // Direkter WebSocket-Endpunkt für Android
+        registry.addEndpoint("/websocket-broker")
+                .setAllowedOriginPatterns("*");
     }
 }

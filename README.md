@@ -32,7 +32,7 @@ val sockJsClient = SockJSClient(...)
 
 val stompClient = Stomp.over(sockJsClient)
 
-stompClient.connect("ws://<SERVER-IP>:8080/websocket-example-broker", ...)
+stompClient.connect("ws://<SERVER-IP>:8080/websocket-broker", ...)
 
 
 🔁 Nachrichtenfluss:
