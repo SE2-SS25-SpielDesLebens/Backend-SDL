@@ -1,9 +1,9 @@
 package Game;
 
-import at.aau.serg.websocketserver.Player.Player;
 import at.aau.serg.websocketserver.session.Job;
 import at.aau.serg.websocketserver.session.JobRepository;
 import at.aau.serg.websocketserver.session.JobService;
+import at.aau.serg.websocketserver.Player.Player;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 
 @Getter
 @Setter
-
 public class GameLogic {
 
     private final Map<String, Player> players = new ConcurrentHashMap<>();
@@ -24,93 +23,109 @@ public class GameLogic {
     private GameController gameController;
     private PlayerTurnManager turnManager;
 
-    // Farbreihenfolge für Autos
     private static final List<String> CAR_COLORS = List.of("Rot", "Blau", "Gelb", "Grün");
     private static final int MAX_PLAYERS = 4;
 
+    private final List<String> retirementOrder = new ArrayList<>();
+    private final Set<Integer> usedInvestmentSlots = new HashSet<>();
 
-
-    // Spielerregistrierung
     public boolean registerPlayer(String id) {
-        if (players.size() >= MAX_PLAYERS) {
-            System.out.println("[LOBBY-VOLL] Spieler " + id + " konnte nicht beitreten. Lobby ist voll.");
-            return false;
-        }
+        if (players.size() >= MAX_PLAYERS) return false;
 
         Player player = new Player(id);
-        players.put(id,player);
+        players.put(id, player);
 
         int playerIndex = players.size();
         player.setCarColor(CAR_COLORS.get(playerIndex - 1));
-        player.addMoney(10000); // Startkapital
-        System.out.println("[JOIN] " + id + " wird Spieler " + playerIndex + " mit Farbe " + player.getCarColor());
+        player.addMoney(250000);
         return true;
     }
 
-    // Spielvorbereitung: z.B. für zusätzliche Setups
     public void prepareGameStart() {
+        int i = 0;
         for (Player p : players.values()) {
-            System.out.println("[SETUP] " + p.getId() + " erhält 10.000 € und Auto: " + p.getCarColor());
-        }
-        setCurrentPlayerStatus();
-    }
-
-    private void setCurrentPlayerStatus() {
-        for (int i = 0; i < players.size(); i++) {
-            Player p = players.get(i);
             p.setActive(i == currentPlayerIndex);
+            i++;
         }
     }
 
-    // Entscheidung: Universität oder direkt Beruf
     public void handleGameStartChoice(int gameId, String playerName, boolean chooseUniversity) {
         Player player = getPlayerByName(playerName);
 
         if (chooseUniversity) {
-            for (int i = 0; i < 5; i++) {
-                player.addDebt();
+            player.removeMoney(100000);
+            // Direkter Zugriff auf das Feld, da kein Setter vorhanden
+            try {
+                java.lang.reflect.Field educationField = Player.class.getDeclaredField("university");
+                educationField.setAccessible(true);
+                educationField.setBoolean(player, true);
+            } catch (Exception e) {
+                throw new RuntimeException("Fehler beim Setzen des Bildungsstatus", e);
             }
-            player.setUniversity(true);
-            System.out.println("[ENTSCHEIDUNG] " + playerName + " wählt Universität.");
         } else {
-            JobRepository repo = jobService.getOrCreateRepository(gameId);
-            List<Job> jobs = repo.getRandomAvailableJobs(false, 1);
-            if (!jobs.isEmpty()) {
-                Job job = jobs.get(0);
-                repo.assignJobToPlayer(playerName, job);
-                players.get(playerName).assignJob(job);
-                System.out.println("[ENTSCHEIDUNG] " + playerName + " startet mit Beruf: " + jobs.get(0).getTitle());
-            }
+            assignDefaultCareer(gameId, playerName);
         }
     }
 
-    // Ein Spieler führt einen Spielzug durch
+    private void assignDefaultCareer(int gameId, String playerName) {
+        JobRepository repo = jobService.getOrCreateRepository(gameId);
+        List<Job> jobs = repo.getRandomAvailableJobs(false, 2);
+
+        if (!jobs.isEmpty()) {
+            Job chosen;
+            boolean bothWithDegree = jobs.stream().allMatch(Job::isRequiresDegree);
+            if (bothWithDegree) {
+                chosen = jobs.get(0);
+            } else {
+                chosen = jobs.stream().filter(j -> !j.isRequiresDegree()).findFirst().orElse(jobs.get(0));
+            }
+            repo.assignJobToPlayer(playerName, chosen);
+            Player player = getPlayerByName(playerName);
+            player.assignJob(chosen);
+            player.setSalary(chosen.getSalary());
+        }
+    }
+
+    public boolean requestLoan(String playerId) {
+        Player player = getPlayerByName(playerId);
+        if (!player.isActive()) {
+            System.out.println("[VERWEIGERT] Nur der aktive Spieler darf einen Kredit aufnehmen.");
+            return false;
+        }
+        player.takeLoan();
+        System.out.println("[KREDIT] Spieler " + playerId + " hat einen Kredit aufgenommen (+20.000 €). Schulden: " + player.getDebts());
+        return true;
+    }
+
     public void performTurn(Player player, int spinResult) {
         if (turnManager != null) {
             turnManager.completeTurn(player.getId(), spinResult);
         } else {
-            System.out.println("[FEHLER] Kein TurnManager verfügbar – Zug wird lokal abgeschlossen.");
             nextTurn();
         }
     }
 
-
-    // Nächster Spieler
     public void nextTurn() {
         if (allPlayersRetired()) {
             endGame();
             return;
         }
 
-        int total = players.size();
+        List<Player> playerList = new ArrayList<>(players.values());
+        int total = playerList.size();
         for (int i = 1; i <= total; i++) {
             int nextIndex = (currentPlayerIndex + i) % total;
-            if (!players.get(nextIndex).isRetired()) {
+            if (!playerList.get(nextIndex).isRetired()) {
                 currentPlayerIndex = nextIndex;
                 break;
             }
         }
-        setCurrentPlayerStatus();
+
+        int i = 0;
+        for (Player p : players.values()) {
+            p.setActive(i == currentPlayerIndex);
+            i++;
+        }
 
         if (gameController != null) {
             String nextPlayerId = getCurrentPlayer().getId();
@@ -118,56 +133,58 @@ public class GameLogic {
         }
     }
 
-    // Spieler geht in Rente – vollständige Verarbeitung
     public void playerRetires(String playerName) {
         Player player = getPlayerByName(playerName);
         player.retire();
+        retirementOrder.add(playerName);
 
-        // 1. Beruf ablegen
+        switch (retirementOrder.size()) {
+            case 1 -> player.addMoney(250000);
+            case 2 -> player.addMoney(100000);
+            case 3 -> player.addMoney(50000);
+            case 4 -> player.addMoney(10000);
+        }
+
         player.clearJob();
-
-        // 2. "Teilen macht Freude"-Karten behalten → keine Aktion
-        // 3. Kapitalanlage bleibt → keine Aktion
-
-        // 4. Schulden + Zinsen zurückzahlen
-        int schulden = player.getDebts();
-        int rueckzahlung = schulden * 25000;
-        player.removeMoney(rueckzahlung);
-        player.resetDebts();
-
-        // 5. Haus verkaufen und muss noch angepasst werden wenn die häuser fertig sind
-        if (!player.getHouseId().isEmpty()) {
-            int hauswert = player.getHouseId().get(0);
-            player.addMoney(hauswert);
-            player.removeHouse(player.getHouseId().get(0));
-        }
-
-        // 6. Zusatzrente pro Kind
-        int kinder = player.getChildren();
-        int bonus = kinder * 10000;
-        player.addMoney(bonus);
-
-        System.out.println("[RENTE] " + playerName + " geht in Rente. Bonus: " + bonus + " €, Schulden: " + rueckzahlung + " €");
-
-        if (allPlayersRetired()) {
-            endGame();
-        }else{
-            setCurrentPlayerStatus();
-        }
+        if (allPlayersRetired()) endGame();
     }
 
-    // Spielende
+    public boolean tryInvestInSlot(String playerId, int slot) {
+        if (usedInvestmentSlots.contains(slot)) return false;
+        Player player = players.get(playerId);
+        player.setInvestments(slot);
+        usedInvestmentSlots.add(slot);
+        return true;
+    }
+
+    public void payoutInvestment(String playerId, int amount) {
+        Player player = players.get(playerId);
+        player.addMoney(amount);
+    }
+
+    public void resetAndReinvest(String playerId, int newSlot) {
+        Player player = players.get(playerId);
+        int oldSlot = player.getInvestments();
+        usedInvestmentSlots.remove(oldSlot);
+        player.setInvestments(newSlot);
+        usedInvestmentSlots.add(newSlot);
+    }
+
     protected void endGame() {
         gameEnded = true;
-        List<Map.Entry<String,Player>> sorted=players.entrySet()
-                        .stream().sorted(Comparator.comparing(entry-> this.calculatePlayerWealth(entry.getValue())))
-                        .collect(Collectors.toList());
-        System.out.println("🏁 Gewonnen hat: " + players.get(0).getId());
+        List<Map.Entry<String, Player>> sorted = players.entrySet()
+                .stream().sorted((a, b) -> Integer.compare(calculateFinalWealth(b.getValue()), calculateFinalWealth(a.getValue())))
+                .collect(Collectors.toList());
+        Player winner = sorted.get(0).getValue();
+        System.out.println("🏁 Gewonnen hat: " + winner.getId() + " mit " + calculateFinalWealth(winner) + " € Vermögen!");
     }
 
-    protected int calculatePlayerWealth(Player player) {
-        int wealth = player.getMoney() - player.getDebts() * 25000;
-        return wealth;
+    private int calculateFinalWealth(Player p) {
+        int geld = p.getMoney();
+        int kinderBonus = p.getChildren() * 50000;
+        int schuldenStrafe = p.getDebts() * 60000;
+        int hauswert = p.getHouseId().values().stream().mapToInt(Integer::intValue).sum();
+        return geld + kinderBonus + hauswert - schuldenStrafe;
     }
 
     protected boolean allPlayersRetired() {
@@ -175,10 +192,9 @@ public class GameLogic {
     }
 
     public Player getCurrentPlayer() {
-        return players.get(currentPlayerIndex);
+        List<Player> playerList = new ArrayList<>(players.values());
+        return playerList.get(currentPlayerIndex);
     }
-
-
 
     private Player getPlayerByName(String name) {
         return players.values().stream()
@@ -187,6 +203,9 @@ public class GameLogic {
                 .orElseThrow(() -> new IllegalArgumentException("Spieler nicht gefunden: " + name));
     }
 
-
+    // 🟡 HIER KOMMT SPÄTER DIE FELDLOGIK DER KOLLEGEN HINZU
+    // z. B. handleActionField(Player), handleHouseField(Player), ...
 }
+
+
 

@@ -80,6 +80,6 @@ public class GameController {
 
         gameLogic.performTurn(player, spinResult);
     }
-
 }
+
 
