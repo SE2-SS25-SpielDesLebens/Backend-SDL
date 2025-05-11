@@ -82,9 +82,7 @@ public class PlayerServiceTest {
         Player lowMoneyPlayer = new Player("Tom", 99, 1000, 0, 0, 0, "Bachelor", "Single", "Pilot", 0, 0, 8);
         service.addPlayer(lowMoneyPlayer);
 
-        assertThrows(IllegalArgumentException.class, () -> {
-            service.investForPlayer(99);
-        });
+        assertThrows(IllegalArgumentException.class, () -> service.investForPlayer(99));
     }
 
     @Test
