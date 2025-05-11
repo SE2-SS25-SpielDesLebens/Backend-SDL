@@ -1,8 +1,11 @@
 package GameTest;
 
-import Game.Player;
+import at.aau.serg.websocketserver.Player.Player;
+import at.aau.serg.websocketserver.session.Job;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -12,28 +15,29 @@ class PlayerTest {
 
     @BeforeEach
     void setUp() {
-        player = new Player("testPlayer");
+        player = new Player("P1");
     }
 
     @Test
-    void player_ShouldBeInitializedCorrectly() {
-        assertEquals("testPlayer", player.getId());
+    void initialState_ShouldBeCorrect() {
+        assertEquals("P1", player.getId());
         assertEquals(0, player.getMoney());
         assertEquals(0, player.getDebts());
+        assertEquals(0, player.getSalary());
+        assertEquals(0, player.getInvestments());
+        assertFalse(player.getEducation());
         assertFalse(player.isMarried());
         assertFalse(player.isRetired());
+        assertFalse(player.isActive());
+        assertFalse(player.isHost());
+        assertNull(player.getJobId());
         assertEquals(0, player.getChildren());
-        assertTrue(player.getLifeCards().isEmpty());
-        assertTrue(player.getShareJoyCards().isEmpty());
-        assertNull(player.getJob());
-        assertNull(player.getAcademicJob());
-        assertNull(player.getHouse());
-        assertEquals(0, player.getHouseValue());
-        assertNull(player.getCarColor());
+        assertEquals(0, player.getFieldID());
+        assertTrue(player.getHouseId().isEmpty());
     }
 
     @Test
-    void money_ShouldBeAddedAndRemovedCorrectly() {
+    void addAndRemoveMoney_ShouldUpdateBalance() {
         player.addMoney(10000);
         assertEquals(10000, player.getMoney());
 
@@ -42,7 +46,7 @@ class PlayerTest {
     }
 
     @Test
-    void debts_ShouldBeAddedAndResetCorrectly() {
+    void debtManagement_ShouldWorkCorrectly() {
         player.addDebt();
         player.addDebt();
         assertEquals(2, player.getDebts());
@@ -52,73 +56,83 @@ class PlayerTest {
     }
 
     @Test
-    void lifeCards_ShouldBeStoredCorrectly() {
-        player.addLifeCard("Reise nach Paris");
-        player.addLifeCard("Hausbau");
-
-        assertEquals(2, player.getLifeCards().size());
-        assertTrue(player.getLifeCards().contains("Reise nach Paris"));
+    void takeLoan_ShouldAddMoneyAndDebt() {
+        player.takeLoan();
+        assertEquals(20000, player.getMoney());
+        assertEquals(1, player.getDebts());
     }
 
     @Test
-    void shareJoyCards_ShouldBeStoredCorrectly() {
-        player.addShareJoyCard("Spende");
-        assertEquals(1, player.getShareJoyCards().size());
-        assertEquals("Spende", player.getShareJoyCards().get(0));
+    void repayLoan_ShouldReduceDebtAndMoney_WhenSufficientFunds() {
+        player.takeLoan(); // +20000 +1 debt
+        player.addMoney(10000); // total 30000
+
+        player.repayLoan(); // -25000, -1 debt
+
+        assertEquals(5000, player.getMoney());
+        assertEquals(0, player.getDebts());
     }
 
     @Test
-    void jobAssignment_ShouldWorkAndBeClearable() {
-        player.setJob("Polizist");
-        player.setAcademicJob("Arzt");
+    void repayLoan_ShouldDoNothing_WhenNotEnoughMoney() {
+        player.takeLoan();
+        player.removeMoney(15000); // now 5000
+        player.repayLoan();
 
-        assertEquals("Polizist", player.getJob());
-        assertEquals("Arzt", player.getAcademicJob());
+        assertEquals(5000, player.getMoney());
+        assertEquals(1, player.getDebts());
+    }
+
+    @Test
+    void jobAssignmentAndClear_ShouldWork() {
+        Job job = new Job(1, "Entwickler", 50000, 10000, false);
+        player.assignJob(job);
+
+        assertEquals(job, player.getJobId());
 
         player.clearJob();
-        assertNull(player.getJob());
-        assertNull(player.getAcademicJob());
+        assertNull(player.getJobId());
     }
 
     @Test
-    void house_ShouldBeSetAndRemovedCorrectly() {
-        player.setHouse("Villa");
-        player.setHouseValue(80000);
+    void houseManagement_ShouldAddAndRemove() {
+        player.getHouseId().put(101, 1);
+        player.getHouseId().put(102, 1);
+        assertEquals(2, player.getHouseId().size());
 
-        assertEquals("Villa", player.getHouse());
-        assertEquals(80000, player.getHouseValue());
-
-        player.removeHouse();
-        assertNull(player.getHouse());
-        assertEquals(0, player.getHouseValue());
+        player.removeHouse(101);
+        assertEquals(1, player.getHouseId().size());
+        assertFalse(player.getHouseId().containsKey(101));
     }
 
     @Test
-    void marriage_ShouldUpdateState() {
-        assertFalse(player.isMarried());
+    void statusChanges_ShouldWorkCorrectly() {
         player.marry();
-        assertTrue(player.isMarried());
-    }
+        assertTrue(player.getRelationship());
 
-    @Test
-    void children_ShouldIncreaseCorrectly() {
-        assertEquals(0, player.getChildren());
         player.addChild();
         player.addChild();
         assertEquals(2, player.getChildren());
-    }
 
-    @Test
-    void retirement_ShouldUpdateState() {
-        assertFalse(player.isRetired());
         player.retire();
         assertTrue(player.isRetired());
+        assertFalse(player.isActive());
     }
 
     @Test
-    void carColor_ShouldBeSetAndRetrieved() {
-        player.setCarColor("blau");
-        assertEquals("blau", player.getCarColor());
+    void carColorAndHostStatus_SetAndGetCorrectly() {
+        player.setCarColor("gelb");
+        assertEquals("gelb", player.getCarColor());
+
+        player.setHost(true);
+        assertTrue(player.isHost());
+    }
+
+    @Test
+    void fieldId_ShouldBeSetAndReturned() {
+        player.setFieldId(42);
+        assertEquals(42, player.getFieldID());
     }
 }
+
 

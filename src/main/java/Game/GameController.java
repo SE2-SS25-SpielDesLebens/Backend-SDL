@@ -1,5 +1,7 @@
 package Game;
 
+import at.aau.serg.websocketserver.Player.Player;
+
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -79,37 +81,5 @@ public class GameController {
         gameLogic.performTurn(player, spinResult);
     }
 
-    public void enforceSpeedingFine(String policeId, String offenderId) {
-        Player police = gameLogic.getPlayers().stream()
-                .filter(p -> p.getId().equals(policeId) && p.hasPoliceCard())
-                .findFirst()
-                .orElse(null);
-
-        Player offender = gameLogic.getPlayers().stream()
-                .filter(p -> p.getId().equals(offenderId))
-                .findFirst()
-                .orElse(null);
-
-        if (police == null || offender == null) {
-            System.out.println("[FEHLER] Ungültige Spieler-ID oder keine Polizistenrolle vorhanden.");
-            return;
-        }
-
-        if (offender.getMoney() >= 5000) {
-            offender.removeMoney(5000);
-            police.addMoney(5000);
-            System.out.println("[STRAFE] " + offenderId + " zahlt 5.000 € an " + policeId + ".");
-        } else {
-            System.out.println("[FEHLER] " + offenderId + " hat nicht genug Geld für die Strafe.");
-        }
-    }
-
-    public boolean attemptStealLifeCard(String playerId) {
-        if (!gameLogic.canStealLifeCard(playerId)) {
-            System.out.println("[DIEBSTAHL] Nicht erlaubt für " + playerId);
-            return false;
-        }
-        return gameLogic.stealLifeCard(playerId);
-    }
 }
 

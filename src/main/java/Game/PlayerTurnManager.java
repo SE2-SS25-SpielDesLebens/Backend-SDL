@@ -1,5 +1,7 @@
 package Game;
 
+import at.aau.serg.websocketserver.Player.Player;
+
 public class PlayerTurnManager {
 
     private final GameLogic gameLogic;
@@ -82,25 +84,7 @@ public class PlayerTurnManager {
 
         System.out.println("[DREH] " + playerId + " hat " + spinResult + " gedreht.");
 
-        // 🚨 Prüfung auf zu schnelles Fahren (10)
-        if (spinResult == 10) {
-            Player police = gameLogic.getPolicePlayer();
-            if (police != null && !police.getId().equals(playerId)) {
-                System.out.println("[ZUSCHNELL] " + playerId + " ist 10 gefahren. Polizist:in " + police.getId() + " kann jetzt Strafe fordern.");
-            } else if (police == null) {
-                System.out.println("[ZUSCHNELL] " + playerId + " fährt 10, aber es gibt keine Polizistin → keine Strafe.");
-            }
-        }
-
         // TODO: Feldlogik wird von externen Modulen übernommen
-
-        // 💡 Automatischer Versuch zu stehlen (optional)
-        if (gameLogic.canStealLifeCard(playerId)) {
-            boolean stolen = gameLogic.stealLifeCard(playerId);
-            if (stolen) {
-                System.out.println("[DIEBSTAHL] " + playerId + " hat erfolgreich ein LebensKärtchen gestohlen.");
-            }
-        }
 
         gameLogic.performTurn(player, spinResult);
     }
