@@ -1,4 +1,4 @@
-package at.aau.serg.websocketserver.websocket.broker;
+package at.aau.serg.websocketserver.Player;
 
 import org.springframework.stereotype.Service;
 import java.util.ArrayList;
@@ -11,8 +11,8 @@ public class PlayerService {
     private int nextId = 3;
 
     public PlayerService() {
-        players.add(new Player("Hans", 1, 10000, 0, 0, 0, "Bachelor", "Single", "Kellner", 0, 0));
-        players.add(new Player("Eva", 2, 15000, 0, 0, 1, "Master", "Verheiratet", "Koch", 0, 0));
+        players.add(new Player("Hans", 1, 10000, 0, 0, 0, "Bachelor", "Single", "Kellner", 0, 0, 0));
+        players.add(new Player("Eva", 2, 15000, 0, 0, 1, "Master", "Verheiratet", "Koch", 0, 0, 0));
     }
 
     public List<Player> getAllPlayers() {
@@ -45,7 +45,8 @@ public class PlayerService {
                 player.getRelationship(),
                 player.getCareer(),
                 player.getJobId(),
-                player.getHouseId()
+                player.getHouseId(),
+                player.getFieldID()
         );
         players.add(newPlayer);
         System.out.println("Neuer Spieler hinzugefügt: " + newPlayer.getName() + " mit ID " + newPlayer.getId());
@@ -75,7 +76,8 @@ public class PlayerService {
                 player.getRelationship(),
                 player.getCareer(),
                 player.getJobId(),
-                player.getHouseId()
+                player.getHouseId(),
+                player.getFieldID()
         );
 
         updatePlayer(player.getId(), updatedPlayer);
@@ -107,7 +109,8 @@ public class PlayerService {
                 "Verheiratet",
                 player.getCareer(),
                 player.getJobId(),
-                player.getHouseId()
+                player.getHouseId(),
+                player.getFieldID()
         );
 
         updatePlayer(player.getId(), updatedPlayer);
@@ -139,7 +142,8 @@ public class PlayerService {
                 player.getRelationship(),
                 player.getCareer(),
                 player.getJobId(),
-                player.getHouseId()
+                player.getHouseId(),
+                player.getFieldID()
         );
 
         updatePlayer(player.getId(), updatedPlayer);
