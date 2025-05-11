@@ -16,19 +16,26 @@ public class Player {
     private int childrenCount;
     private boolean retired;
     private String carColor;
+    private boolean active;
+    private boolean hasPoliceCard;
+
+    private int baseSalary;
+    private int salaryBonus;
 
     public Player(String id) {
         this.id = id;
-        this.money = 0; // Startkapital
+        this.money = 0;
         this.debts = 0;
         this.lifeCards = new ArrayList<>();
         this.shareJoyCards = new ArrayList<>();
         this.married = false;
         this.childrenCount = 0;
         this.retired = false;
+        this.active = false;
+        this.hasPoliceCard = false;
+        this.baseSalary = 0;
+        this.salaryBonus = 0;
     }
-
-    // ───────────── Getter / Setter ─────────────
 
     public String getId() {
         return id;
@@ -56,6 +63,18 @@ public class Player {
 
     public void resetDebts() {
         this.debts = 0;
+    }
+
+    public void takeLoan() {
+        addDebt();
+        addMoney(20000);
+    }
+
+    public void repayLoan() {
+        if (debts > 0 && money >= 25000) {
+            removeMoney(25000);
+            debts--;
+        }
     }
 
     public List<String> getLifeCards() {
@@ -138,6 +157,7 @@ public class Player {
 
     public void retire() {
         this.retired = true;
+        this.active = false;
     }
 
     public String getCarColor() {
@@ -147,5 +167,42 @@ public class Player {
     public void setCarColor(String color) {
         this.carColor = color;
     }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
+    public boolean hasPoliceCard() {
+        return hasPoliceCard;
+    }
+
+    public void assignPoliceCard() {
+        this.hasPoliceCard = true;
+    }
+
+    public int getBaseSalary() {
+        return baseSalary;
+    }
+
+    public void setBaseSalary(int baseSalary) {
+        this.baseSalary = baseSalary;
+    }
+
+    public int getSalaryBonus() {
+        return salaryBonus;
+    }
+
+    public void addSalaryBonus(int bonus) {
+        this.salaryBonus += bonus;
+    }
+
+    public int getTotalSalary() {
+        return baseSalary + salaryBonus;
+    }
 }
+
 

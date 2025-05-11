@@ -13,36 +13,58 @@ public class GameLogic {
     private boolean gameEnded = false;
 
     private JobService jobService;
+    private GameController gameController;
+    private PlayerTurnManager turnManager;
+
+    // Farbreihenfolge für Autos
+    private static final List<String> CAR_COLORS = List.of("Rot", "Blau", "Gelb", "Grün");
+    private static final int MAX_PLAYERS = 4;
+
+    private final List<String> millionaersvillaPlayers = new ArrayList<>();
+    private final Set<String> retirementHomePlayers = new HashSet<>();
+    private final Set<String> completedVillaChoice = new HashSet<>();
+
+    public void setTurnManager(PlayerTurnManager turnManager) {
+        this.turnManager = turnManager;
+    }
 
     public void setJobService(JobService jobService) {
         this.jobService = jobService;
     }
 
-    // Spielerregistrierung
-    public void registerPlayer(String id) {
-        players.add(new Player(id));
+    public void setGameController(GameController gameController) {
+        this.gameController = gameController;
     }
 
-    // Spielvorbereitung: Startgeld & Auto
-    public void prepareGameStart(List<String> carColors) {
+    // Spielerregistrierung
+    public boolean registerPlayer(String id) {
+        if (players.size() >= MAX_PLAYERS) {
+            System.out.println("[LOBBY-VOLL] Spieler " + id + " konnte nicht beitreten. Lobby ist voll.");
+            return false;
+        }
+
+        Player player = new Player(id);
+        players.add(player);
+
+        int playerIndex = players.size();
+        player.setCarColor(CAR_COLORS.get(playerIndex - 1));
+        player.addMoney(10000); // Startkapital
+        System.out.println("[JOIN] " + id + " wird Spieler " + playerIndex + " mit Farbe " + player.getCarColor());
+        return true;
+    }
+
+    // Spielvorbereitung: z.B. für zusätzliche Setups
+    public void prepareGameStart() {
+        for (Player p : players) {
+            System.out.println("[SETUP] " + p.getId() + " erhält 10.000 € und Auto: " + p.getCarColor());
+        }
+        setCurrentPlayerStatus();
+    }
+
+    private void setCurrentPlayerStatus() {
         for (int i = 0; i < players.size(); i++) {
             Player p = players.get(i);
-            p.addMoney(10000);
-            p.setCarColor(carColors.get(i));
-            // Platzhalter: 2 "Teilen macht Freude"-Karten könnten hier auch gesetzt werden
-            System.out.println("[SETUP] " + p.getId() + " erhält 10.000 € und Auto: " + carColors.get(i));
-        }
-    }
-
-    // Reihenfolge bestimmen (höchster Drehwert beginnt)
-    public void determineFirstPlayer(Map<String, Integer> spinResults) {
-        String winnerId = Collections.max(spinResults.entrySet(), Map.Entry.comparingByValue()).getKey();
-        for (int i = 0; i < players.size(); i++) {
-            if (players.get(i).getId().equals(winnerId)) {
-                currentPlayerIndex = i;
-                System.out.println("[START] " + winnerId + " beginnt das Spiel.");
-                break;
-            }
+            p.setActive(i == currentPlayerIndex);
         }
     }
 
@@ -67,23 +89,35 @@ public class GameLogic {
 
     // Ein Spieler führt einen Spielzug durch
     public void performTurn(Player player, int spinResult) {
-        System.out.println("[ZUG] " + player.getId() + " dreht: " + spinResult);
-
-        // TODO: Bewegung auf Spielfeld
-        // TODO: handleField(player)
-
-        // Zug beenden
-        nextTurn();
+        if (turnManager != null) {
+            turnManager.completeTurn(player.getId(), spinResult);
+        } else {
+            System.out.println("[FEHLER] Kein TurnManager verfügbar – Zug wird lokal abgeschlossen.");
+            nextTurn();
+        }
     }
+
 
     // Nächster Spieler
     public void nextTurn() {
         if (allPlayersRetired()) {
             endGame();
-        } else {
-            do {
-                currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
-            } while (players.get(currentPlayerIndex).isRetired());
+            return;
+        }
+
+        int total = players.size();
+        for (int i = 1; i <= total; i++) {
+            int nextIndex = (currentPlayerIndex + i) % total;
+            if (!players.get(nextIndex).isRetired()) {
+                currentPlayerIndex = nextIndex;
+                break;
+            }
+        }
+        setCurrentPlayerStatus();
+
+        if (gameController != null) {
+            String nextPlayerId = getCurrentPlayer().getId();
+            gameController.startPlayerTurn(nextPlayerId, false);
         }
     }
 
@@ -120,6 +154,8 @@ public class GameLogic {
 
         if (allPlayersRetired()) {
             endGame();
+        }else{
+            setCurrentPlayerStatus();
         }
     }
 
@@ -142,6 +178,71 @@ public class GameLogic {
 
     public Player getCurrentPlayer() {
         return players.get(currentPlayerIndex);
+    }
+
+    public Player getPolicePlayer() {
+        return players.stream()
+                .filter(Player::hasPoliceCard)
+                .findFirst()
+                .orElse(null);
+    }
+
+    public boolean isPlayerInRetirement(String playerId) {
+        return retirementHomePlayers.contains(playerId);
+    }
+
+    public boolean isPlayerInVilla(String playerId) {
+        return millionaersvillaPlayers.contains(playerId);
+    }
+
+    public void enterMillionaersvilla(String playerId) {
+        if (!millionaersvillaPlayers.contains(playerId)) {
+            millionaersvillaPlayers.add(playerId);
+        }
+        int position = millionaersvillaPlayers.indexOf(playerId);
+        if (position < 3) {
+            System.out.println("[VILLA] " + playerId + " darf ein LebensKärtchen wählen.");
+        } else {
+            System.out.println("[VILLA] " + playerId + " geht leer aus.");
+        }
+    }
+
+    public boolean hasPlayerMadeVillaChoice(String playerId) {
+        return completedVillaChoice.contains(playerId);
+    }
+
+    public void markVillaChoiceComplete(String playerId) {
+        completedVillaChoice.add(playerId);
+    }
+
+    public Player findStealableVillaPlayer(String stealerId) {
+        if (isPlayerInRetirement(stealerId)) return null;
+        for (Player p : players) {
+            if (!p.getId().equals(stealerId)
+                    && isPlayerInVilla(p.getId())
+                    && !p.getLifeCards().isEmpty()) {
+                return p;
+            }
+        }
+        return null;
+    }
+
+    public boolean canStealLifeCard(String stealerId) {
+        return findStealableVillaPlayer(stealerId) != null;
+    }
+
+    public boolean stealLifeCard(String stealerId) {
+        Player stealer = getPlayerByName(stealerId);
+        Player victim = findStealableVillaPlayer(stealerId);
+
+        if (stealer == null || victim == null) return false;
+        List<String> victimCards = victim.getLifeCards();
+
+        if (victimCards.isEmpty()) return false;
+        String stolenCard = victimCards.remove(0);
+        stealer.addLifeCard(stolenCard);
+        System.out.println("[DIEBSTAHL] " + stealerId + " stiehlt eine Lebenskarte von " + victim.getId());
+        return true;
     }
 
     private Player getPlayerByName(String name) {
