@@ -8,7 +8,6 @@ import java.util.Optional;
 @Service
 public class PlayerService {
     private final List<Player> players = new ArrayList<>();
-    private int nextId = 3;
 
     public PlayerService() {
         players.add(new Player("Player1"));
