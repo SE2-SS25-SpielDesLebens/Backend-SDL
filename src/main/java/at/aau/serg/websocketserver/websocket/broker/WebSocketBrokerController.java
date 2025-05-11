@@ -52,17 +52,11 @@ public class WebSocketBrokerController {
         if (action == null) {
             content = "❌ Keine Aktion angegeben.";
         } else {
-            switch (action) {
-                case "createLobby":
-                    content = "🆕 Lobby [" + gameId + "] von " + message.getPlayerName() + " erstellt.";
-                    break;
-                case "joinLobby":
-                    content = "✅ " + message.getPlayerName() + " ist Lobby [" + gameId + "] beigetreten.";
-                    break;
-                default:
-                    content = "Unbekannte Lobby-Aktion.";
-                    break;
-            }
+            content = switch (action) {
+                case "createLobby" -> "🆕 Lobby [" + gameId + "] von " + message.getPlayerName() + " erstellt.";
+                case "joinLobby" -> "✅ " + message.getPlayerName() + " ist Lobby [" + gameId + "] beigetreten.";
+                default -> "Unbekannte Lobby-Aktion.";
+            };
         }
 
         System.out.println("[LOBBY] [" + gameId + "] " + message.getPlayerName() + ": " + content);
