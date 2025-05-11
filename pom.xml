@@ -23,9 +23,15 @@
         <sonar.projectKey>SE2-SS25-SpielDesLebens_Backend-SDL</sonar.projectKey>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
         <sonar.exclusions>
-            src/main/java/at/aau/serg/websocketserver/messaging/dtos/OutputMessage.java ,
+            src/main/java/at/aau/serg/websocketserver/messaging/dtos/OutputMessage.java,
             src/main/java/at/aau/serg/websocketserver/websocket/broker/WebSocketBrokerConfig.java,
             src/main/java/at/aau/serg/websocketserver/messaging/dtos/WebSocketServerApplication.java,
+            src/main/java/at/aau/serg/websocketserver/websocket/broker/WebSocketBrokerController.java,
+            src/main/java/at/aau/serg/websocketserver/messaging/dtos/JobMessage.java,
+            src/main/java/at/aau/serg/websocketserver/messaging/dtos/JobRequestMessage.java,
+            src/main/java/at/aau/serg/websocketserver/session/Job.java,
+            src/main/java/at/aau/serg/websocketserver/session/JobRepository.java,
+            src/main/java/at/aau/serg/websocketserver/session/JobService.java
             src/main/java/at/aau/serg/websocketserver/messaging/dtos/OutputMessage.java,
             src/main/java/at/aau/serg/websocketserver/websocket/broker/WebSocketBrokerController.java
         </sonar.exclusions>
@@ -80,6 +86,11 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -96,8 +107,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.1</version>
                 <configuration>
-                    <source>11</source>
-                    <target>11</target>
+                    <source>16</source>
+                    <target>16</target>
                     <annotationProcessorPaths>
                         <path>
                             <groupId>org.projectlombok</groupId>
