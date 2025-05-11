@@ -1,15 +1,35 @@
 package at.aau.serg.websocketserver.websocket.broker;
 
+import at.aau.serg.websocketserver.messaging.dtos.JobMessage;
+import at.aau.serg.websocketserver.messaging.dtos.JobRequestMessage;
 import at.aau.serg.websocketserver.messaging.dtos.OutputMessage;
 import at.aau.serg.websocketserver.messaging.dtos.StompMessage;
+import at.aau.serg.websocketserver.session.Job;
+import at.aau.serg.websocketserver.session.JobService;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Controller
 public class WebSocketBrokerController {
+
+    private final JobService jobService;
+    private final SimpMessagingTemplate messagingTemplate;
+
+    public WebSocketBrokerController(JobService jobService,
+                                     SimpMessagingTemplate messagingTemplate) {
+        this.jobService = jobService;
+        this.messagingTemplate = messagingTemplate;
+    }
 
     @MessageMapping("/move")
     @SendTo("/topic/game") // optional: dynamisch mit gameId (siehe Kommentar unten)
@@ -63,5 +83,101 @@ public class WebSocketBrokerController {
                 message.getMessageText(),
                 LocalDateTime.now().toString()
         );
+    }
+
+    /**
+     * Wird aufgerufen, wenn ein Spiel startet. Legt über JobService
+     * das Repository für diese gameId an.
+     */
+
+    @MessageMapping("/game/start/{gameId}")
+    public void handleGameStart(@DestinationVariable int gameId) {
+        // Erstelle oder lade das Repo für diese gameId
+        jobService.getOrCreateRepository(gameId);
+        // kein convertAndSend, es wird nichts zurückgeschickt
+    }
+
+
+    /**
+     * Spieler fragt Jobs an: Holt sich das korrekte Repository
+     * über JobService und sendet zwei Jobs zurück.
+     */
+    @MessageMapping("/jobs/{gameId}/{playerName}/request")
+    public void handleJobRequest(@DestinationVariable int gameId,
+                                 @DestinationVariable String playerName,
+                                 @Payload JobRequestMessage msg) {
+        System.out.println("[JOB_REQUEST] Spiel " + gameId +
+                ", Spieler " + playerName +
+                ", hasDegree=" + msg.hasDegree());
+
+        boolean hasDegree = msg.hasDegree();
+        var repo = jobService.getOrCreateRepository(gameId);
+        List<Job> jobsToSend = new ArrayList<>();
+
+        Optional<Job> current = repo.getCurrentJobForPlayer(playerName);
+        if (current.isPresent()) {
+            jobsToSend.add(current.get());
+            List<Job> random = repo.getRandomAvailableJobs(hasDegree, 1);
+            random.remove(current.get());
+            jobsToSend.addAll(random);
+        } else {
+            jobsToSend = repo.getRandomAvailableJobs(hasDegree, 2);
+        }
+
+        List<JobMessage> dtos = jobsToSend.stream()
+                .map(j -> new JobMessage(
+                        j.getJobId(),
+                        j.getTitle(),
+                        j.getSalary(),
+                        j.getBonusSalary(),
+                        j.isRequiresDegree(),
+                        j.isTaken(),
+                        gameId
+                ))
+                .toList();
+
+        String dest = String.format("/topic/%d/jobs/%s", gameId, playerName);
+        messagingTemplate.convertAndSend(dest, dtos);
+
+        // NEU: Ausgabe nachdem die beiden Jobs verschickt wurden
+        System.out.println("[JOB_RESPONSE] Spiel " + gameId +
+                ", Spieler " + playerName +
+                ", gesendete Jobs: " +
+                dtos.stream()
+                        .map(JobMessage::getTitle)
+                        .reduce((a, b) -> a + " + " + b)
+                        .orElse("<keine>"));
+    }
+
+    /**
+     * Spieler wählt einen Job aus: Repository-Zugriff über JobService.
+     */
+    @MessageMapping("/jobs/{gameId}/{playerName}/select")
+    public void handleJobSelection(@DestinationVariable int gameId,
+                                   @DestinationVariable String playerName,
+                                   @Payload JobMessage msg) {
+        System.out.println("[JOB_SELECT_REQUEST] Spiel " + gameId +
+                ", Spieler " + playerName +
+                ", gewählter JobId=" + msg.getJobId());
+
+        var repo = jobService.getOrCreateRepository(gameId);
+        Optional<Job> currentOpt = repo.getCurrentJobForPlayer(playerName);
+
+        // Neu: Wenn der aktuelle Job bereits dieser ist, nichts tun
+        if (currentOpt.isPresent() && currentOpt.get().getJobId() == msg.getJobId()) {
+            System.out.println("[JOB_SELECT_SKIP] Spieler " + playerName +
+                    " hat JobId=" + msg.getJobId() + " bereits zugewiesen – überspringe");
+            return;
+        }
+
+        // Sonst ganz normal zuweisen
+        repo.findJobById(msg.getJobId())
+                .ifPresent(job -> {
+                    repo.assignJobToPlayer(playerName, job);
+                    System.out.println("[JOB_SELECT] Spiel " + gameId +
+                            ", Spieler " + playerName +
+                            " erhält neuen Job: " + job.getTitle() +
+                            " (ID " + job.getJobId() + ")");
+                });
     }
 }

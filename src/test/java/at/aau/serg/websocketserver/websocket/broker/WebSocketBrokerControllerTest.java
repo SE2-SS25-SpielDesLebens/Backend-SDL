@@ -2,13 +2,32 @@ package at.aau.serg.websocketserver.websocket.broker;
 
 import at.aau.serg.websocketserver.messaging.dtos.OutputMessage;
 import at.aau.serg.websocketserver.messaging.dtos.StompMessage;
-import org.junit.jupiter.api.Test;
+import at.aau.serg.websocketserver.session.JobService;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.Assert.*;
 
-class WebSocketBrokerControllerTest {
+@RunWith(MockitoJUnitRunner.class)
+public class WebSocketBrokerControllerTest {
 
-    private final WebSocketBrokerController controller = new WebSocketBrokerController();
+    @Mock
+    private JobService jobService;
+
+    @Mock
+    private SimpMessagingTemplate messagingTemplate;
+
+    private WebSocketBrokerController controller;
+
+    @Before
+    public void setUp() {
+        // hier injizieren wir die beiden Mocks in den Controller
+        controller = new WebSocketBrokerController(jobService, messagingTemplate);
+    }
 
     @Test
     public void testHandleMove() {
