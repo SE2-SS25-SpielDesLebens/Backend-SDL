@@ -3,6 +3,8 @@ package at.aau.serg.websocketserver.lobby;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import at.aau.serg.websocketserver.Player.*;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class LobbyTest {
@@ -11,7 +13,7 @@ public class LobbyTest {
 
     @BeforeEach
     void setUp(){
-        host = new Player();
+        host = new Player("player1");
         lobby = new Lobby("LOBBY1", host);
     }
 
@@ -24,7 +26,7 @@ public class LobbyTest {
 
     @Test
     void testAddPlayerSuccess(){
-        Player p2 = new Player();
+        Player p2 = new Player("player1");
         boolean added = lobby.addPlayer(p2);
         assertTrue(added);
         assertEquals(2, lobby.getPlayers().size());
@@ -33,10 +35,10 @@ public class LobbyTest {
     @Test
     void testAddPlayerFailsWhenFull(){
         for(int i = 0; i<=3; i++){
-            lobby.addPlayer(new Player());
+            lobby.addPlayer(new Player("player1"));
         }
         //jetzt 4 Spieler vorhanden
-        boolean result = lobby.addPlayer(new Player());
+        boolean result = lobby.addPlayer(new Player("player1"));
         assertFalse(result);
         assertEquals(4, lobby.getPlayers().size());
     }
@@ -59,7 +61,7 @@ public class LobbyTest {
     void testIsFull(){
         assertFalse(lobby.isFull());
         for(int i = 0; i<=3; i++){
-            lobby.addPlayer(new Player());
+            lobby.addPlayer(new Player("player1"));
         }
         assertTrue(lobby.isFull());
     }

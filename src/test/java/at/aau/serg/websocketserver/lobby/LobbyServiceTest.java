@@ -4,6 +4,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import at.aau.serg.websocketserver.Player.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class LobbyServiceTest {
@@ -16,7 +17,7 @@ public class LobbyServiceTest {
 
     @Test
     void testCreateLobby(){
-        Player host = new Player();
+        Player host = new Player("player1");
         Lobby lobby = service.createLobby(host);
 
         assertNotNull(lobby);
@@ -27,10 +28,10 @@ public class LobbyServiceTest {
 
     @Test
     void testJoinLobby(){
-        Player host = new Player();
+        Player host = new Player("player1");
         Lobby lobby = service.createLobby(host);
 
-        Player p2 = new Player();
+        Player p2 = new Player("player2");
         service.joinLobby(lobby.getId(), p2);
 
         assertEquals(2, lobby.getPlayers().size());
@@ -39,17 +40,17 @@ public class LobbyServiceTest {
 
     @Test
     void testJoinLobby2(){
-        Player host = new Player();
+        Player host = new Player("player1");
         Lobby lobby = service.createLobby(host);
         for(int i = 0; i<3; i++) {
-            service.joinLobby(lobby.getId(), new Player());
+            service.joinLobby(lobby.getId(), new Player("player " + i + " "));
         }
-        assertThrows(IllegalStateException.class, () -> service.joinLobby(lobby.getId(), new Player()));
+        assertThrows(IllegalStateException.class, () -> service.joinLobby(lobby.getId(), new Player("player")));
     }
 
     @Test
     void testLeaveLobby(){
-        Player host = new Player();
+        Player host = new Player("player1");
         Lobby lobby = service.createLobby(host);
         service.leaveLobby(lobby.getId(), host);
 
@@ -58,26 +59,26 @@ public class LobbyServiceTest {
 
     @Test
     void testLeaveLobbyException(){
-        Player host = new Player();
+        Player host = new Player("player1");
         Lobby lobby = service.createLobby(host);
         assertThrows(IllegalArgumentException.class, ()-> service.leaveLobby("invalidID", host));
-        assertThrows(IllegalStateException.class, ()-> service.leaveLobby(lobby.getId(), new Player()));
+        assertThrows(IllegalStateException.class, ()-> service.leaveLobby(lobby.getId(), new Player("player2")));
     }
 
     @Test
     void testDeleteLobby(){
-        Player host = new Player();
+        Player host = new Player("player1");
         Lobby lobby = service.createLobby(host);
         String id = lobby.getId();
 
         service.deleteLobby(id);
-        assertThrows(IllegalArgumentException.class, ()-> service.joinLobby(id, new Player()));
+        assertThrows(IllegalArgumentException.class, ()-> service.joinLobby(id, new Player("player2")));
     }
 
     @Test
     void testUniqueIdGeneration(){
-        Player host1 = new Player();
-        Player host2 = new Player();
+        Player host1 = new Player("player1");
+        Player host2 = new Player("player2");
 
         Lobby l1 = service.createLobby(host1);
         Lobby l2 = service.createLobby(host2);
@@ -87,7 +88,7 @@ public class LobbyServiceTest {
 
     @Test
     void testCleanUpLobby(){
-        Player host = new Player();
+        Player host = new Player("player1");
         Lobby lobby = service.createLobby(host);
         String id = lobby.getId();
 
