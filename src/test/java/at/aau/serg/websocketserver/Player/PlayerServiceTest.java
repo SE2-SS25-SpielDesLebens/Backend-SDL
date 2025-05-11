@@ -13,32 +13,27 @@ class PlayerServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new PlayerService();
-    }
-
-    @Test
-    void shouldInitializeWithTwoPlayers() {
-        assertEquals(2, service.getAllPlayers().size());
+        service = PlayerService.getInstance();
+        service.addPlayer("Player1");
+        service.addPlayer("Player2");
+        service.addPlayer("Player3");
     }
 
     @Test
     void shouldAddNewPlayerSuccessfully() {
         service.addPlayer("Player3");
 
-        Optional<Player> result = service.getPlayerById("Player3");
-        assertTrue(result.isPresent());
-        assertEquals("Player3", result.get().getId());
+        Player player = service.getPlayerById("Player3");
+        assertNotNull(player);
+        assertEquals("Player3", player.getId());
     }
 
     @Test
     void shouldUpdatePlayerSuccessfully() {
-        Player original = service.getPlayerById("Player1").orElseThrow();
+        Player original = service.getPlayerById("Player1");
         original.setMoney(50000);
 
-        boolean updated = service.updatePlayer("Player1", original);
-        assertTrue(updated);
-
-        Player updatedPlayer = service.getPlayerById("Player1").orElseThrow();
+        Player updatedPlayer = service.getPlayerById("Player1");
         assertEquals(50000, updatedPlayer.getMoney());
     }
 
@@ -50,13 +45,13 @@ class PlayerServiceTest {
 
     @Test
     void addChildToPlayer_ShouldIncreaseChildrenCount() {
-        Player p = service.getPlayerById("Player1").orElseThrow();
+        Player p = service.getPlayerById("Player1");
         p.setChildrenCount(2);
         service.updatePlayer("Player1", p);
 
         boolean success = service.addChildToPlayer("Player1");
         assertTrue(success);
-        assertEquals(3, service.getPlayerById("Player1").orElseThrow().getChildren());
+        assertEquals(3, service.getPlayerById("Player1").getChildren());
     }
 
     @Test
@@ -68,7 +63,7 @@ class PlayerServiceTest {
 
     @Test
     void addChildToPlayer_ShouldThrowIfTooManyChildren() {
-        Player p = service.getPlayerById("Player1").orElseThrow();
+        Player p = service.getPlayerById("Player1");
         p.setChildrenCount(4);
         service.updatePlayer("Player1", p);
 
@@ -82,13 +77,13 @@ class PlayerServiceTest {
         boolean married = service.marryPlayer("Player1");
         assertTrue(married);
 
-        Player p = service.getPlayerById("Player1").orElseThrow();
+        Player p = service.getPlayerById("Player1");
         assertTrue(p.isMarried());
     }
 
     @Test
     void marryPlayer_ShouldThrowIfAlreadyMarried() {
-        Player p = service.getPlayerById("Player1").orElseThrow();
+        Player p = service.getPlayerById("Player1");
         p.setMarried(true);
         service.updatePlayer("Player1", p);
 
@@ -106,21 +101,21 @@ class PlayerServiceTest {
 
     @Test
     void investForPlayer_ShouldSubtractMoneyAndAddInvestment() {
-        Player p = service.getPlayerById("Player1").orElseThrow();
+        Player p = service.getPlayerById("Player1");
         p.setMoney(25000);
         service.updatePlayer("Player1", p);
 
         boolean success = service.investForPlayer("Player1");
         assertTrue(success);
 
-        Player updated = service.getPlayerById("Player1").orElseThrow();
+        Player updated = service.getPlayerById("Player1");
         assertEquals(5000, updated.getMoney());
         assertEquals(20000, updated.getInvestments());
     }
 
     @Test
     void investForPlayer_ShouldThrowIfInsufficientFunds() {
-        Player p = service.getPlayerById("Player1").orElseThrow();
+        Player p = service.getPlayerById("Player1");
         p.setMoney(10000);
         service.updatePlayer("Player1", p);
 

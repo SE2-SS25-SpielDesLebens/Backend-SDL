@@ -1,9 +1,9 @@
 package at.aau.serg.websocketserver.websocket.broker;
 
-import at.aau.serg.websocketserver.messaging.dtos.JobMessage;
-import at.aau.serg.websocketserver.messaging.dtos.JobRequestMessage;
-import at.aau.serg.websocketserver.messaging.dtos.OutputMessage;
-import at.aau.serg.websocketserver.messaging.dtos.StompMessage;
+import at.aau.serg.websocketserver.Player.PlayerService;
+import at.aau.serg.websocketserver.lobby.Lobby;
+import at.aau.serg.websocketserver.lobby.LobbyService;
+import at.aau.serg.websocketserver.messaging.dtos.*;
 import at.aau.serg.websocketserver.session.Job;
 import at.aau.serg.websocketserver.session.JobService;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -11,24 +11,29 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.stereotype.Controller;
 
+import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Controller
 public class WebSocketBrokerController {
 
     private final JobService jobService;
+    private final PlayerService playerService;
+    private final LobbyService lobbyService;
     private final SimpMessagingTemplate messagingTemplate;
 
     public WebSocketBrokerController(JobService jobService,
                                      SimpMessagingTemplate messagingTemplate) {
         this.jobService = jobService;
         this.messagingTemplate = messagingTemplate;
+        playerService = PlayerService.getInstance();
+        lobbyService = LobbyService.getInstance();
     }
 
     @MessageMapping("/move")
@@ -66,6 +71,25 @@ public class WebSocketBrokerController {
                 content,
                 LocalDateTime.now().toString()
         );
+    }
+
+    //TODO: Message Mapping ordentlich machen
+
+    @MessageMapping("/topic/lobby/create")
+    @SendTo("/topic/{gameid}")
+    public LobbyResponseMessage handleLobbyCreate(@Payload LobbyRequestMessage request, Principal principal){
+        //Spieler sollte schon in PlayerService enthalten sein
+        Lobby lobby = lobbyService.createLobby(playerService.getPlayerById(request.getPlayerName()));
+
+        return new LobbyResponseMessage(lobby.getId(), request.getPlayerName());
+    }
+
+    @MessageMapping("/topic/{lobbyid}/join")
+    @SendToUser("/topic/{lobbyid}/{playerid}")
+    public LobbyResponseMessage handlePlayerJoin(@DestinationVariable String lobbyid, @DestinationVariable String playerid, @Payload LobbyRequestMessage request){
+        Lobby lobby = lobbyService.getLobby(lobbyid);
+        lobby.addPlayer(playerService.getPlayerById(request.getPlayerName()));
+        return new LobbyResponseMessage(lobby.getId(), request.getPlayerName());
     }
 
     @MessageMapping("/chat")
