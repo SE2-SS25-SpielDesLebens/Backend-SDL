@@ -5,6 +5,7 @@ import lombok.Getter;
 import java.security.SecureRandom;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import at.aau.serg.websocketserver.Player.*;
 
 //speichert die Lobbys, verwaltet ID Generierung
 @Getter

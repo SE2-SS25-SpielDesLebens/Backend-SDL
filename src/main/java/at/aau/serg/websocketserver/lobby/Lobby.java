@@ -3,6 +3,9 @@ package at.aau.serg.websocketserver.lobby;
 import lombok.Getter;
 import lombok.Setter;
 
+
+import at.aau.serg.websocketserver.Player.*;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
