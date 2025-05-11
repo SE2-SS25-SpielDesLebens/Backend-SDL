@@ -69,7 +69,11 @@ public class PlayerServiceTest {
 
     @Test
     public void testInvestForPlayer() {
-        Player player = service.getAllPlayers().get(1);
+        Player player = service.getAllPlayers().get(1); //15000
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            service.investForPlayer(player.getId());
+        });
     }
 
     @Test
@@ -107,4 +111,5 @@ public class PlayerServiceTest {
         Optional<Player> player = service.getPlayerById(9999);
         assertTrue(player.isEmpty());
     }
+
 }

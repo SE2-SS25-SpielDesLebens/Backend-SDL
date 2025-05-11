@@ -1,17 +1,21 @@
 package at.aau.serg.websocketserver.Player;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 public class Player {
 
     private final String name;
     private final int id;
-    private final int money;
-    private final int investments;
+    private int money;
+    private int investments;
     private final int salary;
-    private final int children;
+    private int children;
     private final String education;
-    private final String relationship;
+    private String relationship;
     private final String career;
     private final int jobID;
     private final int houseID;

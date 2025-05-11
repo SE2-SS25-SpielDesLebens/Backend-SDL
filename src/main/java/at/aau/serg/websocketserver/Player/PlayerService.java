@@ -65,23 +65,10 @@ public class PlayerService {
             throw new IllegalArgumentException("Ein Spieler darf maximal 4 Kinder haben.");
         }
 
-        Player updatedPlayer = new Player(
-                player.getName(),
-                player.getId(),
-                player.getMoney(),
-                player.getInvestments(),
-                player.getSalary(),
-                player.getChildren() + 1,
-                player.getEducation(),
-                player.getRelationship(),
-                player.getCareer(),
-                player.getJobId(),
-                player.getHouseId(),
-                player.getFieldID()
-        );
+        player.setChildren(player.getChildren()+1);
 
-        updatePlayer(player.getId(), updatedPlayer);
-        System.out.println("👶 Spieler " + player.getName() + " hat nun " + updatedPlayer.getChildren() + " Kind(er).");
+        updatePlayer(player.getId(), player);
+        System.out.println("👶 Spieler " + player.getName() + " hat nun " + player.getChildren() + " Kind(er).");
         return true;
     }
 
@@ -98,22 +85,10 @@ public class PlayerService {
             throw new IllegalArgumentException("Spieler ist bereits verheiratet.");
         }
 
-        Player updatedPlayer = new Player(
-                player.getName(),
-                player.getId(),
-                player.getMoney(),
-                player.getInvestments(),
-                player.getSalary(),
-                player.getChildren(),
-                player.getEducation(),
-                "Verheiratet",
-                player.getCareer(),
-                player.getJobId(),
-                player.getHouseId(),
-                player.getFieldID()
-        );
 
-        updatePlayer(player.getId(), updatedPlayer);
+        player.setRelationship("Verheiratet");
+
+        updatePlayer(player.getId(), player);
         System.out.println("💍 Spieler " + player.getName() + " ist jetzt verheiratet.");
         return true;
     }
@@ -131,22 +106,11 @@ public class PlayerService {
             throw new IllegalArgumentException("Nicht genug Geld für eine Investition.");
         }
 
-        Player updatedPlayer = new Player(
-                player.getName(),
-                player.getId(),
-                player.getMoney() - investAmount,
-                player.getInvestments() + investAmount,
-                player.getSalary(),
-                player.getChildren(),
-                player.getEducation(),
-                player.getRelationship(),
-                player.getCareer(),
-                player.getJobId(),
-                player.getHouseId(),
-                player.getFieldID()
-        );
 
-        updatePlayer(player.getId(), updatedPlayer);
+        player.setMoney(player.getMoney() - investAmount);
+        player.setInvestments(player.getInvestments() + investAmount);
+
+        updatePlayer(player.getId(), player);
         System.out.println("📈 Spieler " + player.getName() + " hat 20.000€ investiert.");
         return true;
     }
