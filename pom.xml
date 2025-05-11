@@ -34,7 +34,7 @@
             src/main/java/at/aau/serg/websocketserver/session/JobService.java
             src/main/java/at/aau/serg/websocketserver/messaging/dtos/OutputMessage.java,
             src/main/java/at/aau/serg/websocketserver/websocket/broker/WebSocketBrokerController.java,
-            src/main/java/at/aau/serg/websocketserver/websocket/broker/PlayerController
+            src/main/java/at/aau/serg/websocketserver/websocket/broker/PlayerController.java
         </sonar.exclusions>
     </properties>
 
