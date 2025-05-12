@@ -1,4 +1,4 @@
-package at.aau.serg.websocketserver.BoardService;
+package at.aau.serg.websocketserver.FieldService;
 
 import at.aau.serg.websocketserver.Player.Player;
 import at.aau.serg.websocketserver.Player.PlayerService;

@@ -11,4 +11,6 @@ public enum FieldType {
     NEUTRAL,
     STOP_MIDLIFECRISIS,
     STOP_EXAM,
+    START_UNIVERSITY,
+    START_NORMAL,
 }

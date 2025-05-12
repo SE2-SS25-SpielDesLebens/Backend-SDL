@@ -14,6 +14,7 @@ public class FieldService {
     }
 
     public String handleFieldEvent(String playerId, FieldType fieldType) {
+
         Player player = playerService.getPlayerById(playerId).orElseThrow(() ->
                 new IllegalArgumentException("Spieler nicht gefunden."));
 
@@ -27,6 +28,8 @@ public class FieldService {
             case STOP_MARRIAGE -> handleMarriage(player);
             case STOP_MIDLIFECRISIS -> handleMidlifecrisis(player);
             case STOP_EXAM -> handleExam(player);
+            case START_NORMAL -> handleStartNormalField(player);
+            case START_UNIVERSITY -> handleStartUniversityField(player);
             default -> "Kein spezieller Effekt für dieses Feld.";
         };
     }
@@ -72,5 +75,12 @@ public class FieldService {
     }
     private String handleExam (Player player){
         return "Jobkarten müssen noch implemetiert werden!";
+    }
+    private String handleStartNormalField(Player player){
+        return "Spiellogik fehlt noch!";
+    }
+
+    private String handleStartUniversityField(Player player){
+        return "Spielogik fehlt noch!";
     }
 }
