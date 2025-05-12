@@ -5,8 +5,10 @@ public enum FieldType {
     ACTION,
     HOUSE,
     INVESTMENT,
-    FAMILY,
-    RETIREMENT,
+    STOP_FAMILY,
+    STOP_RETIREMENT,
     STOP_MARRIAGE,
-    NEUTRAL
+    NEUTRAL,
+    STOP_MIDLIFECRISIS,
+    STOP_EXAM,
 }

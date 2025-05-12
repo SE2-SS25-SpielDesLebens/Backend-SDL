@@ -22,9 +22,11 @@ public class BoardService {
             case ACTION -> handleAction(player);
             case HOUSE -> handleHouse(player);
             case INVESTMENT -> handleInvestment(player);
-            case FAMILY -> handleFamily(player);
-            case RETIREMENT -> handleRetirement(player);
+            case STOP_FAMILY -> handleFamily(player);
+            case STOP_RETIREMENT -> handleRetirement(player);
             case STOP_MARRIAGE -> handleMarriage(player);
+            case STOP_MIDLIFECRISIS -> handleMidlifecrisis(player);
+            case STOP_EXAM -> handleExam(player);
             default -> "Kein spezieller Effekt für dieses Feld.";
         };
     }
@@ -63,5 +65,12 @@ public class BoardService {
     private String handleRetirement(Player player) {
         player.retire();
         return "🪑 Spieler ist nun im Ruhestand.";
+    }
+
+    private String handleMidlifecrisis (Player player){
+        return " Spieler befindet sich jetzt in der MidlifeCrisis!";
+    }
+    private String handleExam (Player player){
+        return "Jobkarten müssen noch implemetiert werden!";
     }
 }
