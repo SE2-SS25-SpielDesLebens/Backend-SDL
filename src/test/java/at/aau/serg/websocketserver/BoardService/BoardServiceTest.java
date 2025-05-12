@@ -2,7 +2,7 @@ package at.aau.serg.websocketserver.BoardService;
 
 import at.aau.serg.websocketserver.Player.Player;
 import at.aau.serg.websocketserver.Player.PlayerService;
-import at.aau.serg.websocketserver.fieldlogic.BoardService;
+import at.aau.serg.websocketserver.fieldlogic.FieldService;
 import at.aau.serg.websocketserver.fieldlogic.FieldType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,13 +12,13 @@ import static org.junit.jupiter.api.Assertions.*;
 public class BoardServiceTest {
 
     private PlayerService playerService;
-    private BoardService boardService;
+    private FieldService fieldService;
     private final String playerId = "testPlayer";
 
     @BeforeEach
     void setUp() {
         playerService = new PlayerService();
-        boardService = new BoardService(playerService);
+        fieldService = new FieldService(playerService);
 
         playerService.addPlayer(playerId);
         Player player = playerService.getPlayerById(playerId).orElseThrow();
@@ -31,7 +31,7 @@ public class BoardServiceTest {
         Player player = playerService.getPlayerById(playerId).orElseThrow();
         int before = player.getMoney();
 
-        String result = boardService.handleFieldEvent(playerId, FieldType.PAYDAY);
+        String result = fieldService.handleFieldEvent(playerId, FieldType.PAYDAY);
 
         assertEquals("💵 Zahltag! Gehalt von 3000€ erhalten.", result);
         assertEquals(before + 3000, player.getMoney());
@@ -39,7 +39,7 @@ public class BoardServiceTest {
 
     @Test
     void testHandleInvestment_success() {
-        String result = boardService.handleFieldEvent(playerId, FieldType.INVESTMENT);
+        String result = fieldService.handleFieldEvent(playerId, FieldType.INVESTMENT);
         assertEquals("📈 20.000€ investiert.", result);
 
         Player player = playerService.getPlayerById(playerId).orElseThrow();
@@ -53,7 +53,7 @@ public class BoardServiceTest {
         player.setMoney(500);  // nicht genug für Investition
 
         Exception ex = assertThrows(IllegalArgumentException.class, () ->
-                boardService.handleFieldEvent(playerId, FieldType.INVESTMENT));
+                fieldService.handleFieldEvent(playerId, FieldType.INVESTMENT));
 
         assertTrue(ex.getMessage().contains("Nicht genug Geld"));
     }
@@ -63,7 +63,7 @@ public class BoardServiceTest {
         Player player = playerService.getPlayerById(playerId).orElseThrow();
         player.setChildrenCount(0);
 
-        String result = boardService.handleFieldEvent(playerId, FieldType.STOP_FAMILY);
+        String result = fieldService.handleFieldEvent(playerId, FieldType.STOP_FAMILY);
 
         assertEquals("👶 Ein Kind wurde zur Familie hinzugefügt!", result);
         assertEquals(1, player.getChildren());
@@ -75,7 +75,7 @@ public class BoardServiceTest {
         player.setChildrenCount(4); // Maximum
 
         Exception ex = assertThrows(IllegalArgumentException.class, () ->
-                boardService.handleFieldEvent(playerId, FieldType.STOP_FAMILY));
+                fieldService.handleFieldEvent(playerId, FieldType.STOP_FAMILY));
 
         assertTrue(ex.getMessage().contains("maximal 4 Kinder"));
     }
@@ -85,7 +85,7 @@ public class BoardServiceTest {
         Player player = playerService.getPlayerById(playerId).orElseThrow();
         player.setMarried(false);
 
-        String result = boardService.handleFieldEvent(playerId, FieldType.STOP_MARRIAGE);
+        String result = fieldService.handleFieldEvent(playerId, FieldType.STOP_MARRIAGE);
 
         assertEquals("💍 Spieler ist jetzt verheiratet.", result);
         assertTrue(player.isMarried());
@@ -97,7 +97,7 @@ public class BoardServiceTest {
         player.setMarried(true);
 
         Exception ex = assertThrows(IllegalArgumentException.class, () ->
-                boardService.handleFieldEvent(playerId, FieldType.STOP_MARRIAGE));
+                fieldService.handleFieldEvent(playerId, FieldType.STOP_MARRIAGE));
 
         assertTrue(ex.getMessage().contains("bereits verheiratet"));
     }
@@ -107,7 +107,7 @@ public class BoardServiceTest {
         Player player = playerService.getPlayerById(playerId).orElseThrow();
         player.setActive(true);
 
-        String result = boardService.handleFieldEvent(playerId, FieldType.STOP_RETIREMENT);
+        String result = fieldService.handleFieldEvent(playerId, FieldType.STOP_RETIREMENT);
 
         assertEquals("🪑 Spieler ist nun im Ruhestand.", result);
         assertTrue(player.isRetired());
@@ -116,26 +116,26 @@ public class BoardServiceTest {
 
     @Test
     void testHandleUnknownField_returnsDefaultMessage() {
-        String result = boardService.handleFieldEvent(playerId, FieldType.NEUTRAL);
+        String result = fieldService.handleFieldEvent(playerId, FieldType.NEUTRAL);
         assertEquals("Kein spezieller Effekt für dieses Feld.", result);
     }
 
     @Test
     void testHandleAction_returnsPlaceholderMessage() {
-        String result = boardService.handleFieldEvent(playerId, FieldType.ACTION);
+        String result = fieldService.handleFieldEvent(playerId, FieldType.ACTION);
         assertEquals("🎲 Aktionskarte gezogen (noch nicht implementiert).", result);
     }
 
     @Test
     void testHandleHouse_returnsPlaceholderMessage() {
-        String result = boardService.handleFieldEvent(playerId, FieldType.HOUSE);
+        String result = fieldService.handleFieldEvent(playerId, FieldType.HOUSE);
         assertEquals("🏠 Hauskauf wird hier später implementiert.", result);
     }
 
     @Test
     void testPlayerNotFound_throwsException() {
         Exception ex = assertThrows(IllegalArgumentException.class, () ->
-                boardService.handleFieldEvent("unknown", FieldType.PAYDAY));
+                fieldService.handleFieldEvent("unknown", FieldType.PAYDAY));
         assertEquals("Spieler nicht gefunden.", ex.getMessage());
     }
 }

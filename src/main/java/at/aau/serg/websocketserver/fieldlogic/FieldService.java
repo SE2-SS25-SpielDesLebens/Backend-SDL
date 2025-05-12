@@ -5,11 +5,11 @@ import at.aau.serg.websocketserver.Player.PlayerService;
 import org.springframework.stereotype.Service;
 
 @Service
-public class BoardService {
+public class FieldService {
 
-    private PlayerService playerService;
+    private final PlayerService playerService;
 
-    public BoardService(PlayerService playerService) {
+    public FieldService(PlayerService playerService) {
         this.playerService = playerService;
     }
 

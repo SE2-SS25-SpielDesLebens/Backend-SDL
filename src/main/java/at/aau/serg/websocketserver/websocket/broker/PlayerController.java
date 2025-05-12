@@ -2,7 +2,7 @@ package at.aau.serg.websocketserver.websocket.broker;
 
 import at.aau.serg.websocketserver.Player.Player;
 import at.aau.serg.websocketserver.Player.PlayerService;
-import at.aau.serg.websocketserver.fieldlogic.BoardService;
+import at.aau.serg.websocketserver.fieldlogic.FieldService;
 import at.aau.serg.websocketserver.fieldlogic.FieldType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,12 +15,12 @@ import java.util.Optional;
 @RequestMapping("/players")
 public class PlayerController {
     private final PlayerService playerService;
-    private final BoardService boardService;
+    private final FieldService fieldService;
 
 
-    public PlayerController(PlayerService playerService, BoardService boardService) {
+    public PlayerController(PlayerService playerService, FieldService fieldService) {
         this.playerService = playerService;
-        this.boardService = boardService;
+        this.fieldService = fieldService;
     }
 
     @GetMapping
@@ -92,7 +92,7 @@ public class PlayerController {
             @RequestParam String playerId,
             @RequestParam FieldType fieldType
     ) {
-        return ResponseEntity.ok(boardService.handleFieldEvent(playerId, fieldType));
+        return ResponseEntity.ok(fieldService.handleFieldEvent(playerId, fieldType));
     }
 
 
