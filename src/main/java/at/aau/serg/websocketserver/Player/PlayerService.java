@@ -8,24 +8,23 @@ import java.util.Optional;
 @Service
 public class PlayerService {
     private final List<Player> players = new ArrayList<>();
-    private int nextId = 3;
 
     public PlayerService() {
-        players.add(new Player("Hans", 1, 10000, 0, 0, 0, "Bachelor", "Single", "Kellner", 0, 0, 0));
-        players.add(new Player("Eva", 2, 15000, 0, 0, 1, "Master", "Verheiratet", "Koch", 0, 0, 0));
+        players.add(new Player("Player1"));
+        players.add(new Player("Player2"));
     }
 
     public List<Player> getAllPlayers() {
         return players;
     }
 
-    public Optional<Player> getPlayerById(int id) {
-        return players.stream().filter(player -> player.getId() == id).findFirst();
+    public Optional<Player> getPlayerById(String id) {
+        return players.stream().filter(player -> player.getId().equals(id)).findFirst();
     }
 
-    public boolean updatePlayer(int id, Player updatedPlayer) {
+    public boolean updatePlayer(String id, Player updatedPlayer) {
         for (int i = 0; i < players.size(); i++) {
-            if (players.get(i).getId() == id) {
+            if (players.get(i).getId().equals(id)) {
                 players.set(i, updatedPlayer);
                 return true;
             }
@@ -33,26 +32,13 @@ public class PlayerService {
         return false;
     }
 
-    public void addPlayer(Player player) {
-        Player newPlayer = new Player(
-                player.getName(),
-                nextId++,
-                player.getMoney(),
-                player.getInvestments(),
-                player.getSalary(),
-                player.getChildren(),
-                player.getEducation(),
-                player.getRelationship(),
-                player.getCareer(),
-                player.getJobId(),
-                player.getHouseId(),
-                player.getFieldID()
-        );
+    public void addPlayer(String id) {
+        Player newPlayer = new Player(id);
         players.add(newPlayer);
-        System.out.println("Neuer Spieler hinzugefügt: " + newPlayer.getName() + " mit ID " + newPlayer.getId());
+        System.out.println("Neuer Spieler hinzugefügt: " + newPlayer.getId() + " mit ID " + newPlayer.getId());
     }
 
-    public boolean addChildToPlayer(int playerId) {
+    public boolean addChildToPlayer(String playerId) {
         Optional<Player> optionalPlayer = getPlayerById(playerId);
 
         if (optionalPlayer.isEmpty()) {
@@ -65,14 +51,14 @@ public class PlayerService {
             throw new IllegalArgumentException("Ein Spieler darf maximal 4 Kinder haben.");
         }
 
-        player.setChildren(player.getChildren()+1);
+        player.setChildrenCount(player.getChildren()+1);
 
         updatePlayer(player.getId(), player);
-        System.out.println("👶 Spieler " + player.getName() + " hat nun " + player.getChildren() + " Kind(er).");
+        System.out.println("👶 Spieler " + player.getId() + " hat nun " + player.getChildren() + " Kind(er).");
         return true;
     }
 
-    public boolean marryPlayer(int playerId) {
+    public boolean marryPlayer(String playerId) {
         Optional<Player> optionalPlayer = getPlayerById(playerId);
 
         if (optionalPlayer.isEmpty()) {
@@ -81,19 +67,19 @@ public class PlayerService {
 
         Player player = optionalPlayer.get();
 
-        if ("Verheiratet".equalsIgnoreCase(player.getRelationship())) {
+        if (player.isMarried()) {
             throw new IllegalArgumentException("Spieler ist bereits verheiratet.");
         }
 
 
-        player.setRelationship("Verheiratet");
+        player.setMarried(true);
 
         updatePlayer(player.getId(), player);
-        System.out.println("💍 Spieler " + player.getName() + " ist jetzt verheiratet.");
+        System.out.println("💍 Spieler " + player.getId() + " ist jetzt verheiratet.");
         return true;
     }
 
-    public boolean investForPlayer(int playerId) {
+    public boolean investForPlayer(String playerId) {
         Optional<Player> optionalPlayer = getPlayerById(playerId);
         if (optionalPlayer.isEmpty()) {
             throw new IllegalArgumentException("Spieler nicht gefunden.");
@@ -111,7 +97,7 @@ public class PlayerService {
         player.setInvestments(player.getInvestments() + investAmount);
 
         updatePlayer(player.getId(), player);
-        System.out.println("📈 Spieler " + player.getName() + " hat 20.000€ investiert.");
+        System.out.println("📈 Spieler " + player.getId() + " hat 20.000€ investiert.");
         return true;
     }
 
