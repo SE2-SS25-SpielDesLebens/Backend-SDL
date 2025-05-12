@@ -2,6 +2,8 @@ package at.aau.serg.websocketserver.websocket.broker;
 
 import at.aau.serg.websocketserver.Player.Player;
 import at.aau.serg.websocketserver.Player.PlayerService;
+import at.aau.serg.websocketserver.fieldlogic.BoardService;
+import at.aau.serg.websocketserver.fieldlogic.FieldType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,10 +15,12 @@ import java.util.Optional;
 @RequestMapping("/players")
 public class PlayerController {
     private final PlayerService playerService;
+    private final BoardService boardService;
 
 
-    public PlayerController(PlayerService playerService) {
+    public PlayerController(PlayerService playerService, BoardService boardService) {
         this.playerService = playerService;
+        this.boardService = boardService;
     }
 
     @GetMapping
@@ -81,6 +85,14 @@ public class PlayerController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+
+    @PostMapping("/field")
+    public ResponseEntity<String> playerStepsOnField(
+            @RequestParam String playerId,
+            @RequestParam FieldType fieldType
+    ) {
+        return ResponseEntity.ok(boardService.handleFieldEvent(playerId, fieldType));
     }
 
 
