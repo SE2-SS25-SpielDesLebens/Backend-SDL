@@ -1,7 +1,5 @@
 package at.aau.serg.websocketserver.BoardService;
 
-import at.aau.serg.websocketserver.fieldlogic.BoardService;
-import at.aau.serg.websocketserver.fieldlogic.Field;
 import at.aau.serg.websocketserver.fieldlogic.FieldType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
