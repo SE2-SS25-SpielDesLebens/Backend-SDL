@@ -74,7 +74,7 @@ public class FieldService {
                 : "❌ Investition fehlgeschlagen.";
     }
 
-    private String handleFamily(Player player) {
+    public String handleFamily(Player player) {
         return playerService.addChildToPlayer(player.getId())
                 ? "👶 Ein Kind wurde zur Familie hinzugefügt!"
                 : "❌ Fehler beim Hinzufügen eines Kindes.";
@@ -86,16 +86,16 @@ public class FieldService {
                 : "❌ Spieler konnte nicht heiraten.";
     }
 
-    private String handleRetirement(Player player) {
+    public String handleRetirement(Player player) {
         player.retire();
         return "🪑 Spieler ist nun im Ruhestand.";
     }
 
-    private String handleMidlifecrisis(Player player) {
+    public String handleMidlifecrisis(Player player) {
         return "😵 Spieler befindet sich jetzt in der MidlifeCrisis!";
     }
 
-    private String handleExam(Player player) {
+    public String handleExam(Player player) {
         return "🎓 Jobkarten müssen noch implementiert werden.";
     }
 }
