@@ -33,6 +33,9 @@ public class Player {
     private boolean isHost;
     private int fieldId;
     private boolean university;
+    @Getter
+    private int investmentPayout;
+
 
 
 
@@ -85,7 +88,6 @@ public class Player {
             debts--;
         }
     }
-
 
 
     public void clearJob() {

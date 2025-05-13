@@ -193,7 +193,9 @@ public class WebSocketBrokerController {
 
         // 3. GameLogic erzeugen
         GameLogic gameLogic = new GameLogic();
+        gameLogic.setGameId(Integer.parseInt(gameId));
         gameLogic.setJobService(jobService);
+        gameLogic.setBoardService(boardService);
         gameLogic.setGameController(new GameController(gameLogic));
         gameLogic.setTurnManager(new PlayerTurnManager(gameLogic));
 
