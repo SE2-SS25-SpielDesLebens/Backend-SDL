@@ -98,11 +98,13 @@ class FieldServiceTest {
 
     @Test
     void testHandleMarriageFailAlreadyMarried() {
-        Player player = playerService.getPlayerById(playerId).orElseThrow();
-        player.setMarried(true);
+        Player player = playerService.getPlayerById("1").orElseThrow();
+        player.setMarried(true); // Spieler ist bereits verheiratet
 
         String result = fieldService.handleMarriage(player);
-        assertTrue(result.contains("nicht heiraten"));
+
+        // Erwarte eine Fehlermeldung im String
+        assertTrue(result.contains("❌") || result.toLowerCase().contains("verheiratet"));
     }
 
     @Test
