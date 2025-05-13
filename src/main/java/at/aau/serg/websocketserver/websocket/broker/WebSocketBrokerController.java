@@ -31,9 +31,7 @@ public class WebSocketBrokerController {
         this.jobService = jobService;
         this.messagingTemplate = messagingTemplate;
         this.boardService = boardService;
-    }
-
-    @MessageMapping("/move")
+    }    @MessageMapping("/move")
     public void handleMove(StompMessage message) {
         int playerId;
         try {
@@ -44,6 +42,66 @@ public class WebSocketBrokerController {
             return;
         }
 
+        String action = message.getAction();
+        // Prüfe, ob es ein "join:X" Befehl ist (Spieler betritt das Spielfeld)
+        if (action != null && action.startsWith("join:")) {
+            try {
+                int startFieldIndex = Integer.parseInt(action.substring(5));                boardService.addPlayer(playerId, startFieldIndex);                Field currentField = boardService.getPlayerField(playerId);
+                
+                // Get the possible next fields
+                List<Integer> nextPossibleFieldIndices = new ArrayList<>();
+                for (Field nextField : boardService.getValidNextFields(playerId)) {
+                    nextPossibleFieldIndices.add(nextField.getIndex());
+                }
+                
+                MoveMessage moveMessage = new MoveMessage(
+                        message.getPlayerName(),
+                        currentField.getIndex(),
+                        currentField.getType(),
+                        LocalDateTime.now().toString(),
+                        nextPossibleFieldIndices
+                );
+                
+                messagingTemplate.convertAndSend("/topic/game", moveMessage);
+                return;
+            } catch (Exception e) {
+                messagingTemplate.convertAndSend("/topic/game",
+                        new OutputMessage(message.getPlayerName(), "❌ Fehler beim Betreten des Spielfelds", LocalDateTime.now().toString()));
+                return;
+            }
+        }        // Prüfe, ob es eine direkte Bewegung zu einem bestimmten Feld ist
+        if (action != null && action.startsWith("move:")) {
+            try {
+                int targetFieldIndex = Integer.parseInt(action.substring(5));
+                boolean success = boardService.movePlayerToField(playerId, targetFieldIndex);
+                  if (success) {
+                    Field currentField = boardService.getPlayerField(playerId);
+                    List<Integer> nextPossibleFieldIndices = new ArrayList<>();
+                    for (Field nextField : boardService.getValidNextFields(playerId)) {
+                        nextPossibleFieldIndices.add(nextField.getIndex());
+                    }
+                    
+                    MoveMessage moveMessage = new MoveMessage(
+                            message.getPlayerName(),
+                            currentField.getIndex(),
+                            currentField.getType(),
+                            LocalDateTime.now().toString(),
+                            nextPossibleFieldIndices
+                    );
+                    messagingTemplate.convertAndSend("/topic/game", moveMessage);
+                } else {
+                    messagingTemplate.convertAndSend("/topic/game",
+                            new OutputMessage(message.getPlayerName(), "❌ Ungültiger Zug", LocalDateTime.now().toString()));
+                }
+                return;
+            } catch (Exception e) {
+                messagingTemplate.convertAndSend("/topic/game",
+                        new OutputMessage(message.getPlayerName(), "❌ Fehler bei der Bewegung", LocalDateTime.now().toString()));
+                return;
+            }
+        }
+        
+        // Reguläre Bewegung mit Würfel
         int steps;
         try {
             steps = Integer.parseInt(message.getAction().replaceAll("[^0-9]", ""));
@@ -52,20 +110,39 @@ public class WebSocketBrokerController {
                     new OutputMessage(message.getPlayerName(), "❌ Ungültige Würfelzahl", LocalDateTime.now().toString()));
             return;
         }
-
-        boardService.movePlayer(playerId, steps);
-        Field currentField = boardService.getPlayerField(playerId);
-
-        MoveMessage moveMessage = new MoveMessage(
-                message.getPlayerName(),
-                currentField.getIndex(),
-                currentField.getX(),
-                currentField.getY(),
-                currentField.getType(),
-                LocalDateTime.now().toString()
-        );
-
-        messagingTemplate.convertAndSend("/topic/game", moveMessage);
+        
+        // Prüfe ob eine bestimmte Ausgangsposition mitgeschickt wurde
+        int currentFieldIndex = -1;
+        if (message.getAction().contains(":")) {
+            String[] parts = message.getAction().split(":");
+            if (parts.length > 1) {
+                try {
+                    currentFieldIndex = Integer.parseInt(parts[1]);
+                    // Wenn eine gültige aktuelle Position mitgeschickt wurde, setzen wir diese
+                    if (currentFieldIndex >= 0 && currentFieldIndex < boardService.getBoardSize()) {
+                        boardService.setPlayerPosition(playerId, currentFieldIndex);
+                    }
+                } catch (NumberFormatException e) {
+                    // Ignoriere Fehler hier
+                }
+            }
+        }
+        
+        boardService.movePlayer(playerId, steps);                Field currentField = boardService.getPlayerField(playerId);
+                List<Integer> nextPossibleFieldIndices = new ArrayList<>();
+                for (Field nextField : boardService.getValidNextFields(playerId)) {
+                    nextPossibleFieldIndices.add(nextField.getIndex());
+                }
+                
+                MoveMessage moveMessage = new MoveMessage(
+                        message.getPlayerName(),
+                        currentField.getIndex(),
+                        currentField.getType(),
+                        LocalDateTime.now().toString(),
+                        nextPossibleFieldIndices
+                );
+                
+                messagingTemplate.convertAndSend("/topic/game", moveMessage);
     }
 
     @MessageMapping("/lobby")

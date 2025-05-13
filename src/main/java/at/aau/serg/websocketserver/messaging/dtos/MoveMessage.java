@@ -1,27 +1,54 @@
 package at.aau.serg.websocketserver.messaging.dtos;
 
-public class MoveMessage {
-    private String playerName;
-    private int fieldIndex;
-    private float x;
-    private float y;
-    private String type;
-    private String timestamp;
+import java.util.List;
+import java.util.ArrayList;
 
-    public MoveMessage(String playerName, int fieldIndex, float x, float y, String type, String timestamp) {
+/**
+ * Repräsentiert eine Bewegungsnachricht für die Übertragung über den WebSocket.
+ * Sendet nur die Field-ID, da die Koordinaten im Frontend bekannt sind.
+ * Beinhaltet auch Information über erlaubte nächste Felder.
+ */
+public class MoveMessage {
+    private final String playerName;
+    private final int index;
+    private final String type;
+    private final String timestamp;
+    private final List<Integer> nextPossibleFields;
+
+    public MoveMessage(String playerName, int index, String type, String timestamp) {
         this.playerName = playerName;
-        this.fieldIndex = fieldIndex;
-        this.x = x;
-        this.y = y;
+        this.index = index;
         this.type = type;
         this.timestamp = timestamp;
+        this.nextPossibleFields = new ArrayList<>();
+    }
+    
+    public MoveMessage(String playerName, int index, String type, String timestamp, List<Integer> nextPossibleFields) {
+        this.playerName = playerName;
+        this.index = index;
+        this.type = type;
+        this.timestamp = timestamp;
+        this.nextPossibleFields = new ArrayList<>(nextPossibleFields);
     }
 
-    // Getter
-    public String getPlayerName() { return playerName; }
-    public int getFieldIndex() { return fieldIndex; }
-    public float getX() { return x; }
-    public float getY() { return y; }
-    public String getType() { return type; }
-    public String getTimestamp() { return timestamp; }
+    public String getPlayerName() {
+        return playerName;
+    }    
+    
+    public int getIndex() {
+        return index;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public String getTimestamp() {
+        return timestamp;
+    }
+    
+    public List<Integer> getNextPossibleFields() {
+        return new ArrayList<>(nextPossibleFields);
+    }
 }
+
