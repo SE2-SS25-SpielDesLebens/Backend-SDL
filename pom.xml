@@ -26,7 +26,19 @@
             src/main/java/at/aau/serg/websocketserver/messaging/dtos/OutputMessage.java,
             src/main/java/at/aau/serg/websocketserver/websocket/broker/WebSocketBrokerConfig.java,
             src/main/java/at/aau/serg/websocketserver/messaging/dtos/WebSocketServerApplication.java,
+            src/main/java/at/aau/serg/websocketserver/websocket/broker/WebSocketBrokerController.java,
+            src/main/java/at/aau/serg/websocketserver/messaging/dtos/JobMessage.java,
+            src/main/java/at/aau/serg/websocketserver/messaging/dtos/JobRequestMessage.java,
+            src/main/java/at/aau/serg/websocketserver/session/Job.java,
+            src/main/java/at/aau/serg/websocketserver/session/JobRepository.java,
+            src/main/java/at/aau/serg/websocketserver/session/JobService.java,
+            src/main/java/at/aau/serg/websocketserver/board/Board.java,
+            src/main/java/at/aau/serg/websocketserver/board/BoardFactory.java,
+            src/main/java/at/aau/serg/websocketserver/board/BoardService.java,
             src/main/java/at/aau/serg/websocketserver/messaging/dtos/OutputMessage.java,
+            src/main/java/at/aau/serg/websocketserver/messaging/dtos/MoveMessage.java,
+            src/main/java/at/aau/serg/websocketserver/messaging/dtos/StartMessage.java,
+            src/main/java/at/aau/serg/websocketserver/websocket/broker/WebSocketBrokerController.java,
             src/main/java/at/aau/serg/websocketserver/websocket/broker/PlayerController.java
         </sonar.exclusions>
     </properties>
