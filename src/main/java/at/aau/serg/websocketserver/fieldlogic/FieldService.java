@@ -69,21 +69,33 @@ public class FieldService {
     }
 
     private String handleInvestment(Player player) {
-        return playerService.investForPlayer(player.getId())
-                ? "📈 20.000€ investiert."
-                : "❌ Investition fehlgeschlagen.";
+        try {
+            return playerService.investForPlayer(player.getId())
+                    ? "📈 20.000€ investiert."
+                    : "❌ Investition fehlgeschlagen.";
+        } catch (IllegalArgumentException e) {
+            return "❌ Investition fehlgeschlagen: " + e.getMessage();
+        }
     }
 
     public String handleFamily(Player player) {
-        return playerService.addChildToPlayer(player.getId())
-                ? "👶 Ein Kind wurde zur Familie hinzugefügt!"
-                : "❌ Fehler beim Hinzufügen eines Kindes.";
+        try {
+            return playerService.addChildToPlayer(player.getId())
+                    ? "👶 Ein Kind wurde zur Familie hinzugefügt!"
+                    : "❌ Fehler beim Hinzufügen eines Kindes.";
+        } catch (IllegalArgumentException e) {
+            return "❌ Fehler beim Hinzufügen eines Kindes: " + e.getMessage();
+        }
     }
 
-    private String handleMarriage(Player player) {
-        return playerService.marryPlayer(player.getId())
-                ? "💍 Spieler ist jetzt verheiratet."
-                : "❌ Spieler konnte nicht heiraten.";
+    public String handleMarriage(Player player) {
+        try {
+            return playerService.marryPlayer(player.getId())
+                    ? "💍 Spieler ist jetzt verheiratet."
+                    : "❌ Spieler konnte nicht heiraten.";
+        } catch (IllegalArgumentException e) {
+            return "❌ Fehler bei der Heirat: " + e.getMessage();
+        }
     }
 
     public String handleRetirement(Player player) {

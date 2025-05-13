@@ -15,6 +15,8 @@ class FieldServiceTest {
     private FieldService fieldService;
     private PlayerService playerService;
     private BoardService boardService;
+    private final String playerId = "1";
+    private final int playerIdInt = 1;
 
     @BeforeEach
     void setUp() {
@@ -22,95 +24,128 @@ class FieldServiceTest {
         boardService = new BoardService();
         fieldService = new FieldService(playerService, boardService);
 
-        // Setup: Spieler mit ID "1" auf Feld 0 setzen
-        playerService.addPlayer("1");
-        boardService.addPlayer(1, 0);
+        playerService.addPlayer(playerId);
+        boardService.addPlayer(playerIdInt, 0); // Startfeld
     }
 
     @Test
     void testTriggerPaydayFieldEvent() {
-        boardService.setPlayerPosition(1, 1); // ZAHLTAG
-        Player player = playerService.getPlayerById("1").orElseThrow();
+        boardService.setPlayerPosition(playerIdInt, 1); // PAYDAY
+        Player player = playerService.getPlayerById(playerId).orElseThrow();
         player.setSalary(3000);
-        String result = fieldService.triggerCurrentFieldEvent(1);
+        player.setMoney(0);
+
+        String result = fieldService.triggerCurrentFieldEvent(playerIdInt);
         assertTrue(result.contains("Zahltag"));
         assertEquals(3000, player.getMoney());
     }
 
     @Test
     void testTriggerActionField() {
-        boardService.setPlayerPosition(1, 2); // AKTION
-        String result = fieldService.triggerCurrentFieldEvent(1);
+        boardService.setPlayerPosition(playerIdInt, 2); // ACTION
+        String result = fieldService.triggerCurrentFieldEvent(playerIdInt);
         assertTrue(result.contains("Aktionskarte"));
     }
 
     @Test
     void testTriggerInvestmentFieldSuccess() {
-        boardService.setPlayerPosition(1, 3); // ANLAGE
-        Player player = playerService.getPlayerById("1").orElseThrow();
-        player.setMoney(10000);
-        String result = fieldService.triggerCurrentFieldEvent(1);
+        boardService.setPlayerPosition(playerIdInt, 3); // INVESTMENT
+        Player player = playerService.getPlayerById(playerId).orElseThrow();
+        player.setMoney(25000);
+
+        String result = fieldService.triggerCurrentFieldEvent(playerIdInt);
         assertTrue(result.contains("investiert"));
-        assertEquals(10000, player.getMoney());
+        assertEquals(5000, player.getMoney());
     }
 
     @Test
     void testTriggerInvestmentFieldFails() {
-        boardService.setPlayerPosition(1, 3); // ANLAGE
-        Player player = playerService.getPlayerById("1").orElseThrow();
-        player.setMoney(0);
-        String result = fieldService.triggerCurrentFieldEvent(1);
+        boardService.setPlayerPosition(playerIdInt, 3); // INVESTMENT
+        Player player = playerService.getPlayerById(playerId).orElseThrow();
+        player.setMoney(1000);
+
+        String result = fieldService.triggerCurrentFieldEvent(playerIdInt);
         assertTrue(result.contains("fehlgeschlagen"));
     }
 
     @Test
-    void testTriggerFamilyField() {
-        boardService.setPlayerPosition(1, 5); // FREUND → STOP_FAMILY
-        Player player = playerService.getPlayerById("1").orElseThrow();
+    void testHandleFamilySuccess() {
+        Player player = playerService.getPlayerById(playerId).orElseThrow();
         player.setChildrenCount(2);
-        Field friendField = boardService.getFieldByIndex(5);
-        friendField.addNextField(5); // Damit der Feldtyp erhalten bleibt
-        friendField.addNextField(5);
-        friendField.addNextField(5);
-        friendField.addNextField(5);
+
         String result = fieldService.handleFamily(player);
         assertTrue(result.contains("Kind"));
+        assertEquals(3, player.getChildren());
     }
 
     @Test
-    void testTriggerMarriageField() {
-        boardService.setPlayerPosition(1, 16); // HEIRAT
-        Player player = playerService.getPlayerById("1").orElseThrow();
-        player.setMarried(true);
-        String result = fieldService.triggerCurrentFieldEvent(1);
+    void testHandleFamilyFailTooManyChildren() {
+        Player player = playerService.getPlayerById(playerId).orElseThrow();
+        player.setChildrenCount(4);
+
+        String result = fieldService.handleFamily(player);
+        assertTrue(result.contains("Fehler"));
+    }
+
+    @Test
+    void testHandleMarriageSuccess() {
+        Player player = playerService.getPlayerById(playerId).orElseThrow();
+        player.setMarried(false);
+
+        String result = fieldService.handleMarriage(player);
         assertTrue(result.contains("verheiratet"));
     }
 
     @Test
-    void testTriggerRetirementField() {
-        boardService.setPlayerPosition(1, 8); // beliebiges Feld
-        Player player = playerService.getPlayerById("1").orElseThrow();
+    void testHandleMarriageFailAlreadyMarried() {
+        Player player = playerService.getPlayerById(playerId).orElseThrow();
+        player.setMarried(true);
+
+        String result = fieldService.handleMarriage(player);
+        assertTrue(result.contains("nicht heiraten"));
+    }
+
+    @Test
+    void testHandleRetirement() {
+        Player player = playerService.getPlayerById(playerId).orElseThrow();
+        assertFalse(player.isRetired());
+
         String result = fieldService.handleRetirement(player);
         assertTrue(result.contains("Ruhestand"));
         assertTrue(player.isRetired());
     }
 
     @Test
-    void testTriggerMidlifeCrisis() {
-        String result = fieldService.handleMidlifecrisis(new Player("test"));
+    void testHandleMidlifeCrisis() {
+        Player player = new Player("test");
+        String result = fieldService.handleMidlifecrisis(player);
         assertTrue(result.contains("MidlifeCrisis"));
     }
 
     @Test
-    void testTriggerExam() {
-        String result = fieldService.handleExam(new Player("test"));
+    void testHandleExam() {
+        Player player = new Player("test");
+        String result = fieldService.handleExam(player);
         assertTrue(result.contains("Jobkarten"));
     }
 
     @Test
     void testUnknownFieldType() {
-        boardService.setPlayerPosition(1, 0); // Feldtyp: STARTNORMAL
-        String result = fieldService.triggerCurrentFieldEvent(1);
+        // Feldtyp auf ungültig setzen
+        Field field = boardService.getFieldByIndex(0);
+        field.addNextField(0);
+        boardService.setPlayerPosition(playerIdInt, 0);
+
+        String result = fieldService.triggerCurrentFieldEvent(playerIdInt);
         assertTrue(result.contains("Unbekannter Feldtyp") || result.contains("❌"));
+    }
+
+    @Test
+    void testHandleHouse() {
+        // Feld 10 ist HOUSE laut deiner Logik
+        boardService.setPlayerPosition(playerIdInt, 10);
+
+        String result = fieldService.triggerCurrentFieldEvent(playerIdInt);
+        assertTrue(result.contains("Hauskauf"));
     }
 }
