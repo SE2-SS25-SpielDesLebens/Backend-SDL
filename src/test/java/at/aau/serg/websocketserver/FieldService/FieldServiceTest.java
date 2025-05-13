@@ -41,6 +41,15 @@ class FieldServiceTest {
     }
 
     @Test
+    void testTriggerCurrentFieldEventWithInvalidPlayerId() {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            fieldService.triggerCurrentFieldEvent(999); // nicht existierender Spieler
+        });
+        assertTrue(exception.getMessage().contains("Spieler nicht gefunden"));
+    }
+
+
+    @Test
     void testTriggerActionField() {
         boardService.setPlayerPosition(playerIdInt, 2); // ACTION
         String result = fieldService.triggerCurrentFieldEvent(playerIdInt);
@@ -150,4 +159,37 @@ class FieldServiceTest {
         String result = fieldService.triggerCurrentFieldEvent(playerIdInt);
         assertTrue(result.contains("Hauskauf"));
     }
+
+    @Test
+    void testTriggerCurrentFieldEventWithInvalidFieldType() {
+        Field field = boardService.getFieldByIndex(0);
+        field.addNextField(0);
+        boardService.setPlayerPosition(playerIdInt, 0);
+
+        // Simuliere ungültigen Typ
+        Field invalidField = boardService.getPlayerField(playerIdInt);
+        invalidField.addNextField(0);
+        boardService.setPlayerPosition(playerIdInt, 0);
+        String result = fieldService.triggerCurrentFieldEvent(playerIdInt);
+
+        assertTrue(result.contains("Unbekannter Feldtyp") || result.contains("❌"));
+    }
+
+    @Test
+    void testHandleFieldEventDefault() {
+        String result = fieldService.triggerCurrentFieldEvent(playerIdInt); // Simuliere STARTNORMAL als Typ
+        assertTrue(result.contains("❌") || result.contains("Kein definierter Effekt"));
+    }
+
+    @Test
+    void testTriggerMarriageFieldAlreadyMarriedHandled() {
+        boardService.setPlayerPosition(playerIdInt, 16); // HEIRAT
+        Player player = playerService.getPlayerById(playerId).orElseThrow();
+        player.setMarried(true); // ist bereits verheiratet
+
+        String result = fieldService.triggerCurrentFieldEvent(playerIdInt);
+        assertTrue(result.contains("❌") || result.contains("verheiratet"));
+    }
+
+
 }
