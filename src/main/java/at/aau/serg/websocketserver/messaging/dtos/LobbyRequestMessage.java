@@ -1,10 +1,10 @@
 package at.aau.serg.websocketserver.messaging.dtos;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
-@Getter
-@Setter
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class LobbyRequestMessage {
     private String playerName;
 }

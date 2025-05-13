@@ -32,7 +32,7 @@ public class LobbyService {
         String id = generateUniqueID();
         Lobby lobby = new Lobby(id, player);
         lobbies.put(id, lobby);
-        player.setHost(true);
+        //player.setHost(true); für testzwecke auskommentiert
         return lobby;
     }
 

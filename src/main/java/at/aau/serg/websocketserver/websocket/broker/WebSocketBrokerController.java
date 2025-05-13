@@ -6,6 +6,7 @@ import at.aau.serg.websocketserver.lobby.LobbyService;
 import at.aau.serg.websocketserver.messaging.dtos.*;
 import at.aau.serg.websocketserver.session.Job;
 import at.aau.serg.websocketserver.session.JobService;
+import org.springframework.messaging.MessagingException;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -71,25 +72,46 @@ public class WebSocketBrokerController {
                 content,
                 LocalDateTime.now().toString()
         );
+
     }
 
-    //TODO: Message Mapping ordentlich machen
-
-    @MessageMapping("/topic/lobby/create")
-    @SendTo("/topic/{gameid}")
-    public LobbyResponseMessage handleLobbyCreate(@Payload LobbyRequestMessage request, Principal principal){
+    @MessageMapping("/lobby/create")
+    @SendTo("/queue/lobby/created")
+    public void handleLobbyCreate(@Payload LobbyRequestMessage request, Principal principal){
         //Spieler sollte schon in PlayerService enthalten sein
         Lobby lobby = lobbyService.createLobby(playerService.getPlayerById(request.getPlayerName()));
-
-        return new LobbyResponseMessage(lobby.getId(), request.getPlayerName());
+        System.out.println("Lobbyid: " + lobby.getId() + " " + request.getPlayerName() + " " + principal.getName());
+        LobbyResponseMessage response = new LobbyResponseMessage(lobby.getId(), request.getPlayerName(), true, null);
+        messagingTemplate.convertAndSendToUser(
+                request.getPlayerName(),   // = Principal.getName(), wenn korrekt verwendet
+                "/queue/lobby/created",    // Ziel für den Client
+                response
+        );
+        System.out.println("Nachricht gesendet");
     }
 
-    @MessageMapping("/topic/{lobbyid}/join")
-    @SendToUser("/topic/{lobbyid}/{playerid}")
-    public LobbyResponseMessage handlePlayerJoin(@DestinationVariable String lobbyid, @DestinationVariable String playerid, @Payload LobbyRequestMessage request){
+    @MessageMapping("/{lobbyid}/join")
+    @SendTo("/topic/{lobbyid}")
+    public void handlePlayerJoin(@DestinationVariable String lobbyid, @Payload LobbyRequestMessage request){
+        LobbyResponseMessage response = null;
+        try {
+            Lobby lobby = lobbyService.getLobby(lobbyid);
+            lobby.addPlayer(playerService.getPlayerById(request.getPlayerName()));
+            response = new LobbyResponseMessage(lobbyid, request.getPlayerName(), true, "Spieler " + request.getPlayerName() + " ist erfolgreich beigetreten");
+
+        } catch (Exception e) {
+            response = new LobbyResponseMessage(lobbyid, request.getPlayerName(), false, e.getMessage());
+        }finally {
+            String destination = String.format("/topic/%s", lobbyid);
+            assert response != null;
+            messagingTemplate.convertAndSend(destination, response);
+        }
+    }
+
+    @MessageMapping("/{lobbyid}/leave")
+    public void handlePlayerLeave(@DestinationVariable String lobbyid, @Payload LobbyRequestMessage request){
         Lobby lobby = lobbyService.getLobby(lobbyid);
-        lobby.addPlayer(playerService.getPlayerById(request.getPlayerName()));
-        return new LobbyResponseMessage(lobby.getId(), request.getPlayerName());
+        lobby.removePlayer(playerService.getPlayerById(request.getPlayerName()));
     }
 
     @MessageMapping("/chat")

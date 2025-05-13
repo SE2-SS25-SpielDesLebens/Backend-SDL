@@ -1,11 +1,15 @@
 package at.aau.serg.websocketserver.messaging.dtos;
 
-public class LobbyResponseMessage {
-    private final String playerName;
-    private final String lobbyID;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-    public LobbyResponseMessage(String lobbyID, String playerName){
-        this.lobbyID = lobbyID;
-        this.playerName = playerName;
-    }
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class LobbyResponseMessage {
+    private String lobbyID;
+    private String playerName;
+    private boolean isSuccessful;
+    private String message;
 }
