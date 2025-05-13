@@ -2,22 +2,45 @@ package at.aau.serg.websocketserver.fieldlogic;
 
 import at.aau.serg.websocketserver.Player.Player;
 import at.aau.serg.websocketserver.Player.PlayerService;
+import at.aau.serg.websocketserver.board.BoardService;
+import at.aau.serg.websocketserver.board.Field;
 import org.springframework.stereotype.Service;
 
 @Service
 public class FieldService {
 
     private final PlayerService playerService;
+    private final BoardService boardService;
 
-    public FieldService(PlayerService playerService) {
+    public FieldService(PlayerService playerService, BoardService boardService) {
         this.playerService = playerService;
+        this.boardService = boardService;
     }
 
-    public String handleFieldEvent(String playerId, FieldType fieldType) {
-
-        Player player = playerService.getPlayerById(playerId).orElseThrow(() ->
+    /**
+     * Reagiere auf ein Feldereignis basierend auf der aktuellen Spielerposition
+     */
+    public String triggerCurrentFieldEvent(int playerId) {
+        // Spieler ermitteln
+        Player player = playerService.getPlayerById(String.valueOf(playerId)).orElseThrow(() ->
                 new IllegalArgumentException("Spieler nicht gefunden."));
 
+        // Aktuelles Feld vom BoardService holen
+        Field field = boardService.getPlayerField(playerId);
+
+        // Feldtyp interpretieren
+        FieldType fieldType;
+        try {
+            fieldType = FieldType.valueOf(field.getType());
+        } catch (IllegalArgumentException e) {
+            return "❌ Unbekannter Feldtyp: " + field.getType();
+        }
+
+        // Je nach Typ entsprechende Aktion ausführen
+        return handleFieldEvent(player, fieldType);
+    }
+
+    private String handleFieldEvent(Player player, FieldType fieldType) {
         return switch (fieldType) {
             case PAYDAY -> handlePayday(player);
             case ACTION -> handleAction(player);
@@ -28,9 +51,7 @@ public class FieldService {
             case STOP_MARRIAGE -> handleMarriage(player);
             case STOP_MIDLIFECRISIS -> handleMidlifecrisis(player);
             case STOP_EXAM -> handleExam(player);
-            case START_NORMAL -> handleStartNormalField(player);
-            case START_UNIVERSITY -> handleStartUniversityField(player);
-            default -> "Kein spezieller Effekt für dieses Feld.";
+            default -> "❌ Kein definierter Effekt für dieses Feld.";
         };
     }
 
@@ -70,17 +91,11 @@ public class FieldService {
         return "🪑 Spieler ist nun im Ruhestand.";
     }
 
-    private String handleMidlifecrisis (Player player){
-        return " Spieler befindet sich jetzt in der MidlifeCrisis!";
-    }
-    private String handleExam (Player player){
-        return "Jobkarten müssen noch implemetiert werden!";
-    }
-    private String handleStartNormalField(Player player){
-        return "Spiellogik fehlt noch!";
+    private String handleMidlifecrisis(Player player) {
+        return "😵 Spieler befindet sich jetzt in der MidlifeCrisis!";
     }
 
-    private String handleStartUniversityField(Player player){
-        return "Spielogik fehlt noch!";
+    private String handleExam(Player player) {
+        return "🎓 Jobkarten müssen noch implementiert werden.";
     }
 }

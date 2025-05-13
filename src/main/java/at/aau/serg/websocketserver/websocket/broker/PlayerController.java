@@ -87,13 +87,11 @@ public class PlayerController {
         }
     }
 
-    @PostMapping("/field")
-    public ResponseEntity<String> playerStepsOnField(
-            @RequestParam String playerId,
-            @RequestParam FieldType fieldType
-    ) {
-        return ResponseEntity.ok(fieldService.handleFieldEvent(playerId, fieldType));
+    @PostMapping("/{id}/trigger-field")
+    public ResponseEntity<String> triggerFieldEffect(@PathVariable int id) {
+        return ResponseEntity.ok(fieldService.triggerCurrentFieldEvent(id));
     }
+
 
 
 }
