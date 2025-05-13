@@ -1,5 +1,11 @@
 package at.aau.serg.websocketserver.websocket.broker;
 
+import Game.GameController;
+import Game.GameLogic;
+import Game.PlayerTurnManager;
+import at.aau.serg.websocketserver.Player.Player;
+import at.aau.serg.websocketserver.lobby.Lobby;
+import at.aau.serg.websocketserver.lobby.LobbyService;
 import at.aau.serg.websocketserver.messaging.dtos.JobMessage;
 import at.aau.serg.websocketserver.messaging.dtos.JobRequestMessage;
 import at.aau.serg.websocketserver.messaging.dtos.OutputMessage;
@@ -31,16 +37,55 @@ public class WebSocketBrokerController {
         this.messagingTemplate = messagingTemplate;
     }
 
-    @MessageMapping("/move")
-    @SendTo("/topic/game") // optional: dynamisch mit gameId (siehe Kommentar unten)
-    public OutputMessage handleMove(StompMessage message) {
-        System.out.println("[MOVE] [" + message.getGameId() + "] " + message.getPlayerName() + ": " + message.getAction());
-        return new OutputMessage(
-                message.getPlayerName(),
-                message.getAction(),
-                LocalDateTime.now().toString()
-        );
+    @MessageMapping("/game/{gameId}/move")
+    @SendTo("/topic/game/{gameId}")
+    public OutputMessage handleMove(
+            @DestinationVariable String gameId,
+            StompMessage message
+    ) {
+        System.out.println("[MOVE] [" + gameId + "] " + message.getPlayerName() + ": " + message.getAction());
+
+        Lobby lobby = LobbyService.getInstance().getLobby(gameId);
+        if (lobby == null || !lobby.isStarted()) {
+            return new OutputMessage("System", "Spiel nicht gefunden oder nicht gestartet", now());
+        }
+
+        GameLogic game = lobby.getGameLogic();
+
+        if (game == null) {
+            return new OutputMessage("System", "Spielinstanz nicht vorhanden", now());
+        }
+
+        Player player = game.getCurrentPlayer();
+        if (!player.getId().equals(message.getPlayerName())) {
+            return new OutputMessage("System", "Nicht dein Zug!", now());
+        }
+
+        int spin = parseSpinResult(message.getAction());
+        if (spin <= 0 || spin > 10) {
+            return new OutputMessage("System", "Ungültiger Drehwert", now());
+        }
+
+        game.performTurn(player, spin);
+        return new OutputMessage(player.getId(), "dreht " + spin, now());
     }
+
+
+    private int parseSpinResult(String action) {
+        if (action != null && action.startsWith("drehe:")) {
+            try {
+                return Integer.parseInt(action.split(":")[1]);
+            } catch (Exception e) {
+                System.out.println("[FEHLER] Ungültiges Drehradformat: " + action);
+            }
+        }
+        return 0;
+    }
+
+    private String now() {
+        return java.time.LocalDateTime.now().toString();
+    }
+
 
     @MessageMapping("/lobby")
     @SendTo("/topic/lobby")
@@ -85,11 +130,59 @@ public class WebSocketBrokerController {
      */
 
     @MessageMapping("/game/start/{gameId}")
-    public void handleGameStart(@DestinationVariable int gameId) {
-        // Erstelle oder lade das Repo für diese gameId
-        jobService.getOrCreateRepository(gameId);
-        // kein convertAndSend, es wird nichts zurückgeschickt
+    public void handleGameStart(@DestinationVariable String gameId) {
+        // 1. Repository vorbereiten
+        jobService.getOrCreateRepository(Integer.parseInt(gameId));
+
+        // 2. Lobby und Spieler holen
+        Lobby lobby = LobbyService.getInstance().getLobby(gameId);
+        if (lobby == null || lobby.isStarted()) {
+            System.out.println("[WARNUNG] Lobby nicht gefunden oder bereits gestartet: " + gameId);
+            return;
+        }
+
+        // 3. GameLogic erzeugen
+        GameLogic gameLogic = new GameLogic();
+        gameLogic.setJobService(jobService);
+        gameLogic.setGameController(new GameController(gameLogic));
+        gameLogic.setTurnManager(new PlayerTurnManager(gameLogic));
+
+        for (Player player : lobby.getPlayers()) {
+            gameLogic.registerPlayer(player.getId());
+        }
+
+        gameLogic.prepareGameStart();
+        lobby.setStarted(true);
+        lobby.setGameLogic(gameLogic);
+
+
+        // 4. Optional: Nachricht an alle senden
+        messagingTemplate.convertAndSend(
+                "/topic/game/" + gameId + "/status",
+                "Das Spiel wurde gestartet. Spieleranzahl: " + lobby.getPlayers().size()
+        );
+
     }
+
+    @MessageMapping("/game/end/{gameId}")
+    @SendTo("/topic/game/{gameId}/status")
+    public OutputMessage handleGameEnd(@DestinationVariable String gameId) {
+        Lobby lobby = LobbyService.getInstance().getLobby(gameId);
+        if (lobby == null || !lobby.isStarted()) {
+            return new OutputMessage("System", "Spiel nicht gefunden oder nicht gestartet", now());
+        }
+
+        GameLogic game = lobby.getGameLogic();
+        if (game == null) {
+            return new OutputMessage("System", "Keine Spielinstanz vorhanden", now());
+        }
+
+        game.endGame(); // ❗ Dies ruft die finale Auswertung auf
+        lobby.setStarted(false); // Spiel wird beendet
+
+        return new OutputMessage("System", "Spiel wurde manuell beendet!", now());
+    }
+
 
 
     /**

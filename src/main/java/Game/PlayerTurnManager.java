@@ -10,7 +10,7 @@ public class PlayerTurnManager {
         this.gameLogic = gameLogic;
     }
 
-    // Startet den Spielzug und behandelt z. B. Kapitalanlage
+    // Startet den Spielzug und behandelt zB. Kapitalanlage
     public void startTurn(String playerId, boolean kauftKapitalanlage) {
         Player player = gameLogic.getCurrentPlayer();
         if (!player.getId().equals(playerId)) {

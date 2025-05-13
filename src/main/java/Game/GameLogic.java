@@ -170,7 +170,7 @@ public class GameLogic {
         usedInvestmentSlots.add(newSlot);
     }
 
-    protected void endGame() {
+    public void endGame() {
         gameEnded = true;
         List<Map.Entry<String, Player>> sorted = players.entrySet()
                 .stream().sorted((a, b) -> Integer.compare(calculateFinalWealth(b.getValue()), calculateFinalWealth(a.getValue())))
@@ -202,9 +202,8 @@ public class GameLogic {
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Spieler nicht gefunden: " + name));
     }
-
-    // 🟡 HIER KOMMT SPÄTER DIE FELDLOGIK DER KOLLEGEN HINZU
-    // z. B. handleActionField(Player), handleHouseField(Player), ...
+    // Feldlogik muss noch implementiert werden
+    // zb. handleActionField(Player), handleHouseField(Player), ...
 }
 
 
