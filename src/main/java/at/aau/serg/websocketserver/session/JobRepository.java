@@ -5,8 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Repository;
 
 import java.io.InputStream;
+import java.security.SecureRandom;
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 /**
@@ -16,12 +16,13 @@ import java.util.stream.Collectors;
 public class JobRepository {
 
     private final List<Job> jobs = new ArrayList<>();
+    // Einmalig erzeugter SecureRandom-Generator
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     /**
      * Lädt alle Jobs aus jobs.json.
      */
     public void loadJobs() throws Exception {
-        // Ausgabe, um zu sehen, dass wir im Repository angekommen sind
         System.out.println("[JobRepository] loadJobs() aufgerufen");
 
         InputStream inputStream = getClass().getClassLoader().getResourceAsStream("jobs.json");
@@ -47,7 +48,6 @@ public class JobRepository {
             }
         }
 
-        // Ausgabe, wie viele Jobs geladen wurden
         System.out.println("[JobRepository] jobs.json geladen: " + jobs.size() + " Jobs");
     }
 
@@ -58,12 +58,11 @@ public class JobRepository {
         Optional<Job> existing = jobs.stream()
                 .filter(job -> playerName.equals(job.getAssignedToPlayerName()))
                 .findFirst();
-        if (existing.isPresent()) {
-            Job j = existing.get();
-            System.out.println("[JobRepository] Spieler \"" + playerName +
-                    "\" hat bereits Job: \"" + j.getTitle() +
-                    "\" (ID " + j.getJobId() + ")");
-        }
+        existing.ifPresent(j -> System.out.println(
+                "[JobRepository] Spieler \"" + playerName +
+                        "\" hat bereits Job: \"" + j.getTitle() +
+                        "\" (ID " + j.getJobId() + ")"
+        ));
         return existing;
     }
 
@@ -77,9 +76,12 @@ public class JobRepository {
                 .filter(job -> job.isRequiresDegree() == hasDegree)
                 .collect(Collectors.toList());
 
-        // ThreadLocalRandom ist performant und threadsicher
-        Collections.shuffle(availableJobs, ThreadLocalRandom.current());
-        return availableJobs.stream().limit(count).collect(Collectors.toList());
+        // Kryptographisch starker, thread‐sicherer Zufalls­generator
+        Collections.shuffle(availableJobs, SECURE_RANDOM);
+
+        return availableJobs.stream()
+                .limit(count)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -97,20 +99,27 @@ public class JobRepository {
     public void assignJobToPlayer(String playerName, Job newJob) {
         // Alten Job freigeben (mit Log)
         getCurrentJobForPlayer(playerName).ifPresent(old -> {
-            System.out.println("[JobRepository] Spieler \"" + playerName +
-                    "\" gibt alten Job frei: \"" + old.getTitle() +
-                    "\" (ID " + old.getJobId() + ")");
+            System.out.println(
+                    "[JobRepository] Spieler \"" + playerName +
+                            "\" gibt alten Job frei: \"" + old.getTitle() +
+                            "\" (ID " + old.getJobId() + ")"
+            );
             old.releaseJob();
         });
+
         // Neuen Job zuweisen
         boolean success = newJob.assignJobTo(playerName);
         if (success) {
-            System.out.println("[JobRepository] Spieler \"" + playerName +
-                    "\" erhält neuen Job: \"" + newJob.getTitle() +
-                    "\" (ID " + newJob.getJobId() + ")");
+            System.out.println(
+                    "[JobRepository] Spieler \"" + playerName +
+                            "\" erhält neuen Job: \"" + newJob.getTitle() +
+                            "\" (ID " + newJob.getJobId() + ")"
+            );
         } else {
-            System.out.println("[JobRepository] Zuweisung fehlgeschlagen für Job: \"" +
-                    newJob.getTitle() + "\" (ID " + newJob.getJobId() + ")");
+            System.out.println(
+                    "[JobRepository] Zuweisung fehlgeschlagen für Job: \"" +
+                            newJob.getTitle() + "\" (ID " + newJob.getJobId() + ")"
+            );
         }
     }
 
@@ -118,8 +127,10 @@ public class JobRepository {
      * Gibt einen Job explizit frei.
      */
     public void releaseJob(Job job) {
-        System.out.println("[JobRepository] Job freigegeben: \"" +
-                job.getTitle() + "\" (ID " + job.getJobId() + ")");
+        System.out.println(
+                "[JobRepository] Job freigegeben: \"" +
+                        job.getTitle() + "\" (ID " + job.getJobId() + ")"
+        );
         job.releaseJob();
     }
 }
