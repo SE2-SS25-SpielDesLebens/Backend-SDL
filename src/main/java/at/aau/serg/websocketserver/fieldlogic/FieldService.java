@@ -110,4 +110,5 @@ public class FieldService {
     public String handleExam(Player player) {
         return "🎓 Jobkarten müssen noch implementiert werden.";
     }
+
 }

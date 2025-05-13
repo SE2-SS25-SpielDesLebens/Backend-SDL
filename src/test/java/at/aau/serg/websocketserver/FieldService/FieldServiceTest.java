@@ -190,6 +190,19 @@ class FieldServiceTest {
         String result = fieldService.triggerCurrentFieldEvent(playerIdInt);
         assertTrue(result.contains("❌") || result.contains("verheiratet"));
     }
+    @Test
+    void testTriggerHouseField() {
+        boardService.setPlayerPosition(playerIdInt, 10); // HOUSE
+        String result = fieldService.triggerCurrentFieldEvent(playerIdInt);
+        assertTrue(result.contains("Hauskauf"));
+    }
+
+    @Test
+    void testTriggerStartNormalField() {
+        boardService.setPlayerPosition(playerIdInt, 0); // STARTNORMAL
+        String result = fieldService.triggerCurrentFieldEvent(playerIdInt);
+        assertTrue(result.contains("Kein definierter Effekt") || result.contains("❌"));
+    }
 
 
 }
