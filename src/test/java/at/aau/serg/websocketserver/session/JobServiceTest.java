@@ -5,9 +5,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.ObjectProvider;
 
-import java.lang.reflect.Field;
-import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 class JobServiceTest {
