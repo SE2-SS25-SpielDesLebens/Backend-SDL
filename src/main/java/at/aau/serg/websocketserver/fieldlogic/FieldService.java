@@ -68,7 +68,7 @@ public class FieldService {
         return "🏠 Hauskauf wird hier später implementiert.";
     }
 
-    private String handleInvestment(Player player) {
+    public String handleInvestment(Player player) {
         try {
             return playerService.investForPlayer(player.getId())
                     ? "📈 20.000€ investiert."

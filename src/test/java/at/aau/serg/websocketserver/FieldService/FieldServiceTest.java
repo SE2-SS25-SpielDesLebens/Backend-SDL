@@ -204,5 +204,45 @@ class FieldServiceTest {
         assertTrue(result.contains("Kein definierter Effekt") || result.contains("❌"));
     }
 
+    @Test
+    void testTriggerFieldWithStopFamily() {
+        boardService.setPlayerPosition(playerIdInt, 5); // FREUND = STOP_FAMILY (simuliert)
+        Field field = boardService.getFieldByIndex(5);
+        field.addNextField(6); // nur für Konsistenz
+        fieldService.handleFamily(playerService.getPlayerById(playerId).orElseThrow()); // zur Sicherheit vorbereiten
+
+        String result = fieldService.triggerCurrentFieldEvent(playerIdInt);
+        assertTrue(result.contains("Kind") || result.contains("Fehler beim Hinzufügen eines Kindes"));
+    }
+
+
+    @Test
+    void testMarriageFailsWithException() {
+        Player player = playerService.getPlayerById(playerId).orElseThrow();
+        player.setMarried(true); // verursacht IllegalArgumentException
+
+        String result = fieldService.handleMarriage(player);
+        assertTrue(result.contains("Fehler bei der Heirat"));
+    }
+
+    @Test
+    void testFamilyFailsWithException() {
+        Player player = playerService.getPlayerById(playerId).orElseThrow();
+        player.setChildrenCount(4); // zu viele Kinder → Exception
+
+        String result = fieldService.handleFamily(player);
+        assertTrue(result.contains("Fehler beim Hinzufügen eines Kindes"));
+    }
+
+    @Test
+    void testInvestmentFailsWithException() {
+        Player player = playerService.getPlayerById(playerId).orElseThrow();
+        player.setMoney(1000); // zu wenig Geld → Exception
+
+        String result = fieldService.handleInvestment(player);
+        assertTrue(result.contains("Investition fehlgeschlagen"));
+    }
+
+
 
 }
