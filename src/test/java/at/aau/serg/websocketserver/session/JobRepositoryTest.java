@@ -106,6 +106,16 @@ class JobRepositoryTest {
     }
 
     @Test
+    void testGetRandomAvailableJobsCountExceedsAvailable() throws Exception {
+        Job only = new Job(1, "Solo", 100, 10, false);
+        getJobsList(repo).add(only);
+
+        List<Job> res = repo.getRandomAvailableJobs(false, 5);
+        assertEquals(1, res.size(), "Should not return more jobs than available");
+        assertEquals(only, res.get(0));
+    }
+
+    @Test
     void testReleaseJob() throws Exception {
         Job job = new Job(3, "Test", 300, 30, false);
         getJobsList(repo).add(job);
@@ -115,5 +125,26 @@ class JobRepositoryTest {
         repo.releaseJob(job);
         assertFalse(job.isTaken(), "Job should be released");
         assertNull(job.getAssignedToPlayerName(), "Job should have no assigned player after release");
+    }
+
+    @Test
+    void testLoadJobsLoadsFromJson() throws Exception {
+        repo.loadJobs();
+        List<Job> all = getJobsList(repo);
+        assertEquals(2, all.size(), "Es sollten genau 2 Jobs geladen werden");
+        assertEquals(1, all.get(0).getJobId(), "Erster Job sollte ID=1 haben");
+        assertEquals("Entwickler", all.get(1).getTitle(), "Zweiter Job sollte 'Entwickler' heißen");
+    }
+    @Test
+    void testLoadJobsThrowsWhenMissing() {
+        JobRepository emptyRepo = new JobRepository() {
+            @Override
+            public void loadJobs() throws Exception {
+                // Simuliere fehlende jobs.json
+                throw new IllegalStateException("jobs.json nicht gefunden!");
+            }
+        };
+        assertThrows(IllegalStateException.class, emptyRepo::loadJobs,
+                "Wenn jobs.json nicht gefunden wird, muss eine IllegalStateException geworfen werden");
     }
 }
