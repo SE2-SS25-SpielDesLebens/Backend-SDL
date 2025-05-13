@@ -4,14 +4,14 @@ import Game.GameController;
 import Game.GameLogic;
 import Game.PlayerTurnManager;
 import at.aau.serg.websocketserver.Player.Player;
+import at.aau.serg.websocketserver.board.BoardService;
+import at.aau.serg.websocketserver.board.Field;
 import at.aau.serg.websocketserver.lobby.Lobby;
 import at.aau.serg.websocketserver.lobby.LobbyService;
-import at.aau.serg.websocketserver.messaging.dtos.JobMessage;
-import at.aau.serg.websocketserver.messaging.dtos.JobRequestMessage;
-import at.aau.serg.websocketserver.messaging.dtos.OutputMessage;
-import at.aau.serg.websocketserver.messaging.dtos.StompMessage;
+import at.aau.serg.websocketserver.messaging.dtos.*;
 import at.aau.serg.websocketserver.session.Job;
 import at.aau.serg.websocketserver.session.JobService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -30,69 +30,134 @@ public class WebSocketBrokerController {
 
     private final JobService jobService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final BoardService boardService;
 
+    @Autowired
     public WebSocketBrokerController(JobService jobService,
-                                     SimpMessagingTemplate messagingTemplate) {
+                                     SimpMessagingTemplate messagingTemplate,
+                                     BoardService boardService) {
         this.jobService = jobService;
         this.messagingTemplate = messagingTemplate;
-    }
-
-    @MessageMapping("/game/{gameId}/move")
-    @SendTo("/topic/game/{gameId}")
-    public OutputMessage handleMove(
-            @DestinationVariable String gameId,
-            StompMessage message
-    ) {
-        System.out.println("[MOVE] [" + gameId + "] " + message.getPlayerName() + ": " + message.getAction());
-
-        Lobby lobby = LobbyService.getInstance().getLobby(gameId);
-        if (lobby == null || !lobby.isStarted()) {
-            return new OutputMessage("System", "Spiel nicht gefunden oder nicht gestartet", now());
+        this.boardService = boardService;
+    }    @MessageMapping("/move")
+    public void handleMove(StompMessage message) {
+        int playerId;
+        try {
+            playerId = Integer.parseInt(message.getPlayerName()); // Annahme: playerName = ID
+        } catch (NumberFormatException e) {
+            messagingTemplate.convertAndSend("/topic/game",
+                    new OutputMessage(message.getPlayerName(), "❌ Ungültige Spieler-ID", LocalDateTime.now().toString()));
+            return;
         }
 
-        GameLogic game = lobby.getGameLogic();
-
-        if (game == null) {
-            return new OutputMessage("System", "Spielinstanz nicht vorhanden", now());
-        }
-
-        Player player = game.getCurrentPlayer();
-        if (!player.getId().equals(message.getPlayerName())) {
-            return new OutputMessage("System", "Nicht dein Zug!", now());
-        }
-
-        int spin = parseSpinResult(message.getAction());
-        if (spin <= 0 || spin > 10) {
-            return new OutputMessage("System", "Ungültiger Drehwert", now());
-        }
-
-        game.performTurn(player, spin);
-        return new OutputMessage(player.getId(), "dreht " + spin, now());
-    }
-
-
-    private int parseSpinResult(String action) {
-        if (action != null && action.startsWith("drehe:")) {
+        String action = message.getAction();
+        // Prüfe, ob es ein "join:X" Befehl ist (Spieler betritt das Spielfeld)
+        if (action != null && action.startsWith("join:")) {
             try {
-                return Integer.parseInt(action.split(":")[1]);
+                int startFieldIndex = Integer.parseInt(action.substring(5));                boardService.addPlayer(playerId, startFieldIndex);                Field currentField = boardService.getPlayerField(playerId);
+
+                // Get the possible next fields
+                List<Integer> nextPossibleFieldIndices = new ArrayList<>();
+                for (Field nextField : boardService.getValidNextFields(playerId)) {
+                    nextPossibleFieldIndices.add(nextField.getIndex());
+                }
+
+                MoveMessage moveMessage = new MoveMessage(
+                        message.getPlayerName(),
+                        currentField.getIndex(),
+                        currentField.getType(),
+                        LocalDateTime.now().toString(),
+                        nextPossibleFieldIndices
+                );
+
+                messagingTemplate.convertAndSend("/topic/game", moveMessage);
+                return;
             } catch (Exception e) {
-                System.out.println("[FEHLER] Ungültiges Drehradformat: " + action);
+                messagingTemplate.convertAndSend("/topic/game",
+                        new OutputMessage(message.getPlayerName(), "❌ Fehler beim Betreten des Spielfelds", LocalDateTime.now().toString()));
+                return;
+            }
+        }        // Prüfe, ob es eine direkte Bewegung zu einem bestimmten Feld ist
+        if (action != null && action.startsWith("move:")) {
+            try {
+                int targetFieldIndex = Integer.parseInt(action.substring(5));
+                boolean success = boardService.movePlayerToField(playerId, targetFieldIndex);
+                  if (success) {
+                    Field currentField = boardService.getPlayerField(playerId);
+                    List<Integer> nextPossibleFieldIndices = new ArrayList<>();
+                    for (Field nextField : boardService.getValidNextFields(playerId)) {
+                        nextPossibleFieldIndices.add(nextField.getIndex());
+                    }
+
+                    MoveMessage moveMessage = new MoveMessage(
+                            message.getPlayerName(),
+                            currentField.getIndex(),
+                            currentField.getType(),
+                            LocalDateTime.now().toString(),
+                            nextPossibleFieldIndices
+                    );
+                    messagingTemplate.convertAndSend("/topic/game", moveMessage);
+                } else {
+                    messagingTemplate.convertAndSend("/topic/game",
+                            new OutputMessage(message.getPlayerName(), "❌ Ungültiger Zug", LocalDateTime.now().toString()));
+                }
+                return;
+            } catch (Exception e) {
+                messagingTemplate.convertAndSend("/topic/game",
+                        new OutputMessage(message.getPlayerName(), "❌ Fehler bei der Bewegung", LocalDateTime.now().toString()));
+                return;
             }
         }
-        return 0;
-    }
 
-    private String now() {
-        return java.time.LocalDateTime.now().toString();
-    }
+        // Reguläre Bewegung mit Würfel
+        int steps;
+        try {
+            steps = Integer.parseInt(message.getAction().replaceAll("[^0-9]", ""));
+        } catch (NumberFormatException e) {
+            messagingTemplate.convertAndSend("/topic/game",
+                    new OutputMessage(message.getPlayerName(), "❌ Ungültige Würfelzahl", LocalDateTime.now().toString()));
+            return;
+        }
 
+        // Prüfe ob eine bestimmte Ausgangsposition mitgeschickt wurde
+        int currentFieldIndex = -1;
+        if (message.getAction().contains(":")) {
+            String[] parts = message.getAction().split(":");
+            if (parts.length > 1) {
+                try {
+                    currentFieldIndex = Integer.parseInt(parts[1]);
+                    // Wenn eine gültige aktuelle Position mitgeschickt wurde, setzen wir diese
+                    if (currentFieldIndex >= 0 && currentFieldIndex < boardService.getBoardSize()) {
+                        boardService.setPlayerPosition(playerId, currentFieldIndex);
+                    }
+                } catch (NumberFormatException e) {
+                    // Ignoriere Fehler hier
+                }
+            }
+        }
+
+        boardService.movePlayer(playerId, steps);                Field currentField = boardService.getPlayerField(playerId);
+                List<Integer> nextPossibleFieldIndices = new ArrayList<>();
+                for (Field nextField : boardService.getValidNextFields(playerId)) {
+                    nextPossibleFieldIndices.add(nextField.getIndex());
+                }
+
+                MoveMessage moveMessage = new MoveMessage(
+                        message.getPlayerName(),
+                        currentField.getIndex(),
+                        currentField.getType(),
+                        LocalDateTime.now().toString(),
+                        nextPossibleFieldIndices
+                );
+
+                messagingTemplate.convertAndSend("/topic/game", moveMessage);
+    }
 
     @MessageMapping("/lobby")
-    @SendTo("/topic/lobby")
-    public OutputMessage handleLobby(StompMessage message) {
+    public void handleLobby(@Payload StompMessage message) {
         String action = message.getAction();
-        String content;
         String gameId = message.getGameId();
+        String content;
 
         if (action == null) {
             content = "❌ Keine Aktion angegeben.";
@@ -104,30 +169,15 @@ public class WebSocketBrokerController {
             };
         }
 
-        System.out.println("[LOBBY] [" + gameId + "] " + message.getPlayerName() + ": " + content);
-
-        return new OutputMessage(
-                message.getPlayerName(),
-                content,
-                LocalDateTime.now().toString()
-        );
+        messagingTemplate.convertAndSend("/topic/lobby",
+                new OutputMessage(message.getPlayerName(), content, LocalDateTime.now().toString()));
     }
 
     @MessageMapping("/chat")
-    @SendTo("/topic/chat")
-    public OutputMessage handleChat(StompMessage message) {
-        System.out.println("[CHAT] [" + message.getGameId() + "] " + message.getPlayerName() + ": " + message.getMessageText());
-        return new OutputMessage(
-                message.getPlayerName(),
-                message.getMessageText(),
-                LocalDateTime.now().toString()
-        );
+    public void handleChat(@Payload StompMessage message) {
+        messagingTemplate.convertAndSend("/topic/chat",
+                new OutputMessage(message.getPlayerName(), message.getMessageText(), LocalDateTime.now().toString()));
     }
-
-    /**
-     * Wird aufgerufen, wenn ein Spiel startet. Legt über JobService
-     * das Repository für diese gameId an.
-     */
 
     @MessageMapping("/game/start/{gameId}")
     public void handleGameStart(@DestinationVariable String gameId) {
@@ -183,19 +233,16 @@ public class WebSocketBrokerController {
         return new OutputMessage("System", "Spiel wurde manuell beendet!", now());
     }
 
+    private String now() {
+        return LocalDateTime.now().toString();
+    }
 
 
-    /**
-     * Spieler fragt Jobs an: Holt sich das korrekte Repository
-     * über JobService und sendet zwei Jobs zurück.
-     */
+
     @MessageMapping("/jobs/{gameId}/{playerName}/request")
     public void handleJobRequest(@DestinationVariable int gameId,
                                  @DestinationVariable String playerName,
                                  @Payload JobRequestMessage msg) {
-        System.out.println("[JOB_REQUEST] Spiel " + gameId +
-                ", Spieler " + playerName +
-                ", hasDegree=" + msg.hasDegree());
 
         boolean hasDegree = msg.hasDegree();
         var repo = jobService.getOrCreateRepository(gameId);
@@ -225,46 +272,21 @@ public class WebSocketBrokerController {
 
         String dest = String.format("/topic/%d/jobs/%s", gameId, playerName);
         messagingTemplate.convertAndSend(dest, dtos);
-
-        // NEU: Ausgabe nachdem die beiden Jobs verschickt wurden
-        System.out.println("[JOB_RESPONSE] Spiel " + gameId +
-                ", Spieler " + playerName +
-                ", gesendete Jobs: " +
-                dtos.stream()
-                        .map(JobMessage::getTitle)
-                        .reduce((a, b) -> a + " + " + b)
-                        .orElse("<keine>"));
     }
 
-    /**
-     * Spieler wählt einen Job aus: Repository-Zugriff über JobService.
-     */
     @MessageMapping("/jobs/{gameId}/{playerName}/select")
     public void handleJobSelection(@DestinationVariable int gameId,
                                    @DestinationVariable String playerName,
                                    @Payload JobMessage msg) {
-        System.out.println("[JOB_SELECT_REQUEST] Spiel " + gameId +
-                ", Spieler " + playerName +
-                ", gewählter JobId=" + msg.getJobId());
 
         var repo = jobService.getOrCreateRepository(gameId);
         Optional<Job> currentOpt = repo.getCurrentJobForPlayer(playerName);
 
-        // Neu: Wenn der aktuelle Job bereits dieser ist, nichts tun
         if (currentOpt.isPresent() && currentOpt.get().getJobId() == msg.getJobId()) {
-            System.out.println("[JOB_SELECT_SKIP] Spieler " + playerName +
-                    " hat JobId=" + msg.getJobId() + " bereits zugewiesen – überspringe");
             return;
         }
 
-        // Sonst ganz normal zuweisen
         repo.findJobById(msg.getJobId())
-                .ifPresent(job -> {
-                    repo.assignJobToPlayer(playerName, job);
-                    System.out.println("[JOB_SELECT] Spiel " + gameId +
-                            ", Spieler " + playerName +
-                            " erhält neuen Job: " + job.getTitle() +
-                            " (ID " + job.getJobId() + ")");
-                });
+                .ifPresent(job -> repo.assignJobToPlayer(playerName, job));
     }
 }
