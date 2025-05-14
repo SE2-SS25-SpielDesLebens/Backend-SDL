@@ -62,7 +62,7 @@ public class ActionCardDeckTest {
             // after each full cycle, draw one more to reset
             ActionCard c = deck.pull();
             assertNotNull(c);
-            assertEquals(total - (1 + cycle), deck.remaining(), "Remaining after cycle " + cycle + " reset should be size-1");
+            assertEquals(total - (1 + cycle), deck.remaining(), "Remaining after cycle " + cycle + " reset should be size-(1+cycle)");
         }
     }
 }
