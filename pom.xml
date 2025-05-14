@@ -26,7 +26,9 @@
             src/main/java/at/aau/serg/websocketserver/messaging/dtos/OutputMessage.java ,
             src/main/java/at/aau/serg/websocketserver/websocket/broker/WebSocketBrokerConfig.java,
             src/main/java/at/aau/serg/websocketserver/messaging/dtos/WebSocketServerApplication.java,
-            src/main/java/at/aau/serg/websocketserver/websocket/broker/WebSocketBrokerController.java
+            src/main/java/at/aau/serg/websocketserver/websocket/broker/WebSocketBrokerController.java,
+            src/main/java/at/aau/serg/websocketserver/websocket/broker/actionCard/ActionCardController.java,
+            src/main/java/at/aau/serg/websocketserver/websocket/broker/actionCard/ActionCard.java
         </sonar.exclusions>
     </properties>
 
