@@ -1,7 +1,6 @@
 package at.aau.serg.websocketserver.websocket.broker;
 
 import at.aau.serg.websocketserver.board.BoardService;
-import at.aau.serg.websocketserver.board.Field;
 import at.aau.serg.websocketserver.messaging.dtos.*;
 import at.aau.serg.websocketserver.session.Job;
 import at.aau.serg.websocketserver.session.JobRepository;
@@ -16,7 +15,6 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.Assert.*;
