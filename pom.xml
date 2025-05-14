@@ -39,7 +39,9 @@
             src/main/java/at/aau/serg/websocketserver/messaging/dtos/MoveMessage.java,
             src/main/java/at/aau/serg/websocketserver/messaging/dtos/StartMessage.java,
             src/main/java/at/aau/serg/websocketserver/websocket/broker/WebSocketBrokerController.java,
-            src/main/java/at/aau/serg/websocketserver/websocket/broker/PlayerController.java
+            src/main/java/at/aau/serg/websocketserver/websocket/broker/PlayerController.java,
+            src/main/java/at/aau/serg/websocketserver/actionCard/ActionCard.java,
+            src/main/java/at/aau/serg/websocketserver/actionCard/ActionCardController.java
         </sonar.exclusions>
     </properties>
 
