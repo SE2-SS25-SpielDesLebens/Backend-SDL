@@ -1,5 +1,7 @@
 package at.aau.serg.websocketserver.websocket.broker.actionCard;
 
+import at.aau.serg.websocketserver.actionCard.ActionCard;
+import at.aau.serg.websocketserver.actionCard.ActionCardDeck;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
