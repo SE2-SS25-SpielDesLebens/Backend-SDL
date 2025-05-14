@@ -9,6 +9,7 @@ import at.aau.serg.websocketserver.session.JobService;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.security.SecureRandom;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -196,7 +197,7 @@ public class GameLogic {
         // TODO: Aktionskarten-Mechanik integrieren
 
         // Platzhalter: Simuliere eine zufällige Aktion für den Spieler
-        Random random = new Random();
+        SecureRandom random = new SecureRandom();
         int event = random.nextInt(3);
 
         switch (event) {
@@ -223,7 +224,7 @@ public class GameLogic {
         // TODO: Hauskarten-Mechanik integrieren
 
         // Platzhalter: Simuliere Hauskauf oder -verkauf Entscheidung
-        Random random = new Random();
+        SecureRandom random = new SecureRandom();
         boolean wantsToBuy = random.nextBoolean();
 
         if (wantsToBuy) {
@@ -271,7 +272,7 @@ public class GameLogic {
             return;
         }
 
-        boolean willSwitch = new Random().nextBoolean();
+        boolean willSwitch = new SecureRandom().nextBoolean();
         if (willSwitch || currentJob == null) {
             repo.assignJobToPlayer(player.getId(), newJob);
             player.assignJob(newJob);
@@ -286,7 +287,7 @@ public class GameLogic {
 
     void handleInvestmentField(Player player) {
         int currentSlot = player.getInvestments();
-        Random random = new Random();
+        SecureRandom random = new SecureRandom();
 
         if (currentSlot != 0) {
             boolean wantsToSwitch = random.nextBoolean();
@@ -367,7 +368,7 @@ public class GameLogic {
 
 
     void handleMarriageField(Player player) {
-        Random random = new Random();
+        SecureRandom random = new SecureRandom();
         boolean wantsToMarry = random.nextBoolean(); // Optional: später durch UI ersetzt
 
         if (wantsToMarry) {
@@ -391,7 +392,7 @@ public class GameLogic {
             player.setMustRepeatExam(false); // Flag zurücksetzen
         }
 
-        int result = 1 + new Random().nextInt(10);
+        int result = 1 + new SecureRandom().nextInt(10);
         if (result <= 2) {
             System.out.println("[EXAMEN] Spieler " + player.getId() + " ist durchgefallen und muss im nächsten Zug wiederholen.");
             player.setMustRepeatExam(true);
@@ -412,7 +413,7 @@ public class GameLogic {
             return;
         }
 
-        Job chosenJob = jobs.get(new Random().nextInt(jobs.size()));
+        Job chosenJob = jobs.get(new SecureRandom().nextInt(jobs.size()));
         repo.assignJobToPlayer(player.getId(), chosenJob);
         player.assignJob(chosenJob);
         player.setSalary(chosenJob.getSalary());
