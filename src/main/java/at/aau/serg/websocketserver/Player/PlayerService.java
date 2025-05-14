@@ -33,7 +33,7 @@ public class PlayerService {
     }
 
     public Player addPlayer(String name) {
-        Player newPlayer = new Player(name); // Name als ID (besser: UUID später)
+        Player newPlayer = new Player(name); // Name als ID
         players.add(newPlayer);
         System.out.println("Neuer Spieler hinzugefügt: " + newPlayer.getId());
         return newPlayer;
