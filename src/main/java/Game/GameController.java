@@ -1,18 +1,24 @@
 package Game;
 
 import at.aau.serg.websocketserver.Player.Player;
+import at.aau.serg.websocketserver.messaging.dtos.OutputMessage;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
+import java.time.LocalDateTime;
 import java.util.Timer;
 import java.util.TimerTask;
 
 public class GameController {
 
     private final GameLogic gameLogic;
+    private final SimpMessagingTemplate messagingTemplate;
+
     private Timer turnTimer;
     private static final long TURN_TIMEOUT_MS = 2 * 60 * 1000; // 2 Minuten
 
-    public GameController(GameLogic gameLogic) {
+    public GameController(GameLogic gameLogic, SimpMessagingTemplate messagingTemplate) {
         this.gameLogic = gameLogic;
+        this.messagingTemplate = messagingTemplate;
     }
 
     public boolean isPlayerTurn(String playerId) {
@@ -80,6 +86,33 @@ public class GameController {
 
         gameLogic.performTurn(player, spinResult);
     }
+
+    // Benachrichtigung ans Frontend bei Prüfungsdurchfall
+    public void startRepeatExamTurn(String playerId) {
+        String topic = String.format("/topic/%d/exam-repeat/%s", gameLogic.getGameId(), playerId);
+        messagingTemplate.convertAndSend(
+                topic,
+                new OutputMessage(
+                        "System",
+                        "❌ Du bist durch die Prüfung gefallen. Du musst im nächsten Zug erneut drehen!",
+                        LocalDateTime.now().toString()
+                )
+        );
+    }
+
+    public void requestAdditionalSpin(String playerId) {
+        String topic = String.format("/topic/%d/spin-again/%s", gameLogic.getGameId(), playerId);
+        messagingTemplate.convertAndSend(
+                topic,
+                new OutputMessage(
+                        "System",
+                        "🔁 Du darfst erneut drehen (z. B. nach einer Heirat).",
+                        LocalDateTime.now().toString()
+                )
+        );
+    }
+
 }
+
 
 

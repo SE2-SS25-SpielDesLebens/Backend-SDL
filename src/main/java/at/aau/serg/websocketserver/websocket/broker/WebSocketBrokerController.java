@@ -151,6 +151,16 @@ public class WebSocketBrokerController {
                 );
 
                 messagingTemplate.convertAndSend("/topic/game", moveMessage);
+
+        Lobby lobby = LobbyService.getInstance().getLobby(message.getGameId());
+        if (lobby != null && lobby.isStarted()) {
+            GameLogic logic = lobby.getGameLogic();
+            if (logic != null) {
+                Player player = logic.getPlayerByName(message.getPlayerName());
+                logic.performTurn(player, steps);
+            }
+        }
+
     }
 
     @MessageMapping("/lobby")
@@ -196,7 +206,7 @@ public class WebSocketBrokerController {
         gameLogic.setGameId(Integer.parseInt(gameId));
         gameLogic.setJobService(jobService);
         gameLogic.setBoardService(boardService);
-        gameLogic.setGameController(new GameController(gameLogic));
+        gameLogic.setGameController(new GameController(gameLogic, messagingTemplate));
         gameLogic.setTurnManager(new PlayerTurnManager(gameLogic));
 
         for (Player player : lobby.getPlayers()) {

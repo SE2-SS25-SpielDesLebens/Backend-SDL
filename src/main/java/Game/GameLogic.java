@@ -20,6 +20,7 @@ public class GameLogic {
     private final Map<String, Player> players = new ConcurrentHashMap<>();
     private int currentPlayerIndex = 0;
     private boolean gameEnded = false;
+    @Getter
     @Setter
     private int gameId; // Wird beim Spielstart gesetzt
 
@@ -122,6 +123,13 @@ public class GameLogic {
     }
 
     public void performTurn(Player player, int spinResult) {
+        // 1. Prüfen, ob Spieler das Examen wiederholen muss
+        if (player.mustRepeatExam()) {
+            handleExamField(player);
+            return; // Kein normaler Spielzug erlaubt
+        }
+
+        // 2. Normale Spiellogik
         if (boardService == null) {
             throw new IllegalStateException("BoardService wurde nicht gesetzt.");
         }
@@ -145,11 +153,13 @@ public class GameLogic {
         handleField(player, endField);
         checkAndPayoutInvestment(player.getId(), spinResult);
 
+        // 3. Stoppfelder prüfen (Spieler bleibt stehen, darf erneut drehen etc.)
         List<String> stopFields = List.of("EXAMEN", "HEIRAT");
         if (stopFields.contains(endField.getType())) {
-            return;
+            return; // Noch kein Turn-Ende (z.B. Examen wird separat behandelt)
         }
 
+        // 4. Turn-Management
         if (turnManager != null) {
             turnManager.completeTurn(player.getId(), spinResult);
         } else {
@@ -157,7 +167,8 @@ public class GameLogic {
         }
     }
 
-    private void handleField(Player player, Field field) {
+
+    void handleField(Player player, Field field) {
         String type = field.getType();
         switch (type) {
             case "ZAHLTAG" -> handleSalaryField(player, true);
@@ -357,28 +368,43 @@ public class GameLogic {
 
     private void handleMarriageField(Player player) {
         Random random = new Random();
-        boolean wantsToMarry = random.nextBoolean();
+        boolean wantsToMarry = random.nextBoolean(); // Optional: später durch UI ersetzt
 
         if (wantsToMarry) {
             player.removeMoney(50000);
-            player.addChild();
-            System.out.println("[HEIRAT] Spieler " + player.getId() + " heiratet, zahlt 50.000 € und bekommt einen Stift (Kind). Dreht erneut!");
+            player.addChild(); // Kind als Hochzeitsgeschenk
+            System.out.println("[HEIRAT] Spieler " + player.getId() + " heiratet, zahlt 50.000 € und bekommt ein Kind.");
         } else {
-            System.out.println("[HEIRAT] Spieler " + player.getId() + " heiratet nicht. Dreht erneut!");
+            System.out.println("[HEIRAT] Spieler " + player.getId() + " heiratet nicht.");
         }
 
-        int spinResult = 1 + random.nextInt(10);
-        performTurn(player, spinResult);
+        // Spieler soll selbst erneut drehen → Nachricht ans Frontend
+        if (gameController != null) {
+            gameController.requestAdditionalSpin(player.getId());
+        }
     }
 
+
     private void handleExamField(Player player) {
-        Random random = new Random();
-        int result = 1 + random.nextInt(10);
-        if (result <= 2) {
-            System.out.println("[EXAMEN] Spieler " + player.getId() + " ist durchgefallen und muss beim nächsten Zug erneut drehen.");
-            return;
+        if (player.mustRepeatExam()) {
+            System.out.println("[EXAMEN] Spieler " + player.getId() + " wiederholt die Prüfung.");
+            player.setMustRepeatExam(false); // Flag zurücksetzen
         }
 
+        int result = 1 + new Random().nextInt(10);
+        if (result <= 2) {
+            System.out.println("[EXAMEN] Spieler " + player.getId() + " ist durchgefallen und muss im nächsten Zug wiederholen.");
+            player.setMustRepeatExam(true);
+
+            // Nachricht an Frontend senden
+            if (gameController != null) {
+                gameController.startRepeatExamTurn(player.getId());
+            }
+
+            return; // Zug sofort beendet
+        }
+
+        // Prüfung bestanden → Job mit Studium zuweisen
         JobRepository repo = jobService.getOrCreateRepository(this.gameId);
         List<Job> jobs = repo.getRandomAvailableJobs(true, 4);
         if (jobs.isEmpty()) {
@@ -386,10 +412,11 @@ public class GameLogic {
             return;
         }
 
-        Job chosenJob = jobs.get(random.nextInt(jobs.size()));
+        Job chosenJob = jobs.get(new Random().nextInt(jobs.size()));
         repo.assignJobToPlayer(player.getId(), chosenJob);
         player.assignJob(chosenJob);
         player.setSalary(chosenJob.getSalary());
+
         try {
             java.lang.reflect.Field educationField = Player.class.getDeclaredField("university");
             educationField.setAccessible(true);
@@ -397,8 +424,10 @@ public class GameLogic {
         } catch (Exception e) {
             throw new RuntimeException("Fehler beim Setzen des Bildungsstatus", e);
         }
+
         System.out.println("[EXAMEN] Spieler " + player.getId() + " hat bestanden und erhält Job: " + chosenJob.getTitle());
     }
+
 
     public void nextTurn() {
         if (allPlayersRetired()) {
@@ -444,34 +473,13 @@ public class GameLogic {
         if (allPlayersRetired()) endGame();
     }
 
-    public boolean tryInvestInSlot(String playerId, int slot) {
-        if (usedInvestmentSlots.contains(slot)) return false;
-        Player player = players.get(playerId);
-        player.setInvestments(slot);
-        usedInvestmentSlots.add(slot);
-        return true;
-    }
-
-    public void payoutInvestment(String playerId, int amount) {
-        Player player = players.get(playerId);
-        player.addMoney(amount);
-    }
-
-    public void resetAndReinvest(String playerId, int newSlot) {
-        Player player = players.get(playerId);
-        int oldSlot = player.getInvestments();
-        usedInvestmentSlots.remove(oldSlot);
-        player.setInvestments(newSlot);
-        usedInvestmentSlots.add(newSlot);
-    }
-
     public void endGame() {
         gameEnded = true;
         List<Map.Entry<String, Player>> sorted = players.entrySet()
                 .stream().sorted((a, b) -> Integer.compare(calculateFinalWealth(b.getValue()), calculateFinalWealth(a.getValue())))
                 .collect(Collectors.toList());
         Player winner = sorted.get(0).getValue();
-        System.out.println("🌟 Gewonnen hat: " + winner.getId() + " mit " + calculateFinalWealth(winner) + " € Vermögen!");
+        System.out.println(" Gewonnen hat: " + winner.getId() + " mit " + calculateFinalWealth(winner) + " € Vermögen!");
     }
 
     private int calculateFinalWealth(Player p) {
@@ -491,16 +499,13 @@ public class GameLogic {
         return playerList.get(currentPlayerIndex);
     }
 
-    private Player getPlayerByName(String name) {
+    public Player getPlayerByName(String name) {
         return players.values().stream()
                 .filter(p -> p.getId().equals(name))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Spieler nicht gefunden: " + name));
     }
 
-    public int getGameId() {
-        return this.gameId;
-    }
 }
 
 

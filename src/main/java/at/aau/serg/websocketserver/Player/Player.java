@@ -35,6 +35,9 @@ public class Player {
     private boolean university;
     @Getter
     private int investmentPayout;
+    @Setter
+    private boolean mustRepeatExam = false;
+
 
 
 
@@ -87,6 +90,10 @@ public class Player {
             removeMoney(25000);
             debts--;
         }
+    }
+
+    public boolean mustRepeatExam() {
+        return mustRepeatExam;
     }
 
 
