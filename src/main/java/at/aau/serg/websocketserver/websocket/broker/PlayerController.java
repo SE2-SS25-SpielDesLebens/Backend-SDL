@@ -30,7 +30,7 @@ public class PlayerController {
 
     @PostMapping
     public ResponseEntity<String> createPlayer(@RequestBody Player player) {
-        playerService.addPlayer(player);
+        playerService.addPlayer(String.valueOf(player));
         return ResponseEntity.ok("Player created successfully");
     }
 
@@ -38,14 +38,14 @@ public class PlayerController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Player> getPlayerById(@PathVariable int id) {
-        Optional<Player> player = playerService.getPlayerById(id);
+        Optional<Player> player = playerService.getPlayerById(String.valueOf(id));
         return player.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
 
     @PutMapping("/{id}")
     public ResponseEntity<String> updatePlayer(@PathVariable int id, @RequestBody Player player) {
-        boolean updated = playerService.updatePlayer(id, player);
+        boolean updated = playerService.updatePlayer(String.valueOf(id), player);
         if (updated) {
             return ResponseEntity.ok("Player updated successfully");
         } else {
@@ -56,7 +56,7 @@ public class PlayerController {
     @PutMapping("/{id}/add-child")
     public ResponseEntity<String> addChild(@PathVariable int id) {
         try {
-            playerService.addChildToPlayer(id);
+            playerService.addChildToPlayer(String.valueOf(id));
             return ResponseEntity.ok("Kind erfolgreich hinzugefügt.");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -66,7 +66,7 @@ public class PlayerController {
     @PutMapping("/{id}/marry")
     public ResponseEntity<String> marryPlayer(@PathVariable int id) {
         try {
-            playerService.marryPlayer(id);
+            playerService.marryPlayer(String.valueOf(id));
             return ResponseEntity.ok("Spieler erfolgreich verheiratet.");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -76,7 +76,7 @@ public class PlayerController {
     @PutMapping("/{id}/invest")
     public ResponseEntity<String> invest(@PathVariable int id) {
         try {
-            playerService.investForPlayer(id);
+            playerService.investForPlayer(String.valueOf(id));
             return ResponseEntity.ok("Investition erfolgreich!");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
