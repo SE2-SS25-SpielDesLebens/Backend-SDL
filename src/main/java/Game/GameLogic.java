@@ -221,9 +221,6 @@ public class GameLogic {
     }
 
     void handleHouseField(Player player) {
-        // TODO: Hauskarten-Mechanik integrieren
-
-        // Platzhalter: Simuliere Hauskauf oder -verkauf Entscheidung
         SecureRandom random = new SecureRandom();
         boolean wantsToBuy = random.nextBoolean();
 
@@ -235,20 +232,30 @@ public class GameLogic {
             System.out.println("[HAUS] Spieler " + player.getId() + " kauft ein Haus für " + housePrice + " €.");
         } else if (!player.getHouseId().isEmpty()) {
             // Haus verkaufen: zufällig ein Haus auswählen und Wert zurückgeben (50 % oder 150 %)
-            Integer houseKey = player.getHouseId().keySet().stream().findFirst().get();
-            int originalValue = player.getHouseId().get(houseKey);
-            boolean red = random.nextBoolean();
-            int sellPrice = red ? (int) (originalValue * 1.5) : (int) (originalValue * 0.5);
-            player.addMoney(sellPrice);
-            player.removeHouse(houseKey);
-            System.out.println("[HAUS] Spieler " + player.getId() + " verkauft ein Haus für " + sellPrice + " € (" + (red ? "Rot" : "Schwarz") + ").");
+            Optional<Integer> optionalKey = player.getHouseId()
+                    .keySet()
+                    .stream()
+                    .findFirst();
+
+            if (optionalKey.isPresent()) {
+                Integer houseKey = optionalKey.get();
+                int originalValue = player.getHouseId().get(houseKey);
+                boolean red = random.nextBoolean();
+                int sellPrice = red ? (int) (originalValue * 1.5) : (int) (originalValue * 0.5);
+                player.addMoney(sellPrice);
+                player.removeHouse(houseKey);
+                System.out.println("[HAUS] Spieler " + player.getId()
+                        + " verkauft ein Haus für " + sellPrice + " € (" + (red ? "Rot" : "Schwarz") + ").");
+            } else {
+                System.out.println("[HAUS] Spieler " + player.getId() + " besitzt kein Haus zum Verkaufen.");
+            }
         } else {
             System.out.println("[HAUS] Spieler " + player.getId() + " hat keine Häuser zum Verkaufen.");
         }
 
-        // Später: Hauskarten ziehen (2 Stück), auswählen, kaufen oder verkaufen
-        // Hauskarten-Stack muss in GameLogic oder GameController integriert werden
+        // TODO: Hauskarten ziehen (2 Stück), auswählen, kaufen oder verkaufen
     }
+
 
     void handleJobField(Player player) {
         if (jobService == null) {

@@ -14,7 +14,7 @@ public class GameController {
     private final SimpMessagingTemplate messagingTemplate;
 
     private Timer turnTimer;
-    private static final long TURN_TIMEOUT_MS = 2 * 60 * 1000; // 2 Minuten
+    private static final long TURN_TIMEOUT_MS = 2L * 60 * 1000; // 2 Minuten
 
     public GameController(GameLogic gameLogic, SimpMessagingTemplate messagingTemplate) {
         this.gameLogic = gameLogic;
