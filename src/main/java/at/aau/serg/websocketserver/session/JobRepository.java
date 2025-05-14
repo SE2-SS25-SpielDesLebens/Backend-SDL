@@ -23,8 +23,6 @@ public class JobRepository {
      * Lädt alle Jobs aus jobs.json.
      */
     public void loadJobs() throws Exception {
-        System.out.println("[JobRepository] loadJobs() aufgerufen");
-
         InputStream inputStream = getClass().getClassLoader().getResourceAsStream("jobs.json");
         if (inputStream == null) {
             throw new IllegalStateException("jobs.json nicht gefunden!");
@@ -47,23 +45,15 @@ public class JobRepository {
                 jobs.add(job);
             }
         }
-
-        System.out.println("[JobRepository] jobs.json geladen: " + jobs.size() + " Jobs");
     }
 
     /**
      * Gibt das aktuelle Job-Objekt eines Spielers zurück (falls vorhanden).
      */
     public Optional<Job> getCurrentJobForPlayer(String playerName) {
-        Optional<Job> existing = jobs.stream()
+        return jobs.stream()
                 .filter(job -> playerName.equals(job.getAssignedToPlayerName()))
                 .findFirst();
-        existing.ifPresent(j -> System.out.println(
-                "[JobRepository] Spieler \"" + playerName +
-                        "\" hat bereits Job: \"" + j.getTitle() +
-                        "\" (ID " + j.getJobId() + ")"
-        ));
-        return existing;
     }
 
     /**
@@ -97,40 +87,15 @@ public class JobRepository {
      * Weist einem Spieler einen neuen Job zu und gibt ggf. den alten frei.
      */
     public void assignJobToPlayer(String playerName, Job newJob) {
-        // Alten Job freigeben (mit Log)
-        getCurrentJobForPlayer(playerName).ifPresent(old -> {
-            System.out.println(
-                    "[JobRepository] Spieler \"" + playerName +
-                            "\" gibt alten Job frei: \"" + old.getTitle() +
-                            "\" (ID " + old.getJobId() + ")"
-            );
-            old.releaseJob();
-        });
-
-        // Neuen Job zuweisen
-        boolean success = newJob.assignJobTo(playerName);
-        if (success) {
-            System.out.println(
-                    "[JobRepository] Spieler \"" + playerName +
-                            "\" erhält neuen Job: \"" + newJob.getTitle() +
-                            "\" (ID " + newJob.getJobId() + ")"
-            );
-        } else {
-            System.out.println(
-                    "[JobRepository] Zuweisung fehlgeschlagen für Job: \"" +
-                            newJob.getTitle() + "\" (ID " + newJob.getJobId() + ")"
-            );
-        }
+        // Alten Job freigeben
+        getCurrentJobForPlayer(playerName).ifPresent(Job::releaseJob);
+        newJob.assignJobTo(playerName);
     }
 
     /**
      * Gibt einen Job explizit frei.
      */
     public void releaseJob(Job job) {
-        System.out.println(
-                "[JobRepository] Job freigegeben: \"" +
-                        job.getTitle() + "\" (ID " + job.getJobId() + ")"
-        );
         job.releaseJob();
     }
 }
