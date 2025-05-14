@@ -96,6 +96,11 @@ public class Player {
         return mustRepeatExam;
     }
 
+    public void addHouse(int houseId, int houseValue) {
+        this.houseID.put(houseId, houseValue);  // Fügt das Haus zur Map hinzu
+    }
+
+
 
     public void clearJob() {
         this.job = null;

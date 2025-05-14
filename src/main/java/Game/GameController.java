@@ -87,14 +87,13 @@ public class GameController {
         gameLogic.performTurn(player, spinResult);
     }
 
-    // Benachrichtigung ans Frontend bei Prüfungsdurchfall
     public void startRepeatExamTurn(String playerId) {
         String topic = String.format("/topic/%d/exam-repeat/%s", gameLogic.getGameId(), playerId);
         messagingTemplate.convertAndSend(
                 topic,
                 new OutputMessage(
                         "System",
-                        "❌ Du bist durch die Prüfung gefallen. Du musst im nächsten Zug erneut drehen!",
+                        "Du bist durch die Prüfung gefallen. Du musst im nächsten Zug erneut drehen!",
                         LocalDateTime.now().toString()
                 )
         );
@@ -106,11 +105,23 @@ public class GameController {
                 topic,
                 new OutputMessage(
                         "System",
-                        "🔁 Du darfst erneut drehen (z. B. nach einer Heirat).",
+                        "Du darfst erneut drehen (z. B. nach einer Heirat).",
                         LocalDateTime.now().toString()
                 )
         );
     }
+
+    public TimerTask createTurnTimeout(String playerId) {
+        return new TimerTask() {
+            @Override
+            public void run() {
+                System.out.println("[ZEITABLAUF] Spieler " + playerId + " war zu langsam. Nächster ist dran.");
+                gameLogic.nextTurn();
+            }
+        };
+    }
+
+
 
 }
 

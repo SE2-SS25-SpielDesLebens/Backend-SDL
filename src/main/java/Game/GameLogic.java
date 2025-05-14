@@ -219,7 +219,7 @@ public class GameLogic {
         // Kartenmechanik fehlt noch -> Aktionskarten-Stapel hier einbinden
     }
 
-    private void handleHouseField(Player player) {
+    void handleHouseField(Player player) {
         // TODO: Hauskarten-Mechanik integrieren
 
         // Platzhalter: Simuliere Hauskauf oder -verkauf Entscheidung
@@ -249,7 +249,7 @@ public class GameLogic {
         // Hauskarten-Stack muss in GameLogic oder GameController integriert werden
     }
 
-    private void handleJobField(Player player) {
+    void handleJobField(Player player) {
         if (jobService == null) {
             System.out.println("[BERUF] Kein JobService verfügbar.");
             return;
@@ -284,7 +284,7 @@ public class GameLogic {
         // Später: Spielerentscheidung durch UI/Frontend
     }
 
-    private void handleInvestmentField(Player player) {
+    void handleInvestmentField(Player player) {
         int currentSlot = player.getInvestments();
         Random random = new Random();
 
@@ -356,7 +356,7 @@ public class GameLogic {
     }
 
 
-    private void handleFriendField(Player player, Field field) {
+    void handleFriendField(Player player, Field field) {
         // Einheitliche Behandlung für Baby-, Freund- oder Haustierfelder als 1 Stift im Auto
         String type = field.getType();
         if ("FREUND".equals(type)) {
@@ -366,7 +366,7 @@ public class GameLogic {
     }
 
 
-    private void handleMarriageField(Player player) {
+    void handleMarriageField(Player player) {
         Random random = new Random();
         boolean wantsToMarry = random.nextBoolean(); // Optional: später durch UI ersetzt
 
@@ -385,7 +385,7 @@ public class GameLogic {
     }
 
 
-    private void handleExamField(Player player) {
+    void handleExamField(Player player) {
         if (player.mustRepeatExam()) {
             System.out.println("[EXAMEN] Spieler " + player.getId() + " wiederholt die Prüfung.");
             player.setMustRepeatExam(false); // Flag zurücksetzen
@@ -482,7 +482,7 @@ public class GameLogic {
         System.out.println(" Gewonnen hat: " + winner.getId() + " mit " + calculateFinalWealth(winner) + " € Vermögen!");
     }
 
-    private int calculateFinalWealth(Player p) {
+    int calculateFinalWealth(Player p) {
         int geld = p.getMoney();
         int kinderBonus = p.getChildren() * 50000;
         int schuldenStrafe = p.getDebts() * 60000;
