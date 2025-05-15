@@ -101,7 +101,7 @@ public class WebSocketBrokerControllerTest {
     @Test
     public void testHandleGameStart_CreatesOrLoadsRepositoryOnly() {
         int gameId = 3;
-        controller.handleGameStart(gameId);
+        controller.handleGameStart(String.valueOf(gameId));
 
         verify(jobService, times(1)).getOrCreateRepository(gameId);
         verifyNoInteractions(messagingTemplate);
