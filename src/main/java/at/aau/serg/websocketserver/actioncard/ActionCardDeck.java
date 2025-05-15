@@ -1,4 +1,4 @@
-package at.aau.serg.websocketserver.actionCard;
+package at.aau.serg.websocketserver.actioncard;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -53,7 +53,7 @@ public class ActionCardDeck {
         Type listType = new TypeToken<List<ActionCard>>() {}.getType();
         InputStream is = getClass().getResourceAsStream("/actionCard/cards.json");
         if (is == null) {
-            throw new IllegalStateException("cards.json resource not found in /actionCard/");
+            throw new IllegalStateException("cards.json resource not found in /actioncard/");
         }
         try (InputStreamReader reader = new InputStreamReader(is)) {
             return gson.fromJson(reader, listType);

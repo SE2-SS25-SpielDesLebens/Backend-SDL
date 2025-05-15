@@ -1,7 +1,5 @@
-package at.aau.serg.websocketserver.actionCard;
+package at.aau.serg.websocketserver.actioncard;
 
-import at.aau.serg.websocketserver.actionCard.ActionCard;
-import at.aau.serg.websocketserver.actionCard.ActionCardDeck;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -14,18 +12,18 @@ public class ActionCardDeckTest {
     private ActionCardDeck deck;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         deck = new ActionCardDeck();
     }
 
     @Test
-    public void testSizeMatchesJson() {
+    void testSizeMatchesJson() {
         int size = deck.size();
         assertTrue(size > 0, "Deck should contain at least one card");
     }
 
     @Test
-    public void testPullReturnsNonNullAndDecreasesRemaining() {
+    void testPullReturnsNonNullAndDecreasesRemaining() {
         int initialRemaining = deck.remaining();
         ActionCard card = deck.pull();
         assertNotNull(card, "Pulled card should not be null");
@@ -33,7 +31,7 @@ public class ActionCardDeckTest {
     }
 
     @Test
-    public void testDrawAllUniqueThenResets() {
+    void testDrawAllUniqueThenResets() {
         int total = deck.size();
         Set<Integer> ids = new HashSet<>();
         // draw all cards
@@ -54,7 +52,7 @@ public class ActionCardDeckTest {
     }
 
     @Test
-    public void testMultipleResetsMaintainSize() {
+    void testMultipleResetsMaintainSize() {
         int total = deck.size();
         // perform multiple full cycles
         for (int cycle = 0; cycle < 3; cycle++) {
