@@ -1,4 +1,4 @@
-package at.aau.serg.websocketserver.Player;
+package at.aau.serg.websocketserver.player;
 
 import at.aau.serg.websocketserver.session.Job;
 import com.fasterxml.jackson.annotation.JsonProperty;

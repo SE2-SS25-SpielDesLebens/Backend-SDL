@@ -1,6 +1,6 @@
-package Game;
+package at.aau.serg.websocketserver.game;
 
-import at.aau.serg.websocketserver.Player.Player;
+import at.aau.serg.websocketserver.player.Player;
 
 public class PlayerTurnManager {
 

@@ -1,4 +1,4 @@
-package at.aau.serg.websocketserver.Player;
+package at.aau.serg.websocketserver.player;
 
 import lombok.Getter;
 import org.springframework.stereotype.Service;

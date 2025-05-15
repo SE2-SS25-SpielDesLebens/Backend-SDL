@@ -1,7 +1,7 @@
-package Game;
+package at.aau.serg.websocketserver.game;
 
 import at.aau.serg.websocketserver.board.Field;
-import at.aau.serg.websocketserver.Player.Player;
+import at.aau.serg.websocketserver.player.Player;
 import at.aau.serg.websocketserver.board.BoardService;
 import at.aau.serg.websocketserver.session.Job;
 import at.aau.serg.websocketserver.session.JobRepository;

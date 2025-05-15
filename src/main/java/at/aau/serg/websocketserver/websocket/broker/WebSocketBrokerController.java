@@ -1,10 +1,10 @@
 package at.aau.serg.websocketserver.websocket.broker;
 
-import Game.GameController;
-import Game.GameLogic;
-import Game.PlayerTurnManager;
-import at.aau.serg.websocketserver.Player.Player;
-import at.aau.serg.websocketserver.Player.PlayerService;
+import at.aau.serg.websocketserver.game.GameController;
+import at.aau.serg.websocketserver.game.GameLogic;
+import at.aau.serg.websocketserver.game.PlayerTurnManager;
+import at.aau.serg.websocketserver.player.Player;
+import at.aau.serg.websocketserver.player.PlayerService;
 import at.aau.serg.websocketserver.board.BoardService;
 import at.aau.serg.websocketserver.board.Field;
 import at.aau.serg.websocketserver.lobby.Lobby;
