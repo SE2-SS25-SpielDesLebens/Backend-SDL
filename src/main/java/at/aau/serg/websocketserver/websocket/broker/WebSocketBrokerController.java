@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+
 @Controller
 public class WebSocketBrokerController {
 
@@ -241,12 +242,12 @@ public class WebSocketBrokerController {
     }
 
     @MessageMapping("/game/start/{gameId}")
-    public void handleGameStart(@DestinationVariable String gameId) {
+    public void handleGameStart(@DestinationVariable int gameId) {
         // 1. Repository vorbereiten
-        jobService.getOrCreateRepository(Integer.parseInt(gameId));
+        jobService.getOrCreateRepository(gameId);
 
         // 2. Lobby und Spieler holen
-        Lobby lobby = LobbyService.getInstance().getLobby(gameId);
+        Lobby lobby = LobbyService.getInstance().getLobby(Integer.toString(gameId));
         if (lobby == null || lobby.isStarted()) {
             System.out.println("[WARNUNG] Lobby nicht gefunden oder bereits gestartet: " + gameId);
             return;
@@ -254,7 +255,7 @@ public class WebSocketBrokerController {
 
         // 3. GameLogic erzeugen
         GameLogic gameLogic = new GameLogic();
-        gameLogic.setGameId(Integer.parseInt(gameId));
+        gameLogic.setGameId(gameId);
         gameLogic.setJobService(jobService);
         gameLogic.setBoardService(boardService);
         gameLogic.setGameController(new GameController(gameLogic, messagingTemplate));
