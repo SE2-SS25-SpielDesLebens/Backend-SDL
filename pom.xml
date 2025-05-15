@@ -58,7 +58,7 @@
         <!-- Spring Web (für @WebMvcTest etc.) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
+            <artifactId>spring-boot-starter</artifactId>
         </dependency>
 
         <!-- Lombok (nur zur Entwicklungszeit) -->
