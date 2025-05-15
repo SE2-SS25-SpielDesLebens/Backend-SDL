@@ -1,4 +1,4 @@
-package at.aau.serg.websocketserver.Player;
+package at.aau.serg.websocketserver.player;
 
 import at.aau.serg.websocketserver.session.Job;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -33,6 +33,12 @@ public class Player {
     private boolean isHost;
     private int fieldId;
     private boolean university;
+    @Getter
+    private int investmentPayout;
+    @Setter
+    private boolean mustRepeatExam = false;
+
+
 
 
 
@@ -84,6 +90,14 @@ public class Player {
             removeMoney(25000);
             debts--;
         }
+    }
+
+    public boolean mustRepeatExam() {
+        return mustRepeatExam;
+    }
+
+    public void addHouse(int houseId, int houseValue) {
+        this.houseID.put(houseId, houseValue);  // Fügt das Haus zur Map hinzu
     }
 
 

@@ -1,0 +1,568 @@
+[
+  {
+    "id": 1,
+    "handle": "decision_animals_enrich",
+    "headline": "Tiere verschönern das Leben!",
+    "action": "Wähle EINE Aktion aus:",
+    "imageName": "animals_enrich",
+    "reactions": [
+      "A. Adoptiere einen pelzigen Freund und stecke einen Stift in dein Auto.",
+      "B. Gründe einen Hundesitter-Firma und kassiere von jedem Spieler 20.000."
+    ]
+  },
+  {
+    "id": 2,
+    "handle": "decision_rollercoaster",
+    "headline": "Du fährst mit der schnellsten Achterbahn der Welt!",
+    "action": "Wähle EINE Aktion aus:",
+    "imageName": "rollercoaster",
+    "reactions": [
+      "A. Du traust dich und fährst alleine. Zahle 50.000 an die Bank.",
+      "B. Du fährst mit deinen Freunden. Zahle jedem Spieler 30.000."
+    ]
+  },
+  {
+    "id": 3,
+    "handle": "decision_inherit_villa",
+    "headline": "Deine Großtante vermacht dir ihre Villa!",
+    "action": "Wähle EINE Aktion aus:",
+    "imageName": "inherit_villa",
+    "reactions": [
+      "A. Ziehe mit einem Mitbewohner dort ein und stecke einen Stift in dein Auto.",
+      "B. Vermiete sie und kassiere von jedem Spieler 20.000."
+    ]
+  },
+  {
+    "id": 4,
+    "handle": "decision_festival_tickets",
+    "headline": "Du gewinnst Freikarten für ein Festival!",
+    "action": "Wähle EINE Aktion aus:",
+    "imageName": "festival_tickets",
+    "reactions": [
+      "A. Gehe hin und lerne deinen neuen besten Freund kennen. Stecke einen Stift in dein Auto.",
+      "B. Verkaufe die Tickets und kassiere von einem anderen Spieler 40.000."
+    ]
+  },
+  {
+    "id": 5,
+    "handle": "decision_christmas_gifts",
+    "headline": "Endlich Weihnachten!",
+    "action": "Wähle EINE Aktion aus:",
+    "imageName": "christmas_gifts",
+    "reactions": [
+      "A. Protze mit einem teuren Geschenk für deinen Freund und zahle einem anderen Spieler 40.000.",
+      "B. Kaufe Geschenke für all deine Freunde. Zahle jedem Spieler 20.000."
+    ]
+  },
+  {
+    "id": 6,
+    "handle": "decision_sell_car",
+    "headline": "Du verkaufst dein altes Auto!",
+    "action": "Wähle EINE Aktion aus:",
+    "imageName": "sell_car",
+    "reactions": [
+      "A. Schau beim Autohaus vorbei und kassiere 50.000 von der Bank.",
+      "B. Verkaufe es billiger an einen Freund und kassiere von einem anderen Spieler 30.000."
+    ]
+  },
+  {
+    "id": 7,
+    "handle": "decision_sell_bus",
+    "headline": "Du verkaufst einen alten Schulbus vom Schrottplatz!",
+    "action": "Wähle EINE Aktion aus:",
+    "imageName": "sell_bus",
+    "reactions": [
+      "A. Repariere ihn und verkaufe ihn und kassiere 50.000 von der Bank.",
+      "B. Repariere ihn und vermiete ihn als Partybus. Kassiere von jedem Spieler 20.000."
+    ]
+  },
+  {
+    "id": 8,
+    "handle": "decision_quiz_jacht",
+    "headline": "Du nimmst an einer Quizshow teil … und gewinnst eine Jacht!",
+    "action": "Wähle EINE Aktion aus:",
+    "imageName": "quiz_jacht",
+    "reactions": [
+      "A. Segle um die Welt! Heure einen Kapitän an und stecke einen Stift in dein Auto.",
+      "B. Verkauf die Jacht und kassiere 50.000 von der Bank."
+    ]
+  },
+  {
+    "id": 9,
+    "handle": "decision_inherit_rv",
+    "headline": "Du erbst ein Wohnmobil!",
+    "action": "Wähle EINE Aktion aus:",
+    "imageName": "inherit_rv",
+    "reactions": [
+      "A. Fahre mit einem Freund quer durch das Land. Stecke einen Stift in dein Auto.",
+      "B. Verkaufe das Wohnmobil und kassiere 50.000 von der Bank."
+    ]
+  },
+  {
+    "id": 10,
+    "handle": "decision_paris_trip",
+    "headline": "Du buchst einen Urlaub in Paris!",
+    "action": "Wähle EINE Aktion aus:",
+    "imageName": "paris_trip",
+    "reactions": [
+      "A. Mache die Reise deines Lebens und lerne einen Freund kennen. Stecke einen Stift in dein Auto.",
+      "B. Verkaufe deine Fahrkarte und kassiere von einem anderen Spieler 40.000."
+    ]
+  },
+  {
+    "id": 11,
+    "handle": "decision_comics_auction",
+    "headline": "Du versteigerst deine preisgekrönte Comicsammlung!",
+    "action": "Wähle EINE Aktion aus:",
+    "imageName": "comics_auction",
+    "reactions": [
+      "A. Verkaufe sie an ein Museum und kassiere 40.000 von der Bank.",
+      "B. Verkaufe sie an Sammler und kassiere von jedem Spieler 20.000."
+    ]
+  },
+  {
+    "id": 12,
+    "handle": "decision_sell_farm",
+    "headline": "Du verkaufst euren Bauernhof!",
+    "action": "Wähle EINE Aktion aus:",
+    "imageName": "sell_farm",
+    "reactions": [
+      "A. Verkaufe ihn und kassiere 50.000 von der Bank.",
+      "B. Verwandle ihn in eine Arbeitnehmergesellschaft und kassiere von jedem Spieler 20.000."
+    ]
+  },
+  {
+    "id": 13,
+    "handle": "spin_cat_videos",
+    "headline": "Deine Katzenvideos werden zum Riesenerfolg!",
+    "action": "Drehe die Scheibe und erfahre, wie viel sie wert sind.",
+    "imageName": "cat_videos",
+    "reactions": [
+      "Kassiere das 20.000‑fache deiner gedrehten Zahl von der Bank."
+    ]
+  },
+  {
+    "id": 14,
+    "handle": "spin_first_album",
+    "headline": "Du nimmst dein erstes Album auf!",
+    "action": "Drehe die Scheibe und erfahre, ob es ein Hit wird.",
+    "imageName": "first_album",
+    "reactions": [
+      "Kassiere das 10.000‑fache deiner gedrehten Zahl von der Bank."
+    ]
+  },
+  {
+    "id": 15,
+    "handle": "spin_livestream_guest",
+    "headline": "Du bist Gast im Livestream eines Kollegen!",
+    "action": "Drehe die Scheibe für deinen Lohn.",
+    "imageName": "livestream_guest",
+    "reactions": [
+      "Kassiere das 10.000‑fache deiner gedrehten Zahl von einem Mitspieler."
+    ]
+  },
+  {
+    "id": 16,
+    "handle": "spin_sushi_investment",
+    "headline": "Du investierst in die Sushi Bar eines Freundes!",
+    "action": "Drehe die Scheibe für den Erfolg!",
+    "imageName": "sushi_investment",
+    "reactions": [
+      "Kassiere das 10.000‑fache deiner gedrehten Zahl von einem Mitspieler."
+    ]
+  },
+  {
+    "id": 17,
+    "handle": "spin_biography_launch",
+    "headline": "Du veröffentlichst deine Lebensgeschichte!",
+    "action": "Drehe die Scheibe und erfahre, ob sie toppt oder floppt:",
+    "imageName": "biography_launch",
+    "reactions": [
+      "Rot – Du erhältst 30.000 von der Bank.",
+      "Schwarz – Zahle 30.000 an die Bank."
+    ]
+  },
+  {
+    "id": 18,
+    "handle": "spin_fashion_line",
+    "headline": "Du entwirfst deine eigene Modekollektion!",
+    "action": "Drehe die Scheibe und erfahre, ob sie toppt oder floppt:",
+    "imageName": "fashion_line",
+    "reactions": [
+      "Rot – Du erhältst 30.000 von der Bank.",
+      "Schwarz – Zahle 30.000 an die Bank."
+    ]
+  },
+  {
+    "id": 19,
+    "handle": "spin_poetry_contest",
+    "headline": "Dein Gedicht ist unter den Finalisten in einem Wettbewerb!",
+    "action": "Drehe die Scheibe für deine Platzierung:",
+    "imageName": "poetry_contest",
+    "reactions": [
+      "Rot – Zweiter Platz! Du erhältst 10.000 von der Bank.",
+      "Schwarz – Erster Platz! Du erhältst 50.000 von der Bank."
+    ]
+  },
+  {
+    "id": 20,
+    "handle": "spin_costume_contest",
+    "headline": "Du hast das beste Kostüm beim Kostümwettbewerb!",
+    "action": "Drehe die Scheibe für deinen Preis:",
+    "imageName": "costume_contest",
+    "reactions": [
+      "Rot – Du erhältst 10.000 von der Bank.",
+      "Schwarz – Du erhältst 50.000 von der Bank."
+    ]
+  },
+  {
+    "id": 21,
+    "handle": "contest_ice_flavor",
+    "headline": "Du erfindest einen neuen Eisgeschmack!",
+    "action": "Wähle einen Mitspieler aus und dreht.",
+    "imageName": "ice_flavor",
+    "reactions": [
+      "Der Spieler mit der höchsten Zahl kassiert für seine köstliche Idee 50.000 von der Bank."
+    ]
+  },
+  {
+    "id": 22,
+    "handle": "contest_trash_collection",
+    "headline": "Weg mit dem Müll!",
+    "action": "Alle drehen die Scheibe um herauszufinden, wer am meisten sammelt.",
+    "imageName": "trash_collection",
+    "reactions": [
+      "Der Spieler mit der höchsten Zahl kassiert 50.000 von der Bank."
+    ]
+  },
+  {
+    "id": 23,
+    "handle": "contest_videogame_duel",
+    "headline": "Ein Videospiel-Wettbewerb findet statt!",
+    "action": "Alle drehen die Scheibe, um herauszufinden, wer gewinnt.",
+    "imageName": "videogame_duel",
+    "reactions": [
+      "Der Spieler mit der höchsten Zahl kassiert von jedem Spieler 20.000."
+    ]
+  },
+  {
+    "id": 24,
+    "handle": "contest_global_invention",
+    "headline": "Der weltgrößte Erfindungswettbewerb findet statt!",
+    "action": "Alle drehen die Scheibe um herauszufinden, wessen Idee gewinnt.",
+    "imageName": "global_invention",
+    "reactions": [
+      "Der Spieler mit der höchsten Zahl kassiert von jedem Spieler 20.000."
+    ]
+  },
+  {
+    "id": 25,
+    "handle": "receive_simplify_life",
+    "headline": "Mach dein Leben leichter!",
+    "action": "Verkaufe all den Kram, den du nicht mehr brauchst.",
+    "imageName": "simplify_life",
+    "reactions": [
+      "Du erhältst von jedem Spieler 10.000."
+    ]
+  },
+  {
+    "id": 26,
+    "handle": "receive_claim_roses",
+    "headline": "Klage!",
+    "action": "Wer hat deine Rosen zertrampelt?",
+    "imageName": "claim_roses",
+    "reactions": [
+      "Kassiere von einem anderen Spieler 30.000."
+    ]
+  },
+  {
+    "id": 27,
+    "handle": "receive_ancestry_research",
+    "headline": "Du betreibst Ahnenforschung!",
+    "action": "Du findest einen reichen Verwandten!",
+    "imageName": "ancestry_research",
+    "reactions": [
+      "Du erhältst 50.000 von der Bank."
+    ]
+  },
+  {
+    "id": 28,
+    "handle": "receive_volunteer_reward",
+    "headline": "Deine Freiwilligenarbeit wird belohnt!",
+    "action": "Deine Freiwilligenarbeit wird belohnt!",
+    "imageName": "volunteer_reward",
+    "reactions": [
+      "Du erhältst 40.000 von der Bank."
+    ]
+  },
+  {
+    "id": 29,
+    "handle": "receive_kids_book",
+    "headline": "Du schreibst einen Kinderbuch-Bestseller!",
+    "action": "Du schreibst einen Kinderbuch-Bestseller!",
+    "imageName": "kids_book",
+    "reactions": [
+      "Du erhältst 30.000 von der Bank."
+    ]
+  },
+  {
+    "id": 30,
+    "handle": "receive_claim_noise",
+    "headline": "Klage!",
+    "action": "Die Rockband eines Nachbarn übt 3‑mal die Woche in der Garage. Verlange Schadenersatz für die psychische Belastung.",
+    "imageName": "claim_noise",
+    "reactions": [
+      "Kassiere von einem anderen Spieler 30.000."
+    ]
+  },
+  {
+    "id": 31,
+    "handle": "receive_food_truck",
+    "headline": "Dein Food Truck ist der Hit!",
+    "action": "Dein Food Truck ist der Hit!",
+    "imageName": "food_truck",
+    "reactions": [
+      "Du erhältst 20.000 von der Bank."
+    ]
+  },
+  {
+    "id": 32,
+    "handle": "receive_portrait_commission",
+    "headline": "Du bist ein aufstrebender Künstler!",
+    "action": "Ein Nachbar beauftragt dich mit einem Porträt.",
+    "imageName": "portrait_commission",
+    "reactions": [
+      "Kassiere von einem anderen Spieler 20.000."
+    ]
+  },
+  {
+    "id": 33,
+    "handle": "receive_cat_rescue",
+    "headline": "Du rettest eine Katze und fällst vom Baum!",
+    "action": "Die ganze Stadt beteiligt sich an deinen Arztkosten.",
+    "imageName": "cat_rescue",
+    "reactions": [
+      "Du erhältst von jedem Spieler 20.000."
+    ]
+  },
+  {
+    "id": 34,
+    "handle": "receive_dance_victory",
+    "headline": "Ein schneller Sieg!",
+    "action": "Du bist der klare Gewinner in einem Tanz-Duell.",
+    "imageName": "dance_victory",
+    "reactions": [
+      "Kassiere von einem anderem Spieler 20.000."
+    ]
+  },
+  {
+    "id": 35,
+    "handle": "receive_car_damage",
+    "headline": "Blechschaden!",
+    "action": "Lasse den rücksichtslosen Fahrer bezahlen.",
+    "imageName": "car_damage",
+    "reactions": [
+      "Kassiere von einem anderen Spieler 20.000."
+    ]
+  },
+  {
+    "id": 36,
+    "handle": "receive_team_funding",
+    "headline": "Gruppenfinanzierung für deine neue Geschäftsidee!",
+    "action": "Dein ganzes Team macht mit.",
+    "imageName": "team_funding",
+    "reactions": [
+      "Du erhältst für jeden Stift in deinem Auto 10.000 von der Bank."
+    ]
+  },
+  {
+    "id": 37,
+    "handle": "receive_band_tour",
+    "headline": "Du gründest eine Band und gehst auf Tournee!",
+    "action": "Du gründest eine Band und gehst auf Tournee!",
+    "imageName": "band_tour",
+    "reactions": [
+      "Du erhältst für jeden Stift in deinem Auto 10.000 von der Bank."
+    ]
+  },
+  {
+    "id": 38,
+    "handle": "receive_keep_it_up",
+    "headline": "Weiter so!",
+    "action": "Deine harte Arbeit zahlt sich aus.",
+    "imageName": "keep_it_up",
+    "reactions": [
+      "Du erhältst 10.000 von der Bank."
+    ]
+  },
+  {
+    "id": 39,
+    "handle": "receive_flea_market",
+    "headline": "Dein Flohmarkt ist ein voller Erfolg!",
+    "action": "Dein Flohmarkt ist ein voller Erfolg!",
+    "imageName": "flea_market",
+    "reactions": [
+      "Du erhältst von jedem Spieler 10.000."
+    ]
+  },
+  {
+    "id": 40,
+    "handle": "pay_theater_production",
+    "headline": "Du schreibst und leitest ein neues Theaterstück!",
+    "action": "Die Theatergruppe arbeitet nicht umsonst.",
+    "imageName": "theater_production",
+    "reactions": [
+      "Zahle jedem Spieler 20.000."
+    ]
+  },
+  {
+    "id": 41,
+    "handle": "pay_cruise_trip",
+    "headline": "Du gehst mit deiner Crew auf eine Kreuzfahrt!",
+    "action": "Du gehst mit deiner Crew auf eine Kreuzfahrt!",
+    "imageName": "cruise_trip",
+    "reactions": [
+      "Zahle für jeden Stift in deinem Auto 10.000 an die Bank."
+    ]
+  },
+  {
+    "id": 42,
+    "handle": "pay_hamster_reward",
+    "headline": "Deine Rennmaus Flitzi ist ausgebüxt!",
+    "action": "Ein netter Nachbar bringt sie dir zurück.",
+    "imageName": "hamster_reward",
+    "reactions": [
+      "Zahle 20.000 Belohnung an einen anderen Spieler."
+    ]
+  },
+  {
+    "id": 43,
+    "handle": "pay_birthday_bill",
+    "headline": "Deine Geburtstagsparty dieses Jahr war legendär!",
+    "action": "Und genauso war die Rechnung.",
+    "imageName": "birthday_bill",
+    "reactions": [
+      "Zahle 10.000 an die Bank."
+    ]
+  },
+  {
+    "id": 44,
+    "handle": "pay_pool_build",
+    "headline": "Du baust einen Pool mit einer Wasserrutsche!",
+    "action": "Du baust einen Pool mit einer Wasserrutsche!",
+    "imageName": "pool_build",
+    "reactions": [
+      "Zahle 50.000 an die Bank."
+    ]
+  },
+  {
+    "id": 45,
+    "handle": "pay_gamenight",
+    "headline": "Spieleabend mit Freunden!",
+    "action": "Du kannst noch nicht gut genug bluffen.",
+    "imageName": "gamenight",
+    "reactions": [
+      "Zahle jedem Spieler 10.000."
+    ]
+  },
+  {
+    "id": 46,
+    "handle": "pay_buy_pony",
+    "headline": "Schieb das Glück nicht auf!",
+    "action": "Kauf dir jetzt das Pony, das du schon immer wolltest.",
+    "imageName": "buy_pony",
+    "reactions": [
+      "Zahle 40.000 an die Bank."
+    ]
+  },
+  {
+    "id": 47,
+    "handle": "pay_skatepark",
+    "headline": "Du spendierst deiner Stadt einen Skatepark!",
+    "action": "Du spendierst deiner Stadt einen Skatepark!",
+    "imageName": "skatepark",
+    "reactions": [
+      "Zahle 30.000 an die Bank."
+    ]
+  },
+  {
+    "id": 48,
+    "handle": "pay_kitchen_reno",
+    "headline": "Zeit, die Küche zu renovieren!",
+    "action": "Du kennst die richtige Person für diesen Job.",
+    "imageName": "kitchen_reno",
+    "reactions": [
+      "Zahle 20.000 an einen anderen Spieler."
+    ]
+  },
+  {
+    "id": 49,
+    "handle": "pay_share_wealth",
+    "headline": "Teile deinen Reichtum!",
+    "action": "Teilen macht Freude, oder nicht?",
+    "imageName": "share_wealth",
+    "reactions": [
+      "Zahle jedem Spieler 10.000."
+    ]
+  },
+  {
+    "id": 50,
+    "handle": "pay_insect_farm",
+    "headline": "Du gründest eine Grillenfarm!",
+    "action": "Insekten sind das Protein der Zukunft.",
+    "imageName": "insect_farm",
+    "reactions": [
+      "Zahle 30.000 an die Bank."
+    ]
+  },
+  {
+    "id": 51,
+    "handle": "pay_support_local",
+    "headline": "Du unterstützt kleine Unternehmen!",
+    "action": "Investiere in das Café eines Freundes.",
+    "imageName": "support_local",
+    "reactions": [
+      "Zahle 30.000 an einen anderen Spieler."
+    ]
+  },
+  {
+    "id": 52,
+    "handle": "pay_tuition_stranger",
+    "headline": "Du bezahlst die Studiengebühr für einen Fremden!",
+    "action": "Du bezahlst die Studiengebühr für einen Fremden!",
+    "imageName": "tuition_stranger",
+    "reactions": [
+      "Zahle 30.000 an einen anderen Spieler."
+    ]
+  },
+  {
+    "id": 53,
+    "handle": "pay_roof_damage",
+    "headline": "Der Blitz schlägt ein und reißt ein Loch in dein Dach!",
+    "action": "Der Blitz schlägt ein und reißt ein Loch in dein Dach!",
+    "imageName": "roof_damage",
+    "reactions": [
+      "Zahle 20.000 für die Reparaturen an die Bank."
+    ]
+  },
+  {
+    "id": 54,
+    "handle": "pay_wall_mural",
+    "headline": "Du verschönerst deine Stadt mit einem Wandbild!",
+    "action": "Engagiere ein paar Künstler, um es zu malen.",
+    "imageName": "wall_mural",
+    "reactions": [
+      "Zahle jedem Spieler 20.000."
+    ]
+  },
+  {
+    "id": 55,
+    "handle": "pay_year_long_trip",
+    "headline": "Du machst mit deiner Crew eine einjährige Weltreise!",
+    "action": "Du machst mit deiner Crew eine einjährige Weltreise!",
+    "imageName": "year_long_trip",
+    "reactions": [
+      "Zahle für jeden Stift in deinem Auto 10.000 an die Bank."
+    ]
+  }
+]

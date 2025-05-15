@@ -1,10 +1,11 @@
 package at.aau.serg.websocketserver.lobby;
 
+import at.aau.serg.websocketserver.game.GameLogic;
 import lombok.Getter;
 import lombok.Setter;
 
 
-import at.aau.serg.websocketserver.Player.*;
+import at.aau.serg.websocketserver.player.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -15,6 +16,10 @@ public class Lobby {
     @Getter
     @Setter
     private String id;
+
+    @Getter
+    @Setter
+    private GameLogic gameLogic;
 
     private final ArrayList<Player> players = new ArrayList<>();
     public static final int maxPlayers = 4;

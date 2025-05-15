@@ -39,12 +39,19 @@
             src/main/java/at/aau/serg/websocketserver/messaging/dtos/MoveMessage.java,
             src/main/java/at/aau/serg/websocketserver/messaging/dtos/StartMessage.java,
             src/main/java/at/aau/serg/websocketserver/websocket/broker/WebSocketBrokerController.java,
-            src/main/java/at/aau/serg/websocketserver/websocket/broker/PlayerController.java
+            src/main/java/at/aau/serg/websocketserver/websocket/broker/PlayerController.java,
+            src/main/java/at/aau/serg/websocketserver/actioncard/ActionCard.java,
+            src/main/java/at/aau/serg/websocketserver/actioncard/ActionCardController.java
         </sonar.exclusions>
         <kotlin.version>2.1.20</kotlin.version>
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.13.1</version>
+        </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -67,7 +74,7 @@
         <!-- Spring Web (für @WebMvcTest etc.) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
+            <artifactId>spring-boot-starter</artifactId>
         </dependency>
 
         <!-- Lombok (nur zur Entwicklungszeit) -->

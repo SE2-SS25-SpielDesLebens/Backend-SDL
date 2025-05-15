@@ -1,6 +1,9 @@
 package at.aau.serg.websocketserver.websocket.broker;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.messaging.simp.config.ChannelRegistration;
+import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 
 import java.lang.reflect.Method;
 
@@ -38,4 +41,5 @@ class WebSocketBrokerConfigTest {
             }
         });
     }
+
 }

@@ -1,11 +1,9 @@
 package at.aau.serg.websocketserver.session;
 
-import at.aau.serg.websocketserver.session.JobRepository;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
