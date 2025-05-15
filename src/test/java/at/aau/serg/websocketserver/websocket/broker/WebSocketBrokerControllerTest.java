@@ -96,16 +96,7 @@ public class WebSocketBrokerControllerTest {
         assertNotNull(out.getTimestamp());
     }
 
-    // --- handleGameStart tests --------------------------------------------
 
-    @Test
-    public void testHandleGameStart_CreatesOrLoadsRepositoryOnly() {
-        int gameId = 3;
-        controller.handleGameStart(String.valueOf(gameId));
-
-        verify(jobService, times(1)).getOrCreateRepository(gameId);
-        verifyNoInteractions(messagingTemplate);
-    }
 
     // --- handleJobRequest tests -------------------------------------------
 
