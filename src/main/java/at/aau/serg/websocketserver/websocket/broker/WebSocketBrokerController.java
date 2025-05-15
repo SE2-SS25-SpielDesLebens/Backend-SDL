@@ -217,6 +217,7 @@ public class WebSocketBrokerController {
             Lobby lobby = lobbyService.getLobby(lobbyid);
             lobby.addPlayer(playerService.getPlayerById(request.getPlayerName()));
             response = new LobbyResponseMessage(lobbyid, request.getPlayerName(), true, "Spieler " + request.getPlayerName() + " ist erfolgreich beigetreten");
+            System.out.println("Spieler" + request.getPlayerName() + " ist beigetreten");
 
         } catch (Exception e) {
             response = new LobbyResponseMessage(lobbyid, request.getPlayerName(), false, e.getMessage());
