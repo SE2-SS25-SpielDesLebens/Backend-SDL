@@ -97,7 +97,6 @@ public class LobbyService {
         Lobby lobby = getLobby(id);
         if (lobby != null) {
             lobbies.remove(id);
-            lobby = null;
         }
 
     }
