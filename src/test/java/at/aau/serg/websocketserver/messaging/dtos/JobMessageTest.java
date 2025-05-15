@@ -17,7 +17,7 @@ class JobMessageTest {
                 true,
                 false,
                 99
-        );  // :contentReference[oaicite:0]{index=0}:contentReference[oaicite:1]{index=1}
+        );
 
         assertEquals(1,      msg.getJobId(),         "jobId sollte korrekt gesetzt sein");
         assertEquals("Entwickler", msg.getTitle(),    "title sollte korrekt gesetzt sein");
