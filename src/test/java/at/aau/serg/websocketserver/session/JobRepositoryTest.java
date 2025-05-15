@@ -75,12 +75,12 @@ class JobRepositoryTest {
 
         List<Job> availableFalse = repo.getRandomAvailableJobs(false, 3);
         assertEquals(3, availableFalse.size(), "Should return exactly 3 jobs");
-        assertTrue(availableFalse.stream().allMatch(j -> !j.isTaken()), "None of the returned jobs should be taken");
-        assertTrue(availableFalse.stream().allMatch(j -> !j.isRequiresDegree()), "None should require a degree");
+        assertTrue(availableFalse.stream().noneMatch(Job::isTaken), "None of the returned jobs should be taken");
+        assertTrue(availableFalse.stream().noneMatch(Job::isRequiresDegree), "None should require a degree");
 
         List<Job> availableTrue = repo.getRandomAvailableJobs(true, 1);
         assertEquals(1, availableTrue.size(), "Should return exactly 1 job");
-        assertTrue(availableTrue.stream().allMatch(j -> !j.isTaken()), "Returned job should not be taken");
+        assertTrue(availableTrue.stream().noneMatch(Job::isTaken), "Returned job should not be taken");
         assertTrue(availableTrue.stream().allMatch(Job::isRequiresDegree), "Returned job should require a degree");
     }
 

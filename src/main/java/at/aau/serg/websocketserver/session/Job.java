@@ -25,13 +25,11 @@ public class Job {
         this.assignedToPlayerName = null;
     }
 
-    public boolean assignJobTo(String playerName) {
+    public void assignJobTo(String playerName) {
         if (!isTaken) {
             isTaken = true;
             assignedToPlayerName = playerName;
-            return true;
         }
-        return false;
     }
 
     public void releaseJob() {

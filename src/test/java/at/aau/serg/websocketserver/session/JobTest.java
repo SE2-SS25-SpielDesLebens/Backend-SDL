@@ -12,8 +12,8 @@ class JobTest {
         assertFalse(job.isTaken());
         assertNull(job.getAssignedToPlayerName());
 
-        boolean result = job.assignJobTo("Alice");
-        assertTrue(result);
+        // Job zuweisen
+        job.assignJobTo("Alice");
         assertTrue(job.isTaken());
         assertEquals("Alice", job.getAssignedToPlayerName());
     }
@@ -23,12 +23,12 @@ class JobTest {
         Job job = new Job(2, "Analyst", 4000, 500, true);
         job.assignJobTo("Bob");
         assertTrue(job.isTaken());
-
-        boolean result = job.assignJobTo("Charlie");
-        assertFalse(result);
-        // Zustand bleibt unverändert
         assertEquals("Bob", job.getAssignedToPlayerName());
+
+        // Zweiter Aufruf ändert Zustand nicht
+        job.assignJobTo("Charlie");
         assertTrue(job.isTaken());
+        assertEquals("Bob", job.getAssignedToPlayerName());
     }
 
     @Test
