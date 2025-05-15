@@ -10,8 +10,8 @@ public class PlayerService {
     private final List<Player> players = new ArrayList<>();
 
     public PlayerService() {
-        players.add(new Player("Player1"));
-        players.add(new Player("Player2"));
+        players.add(new Player("1"));
+        players.add(new Player("2"));
     }
 
     public List<Player> getAllPlayers() {
