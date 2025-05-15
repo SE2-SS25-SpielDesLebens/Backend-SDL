@@ -23,7 +23,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Controller
 public class WebSocketBrokerController {
@@ -190,7 +189,7 @@ public class WebSocketBrokerController {
     }
 
     @MessageMapping("/game/start/{gameId}")
-    public void handleGameStart(@DestinationVariable String gameId) {
+    public void handleGameStart(@DestinationVariable int gameId) {
         // 1. Repository vorbereiten
         jobService.getOrCreateRepository(Integer.parseInt(gameId));
 
