@@ -1,5 +1,6 @@
 package at.aau.serg.websocketserver.lobby;
 
+import Game.GameLogic;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -15,6 +16,10 @@ public class Lobby {
     @Getter
     @Setter
     private String id;
+
+    @Getter
+    @Setter
+    private GameLogic gameLogic;
 
     private final ArrayList<Player> players = new ArrayList<>();
     public static final int maxPlayers = 4;
