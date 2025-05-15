@@ -31,12 +31,12 @@ public class BoardServiceTest {
         Field startField = boardService.getFieldByIndex(0);
         assertNotNull(startField);
         assertEquals(0, startField.getIndex());
-        assertEquals("STARTNORMAL", startField.getType());
+        assertEquals("START_NORMAL", startField.getType());
         
         Field uniStartField = boardService.getFieldByIndex(17);
         assertNotNull(uniStartField);
         assertEquals(17, uniStartField.getIndex());
-        assertEquals("STARTUNI", uniStartField.getType());
+        assertEquals("START_UNIVERSITY", uniStartField.getType());
     }
     
     @Test
@@ -86,7 +86,7 @@ public class BoardServiceTest {
         assertEquals(3, currentField.getIndex());
         
         // Überprüfe, ob der Feldtyp stimmt
-        assertEquals("ANLAGE", currentField.getType());
+        assertEquals("INVESTMENT", currentField.getType());
     }
     
     @Test
@@ -226,6 +226,6 @@ public class BoardServiceTest {
         // Dies ist die spezielle Verbindung vom Examen ins Berufsleben
         Field currentField = boardService.getPlayerField(playerId);
         assertEquals(5, currentField.getIndex());
-        assertEquals("FREUND", currentField.getType());
+        assertEquals("STOP_FAMILY", currentField.getType());
     }
 }

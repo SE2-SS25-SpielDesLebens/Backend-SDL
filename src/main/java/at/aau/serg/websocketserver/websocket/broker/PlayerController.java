@@ -1,5 +1,9 @@
 package at.aau.serg.websocketserver.websocket.broker;
 
+import at.aau.serg.websocketserver.Player.Player;
+import at.aau.serg.websocketserver.Player.PlayerService;
+import at.aau.serg.websocketserver.fieldlogic.FieldService;
+import at.aau.serg.websocketserver.fieldlogic.FieldType;
 import at.aau.serg.websocketserver.player.Player;
 import at.aau.serg.websocketserver.player.PlayerService;
 import org.springframework.http.ResponseEntity;
@@ -14,10 +18,12 @@ import java.util.Optional;
 @RequestMapping("/players")
 public class PlayerController {
     private final PlayerService playerService;
+    private final FieldService fieldService;
 
 
-    public PlayerController(PlayerService playerService) {
+    public PlayerController(PlayerService playerService, FieldService fieldService) {
         this.playerService = playerService;
+        this.fieldService = fieldService;
     }
 
     @GetMapping
@@ -84,6 +90,12 @@ public class PlayerController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @PostMapping("/{id}/trigger-field")
+    public ResponseEntity<String> triggerFieldEffect(@PathVariable int id) {
+        return ResponseEntity.ok(fieldService.triggerCurrentFieldEvent(id));
+    }
+
 
 
 }

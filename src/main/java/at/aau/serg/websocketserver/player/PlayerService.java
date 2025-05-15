@@ -37,10 +37,10 @@ public class PlayerService {
         return false;
     }
 
-    public Player addPlayer(String id) {
-        Player newPlayer = new Player(id);
-        players.put(id, newPlayer);
-        System.out.println("Neuer Spieler hinzugefügt: " + newPlayer.getId() + " mit ID " + newPlayer.getId());
+    public Player addPlayer(String name) {
+        Player newPlayer = new Player(name); // Name als ID
+        players.add(newPlayer);
+        System.out.println("Neuer Spieler hinzugefügt: " + newPlayer.getId());
         return newPlayer;
     }
 
