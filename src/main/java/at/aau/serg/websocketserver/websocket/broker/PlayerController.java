@@ -30,10 +30,11 @@ public class PlayerController {
     }
 
     @PostMapping
-    public ResponseEntity<String> createPlayer(@RequestBody Player player) {
-        playerService.addPlayer(String.valueOf(player));
-        return ResponseEntity.ok("Player created successfully");
+    public ResponseEntity<Player> createPlayer(@RequestBody Player player) {
+        Player created = playerService.addPlayer(player.getId());
+        return ResponseEntity.ok(created); // gib den ganzen Spieler zurück
     }
+
 
 
 
