@@ -1,6 +1,6 @@
-package Game;
+package at.aau.serg.websocketserver.game;
 
-import at.aau.serg.websocketserver.Player.Player;
+import at.aau.serg.websocketserver.player.Player;
 import at.aau.serg.websocketserver.messaging.dtos.OutputMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

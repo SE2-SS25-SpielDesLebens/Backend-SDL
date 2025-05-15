@@ -5,7 +5,7 @@ import lombok.Getter;
 import java.security.SecureRandom;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import at.aau.serg.websocketserver.Player.*;
+import at.aau.serg.websocketserver.player.*;
 
 //speichert die Lobbys, verwaltet ID Generierung
 @Getter
@@ -32,7 +32,7 @@ public class LobbyService {
         String id = generateUniqueID();
         Lobby lobby = new Lobby(id, player);
         lobbies.put(id, lobby);
-        player.setHost(true);
+        //später noch Player auf Host setzen, wenn mit PlayerService verknüpft
         return lobby;
     }
 
@@ -97,7 +97,6 @@ public class LobbyService {
         Lobby lobby = getLobby(id);
         if (lobby != null) {
             lobbies.remove(id);
-            lobby = null;
         }
 
     }

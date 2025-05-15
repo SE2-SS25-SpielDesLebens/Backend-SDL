@@ -4,7 +4,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import at.aau.serg.websocketserver.Player.*;
+import at.aau.serg.websocketserver.player.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class LobbyServiceTest {
@@ -23,7 +23,6 @@ public class LobbyServiceTest {
         assertNotNull(lobby);
         assertEquals(1, lobby.getPlayers().size());
         assertEquals(host, lobby.getPlayers().get(0));
-        assertTrue(host.isHost());
     }
 
     @Test

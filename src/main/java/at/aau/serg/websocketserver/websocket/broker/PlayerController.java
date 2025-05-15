@@ -1,10 +1,11 @@
 package at.aau.serg.websocketserver.websocket.broker;
 
-import at.aau.serg.websocketserver.Player.Player;
-import at.aau.serg.websocketserver.Player.PlayerService;
+import at.aau.serg.websocketserver.player.Player;
+import at.aau.serg.websocketserver.player.PlayerService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,11 +22,11 @@ public class PlayerController {
 
     @GetMapping
     public ResponseEntity<List<Player>> getAllPlayers() {
-        List<Player> players = playerService.getAllPlayers();
+        Collection<Player> players = playerService.getPlayers().values();
         if (players.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
-        return ResponseEntity.ok(players);
+        return ResponseEntity.ok((List<Player>) players);
     }
 
     @PostMapping
@@ -38,7 +39,7 @@ public class PlayerController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Player> getPlayerById(@PathVariable int id) {
-        Optional<Player> player = playerService.getPlayerById(String.valueOf(id));
+        Optional<Player> player = Optional.ofNullable(playerService.getPlayerById(String.valueOf(id)));
         return player.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 

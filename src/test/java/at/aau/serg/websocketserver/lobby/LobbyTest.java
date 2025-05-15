@@ -3,7 +3,7 @@ package at.aau.serg.websocketserver.lobby;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import at.aau.serg.websocketserver.Player.*;
+import at.aau.serg.websocketserver.player.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 

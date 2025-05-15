@@ -1,9 +1,10 @@
 package at.aau.serg.websocketserver.websocket.broker;
 
-import Game.GameController;
-import Game.GameLogic;
-import Game.PlayerTurnManager;
-import at.aau.serg.websocketserver.Player.Player;
+import at.aau.serg.websocketserver.game.GameController;
+import at.aau.serg.websocketserver.game.GameLogic;
+import at.aau.serg.websocketserver.game.PlayerTurnManager;
+import at.aau.serg.websocketserver.player.Player;
+import at.aau.serg.websocketserver.player.PlayerService;
 import at.aau.serg.websocketserver.board.BoardService;
 import at.aau.serg.websocketserver.board.Field;
 import at.aau.serg.websocketserver.lobby.Lobby;
@@ -19,6 +20,7 @@ import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
+import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +31,8 @@ import java.util.Optional;
 public class WebSocketBrokerController {
 
     private final JobService jobService;
+    private final PlayerService playerService;
+    private final LobbyService lobbyService;
     private final SimpMessagingTemplate messagingTemplate;
     private final BoardService boardService;
 
@@ -38,8 +42,12 @@ public class WebSocketBrokerController {
                                      BoardService boardService) {
         this.jobService = jobService;
         this.messagingTemplate = messagingTemplate;
+        playerService = PlayerService.getInstance();
+        lobbyService = LobbyService.getInstance();
         this.boardService = boardService;
-    }    @MessageMapping("/move")
+    }
+
+    @MessageMapping("/move")
     public void handleMove(StompMessage message) {
         int playerId;
         try {
@@ -54,7 +62,9 @@ public class WebSocketBrokerController {
         // Prüfe, ob es ein "join:X" Befehl ist (Spieler betritt das Spielfeld)
         if (action != null && action.startsWith("join:")) {
             try {
-                int startFieldIndex = Integer.parseInt(action.substring(5));                boardService.addPlayer(playerId, startFieldIndex);                Field currentField = boardService.getPlayerField(playerId);
+                int startFieldIndex = Integer.parseInt(action.substring(5));
+                boardService.addPlayer(playerId, startFieldIndex);
+                Field currentField = boardService.getPlayerField(playerId);
 
                 // Get the possible next fields
                 List<Integer> nextPossibleFieldIndices = new ArrayList<>();
@@ -120,7 +130,7 @@ public class WebSocketBrokerController {
         }
 
         // Prüfe ob eine bestimmte Ausgangsposition mitgeschickt wurde
-        int currentFieldIndex = -1;
+        int currentFieldIndex;
         if (message.getAction().contains(":")) {
             String[] parts = message.getAction().split(":");
             if (parts.length > 1) {
@@ -179,8 +189,50 @@ public class WebSocketBrokerController {
             };
         }
 
+        System.out.println("[LOBBY] [" + gameId + "] " + message.getPlayerName() + ": " + content);
+
         messagingTemplate.convertAndSend("/topic/lobby",
                 new OutputMessage(message.getPlayerName(), content, LocalDateTime.now().toString()));
+    }
+
+    @MessageMapping("/lobby/create")
+    @SendTo("/queue/lobby/created")
+    public void handleLobbyCreate(@Payload LobbyRequestMessage request, Principal principal){
+        //Spieler sollte schon in PlayerService enthalten sein
+        Lobby lobby = lobbyService.createLobby(playerService.getPlayerById(request.getPlayerName()));
+        System.out.println("Lobbyid: " + lobby.getId() + " " + request.getPlayerName() + " " + principal.getName());
+        LobbyResponseMessage response = new LobbyResponseMessage(lobby.getId(), request.getPlayerName(), true, null);
+        messagingTemplate.convertAndSendToUser(
+                request.getPlayerName(),   // = Principal.getName(), wenn korrekt verwendet
+                "/queue/lobby/created",    // Ziel für den Client
+                response
+        );
+        System.out.println("Nachricht gesendet");
+    }
+
+    @MessageMapping("/{lobbyid}/join")
+    @SendTo("/topic/{lobbyid}")
+    public void handlePlayerJoin(@DestinationVariable String lobbyid, @Payload LobbyRequestMessage request){
+        LobbyResponseMessage response = null;
+        try {
+            Lobby lobby = lobbyService.getLobby(lobbyid);
+            lobby.addPlayer(playerService.getPlayerById(request.getPlayerName()));
+            response = new LobbyResponseMessage(lobbyid, request.getPlayerName(), true, "Spieler " + request.getPlayerName() + " ist erfolgreich beigetreten");
+            System.out.println("Spieler" + request.getPlayerName() + " ist beigetreten");
+
+        } catch (Exception e) {
+            response = new LobbyResponseMessage(lobbyid, request.getPlayerName(), false, e.getMessage());
+        }finally {
+            String destination = String.format("/topic/%s", lobbyid);
+            assert response != null;
+            messagingTemplate.convertAndSend(destination, response);
+        }
+    }
+
+    @MessageMapping("/{lobbyid}/leave")
+    public void handlePlayerLeave(@DestinationVariable String lobbyid, @Payload LobbyRequestMessage request){
+        Lobby lobby = lobbyService.getLobby(lobbyid);
+        lobby.removePlayer(playerService.getPlayerById(request.getPlayerName()));
     }
 
     @MessageMapping("/chat")
