@@ -34,65 +34,65 @@ public class BoardService {
         List<List<Integer>> nextFieldsList = new ArrayList<>();
         
         // Definieren der Felder mit ihren Koordinaten (x, y sind Prozentangaben, 0.0-1.0)
-        fields.add(new Field(0, 0.115f, 0.65f, "STARTNORMAL"));
+        fields.add(new Field(0, 0.115f, 0.65f, "START_NORMAL"));
         nextFieldsList.add(List.of(1));
         
-        fields.add(new Field(1, 0.15f, 0.617f, "ZAHLTAG"));
+        fields.add(new Field(1, 0.15f, 0.617f, "PAYDAY"));
         nextFieldsList.add(List.of(2));
         
-        fields.add(new Field(2, 0.184f, 0.6f, "AKTION"));
+        fields.add(new Field(2, 0.184f, 0.6f, "ACTION"));
         nextFieldsList.add(List.of(3));
         
-        fields.add(new Field(3, 0.2f, 0.58f, "ANLAGE"));
+        fields.add(new Field(3, 0.2f, 0.58f, "INVESTMENT"));
         nextFieldsList.add(List.of(4));
         
-        fields.add(new Field(4, 0.23f, 0.55f, "AKTION"));
+        fields.add(new Field(4, 0.23f, 0.55f, "ACTION"));
         nextFieldsList.add(List.of(5));
         
-        fields.add(new Field(5, 0.27f, 0.52f, "FREUND"));
+        fields.add(new Field(5, 0.27f, 0.52f, "STOP_FAMILY"));
         nextFieldsList.add(List.of(6));
         
-        fields.add(new Field(6, 0.31f, 0.49f, "AKTION"));
+        fields.add(new Field(6, 0.31f, 0.49f, "ACTION"));
         nextFieldsList.add(List.of(7));
         
         fields.add(new Field(7, 0.35f, 0.46f, "BERUF"));
         nextFieldsList.add(List.of(8));
         
-        fields.add(new Field(8, 0.39f, 0.43f, "ZAHLTAG"));
+        fields.add(new Field(8, 0.39f, 0.43f, "PAYDAY"));
         nextFieldsList.add(List.of(9));
         
-        fields.add(new Field(9, 0.405f, 0.39f, "AKTION"));
+        fields.add(new Field(9, 0.405f, 0.39f, "ACTION"));
         nextFieldsList.add(List.of(10));
         
-        fields.add(new Field(10, 0.42f, 0.35f, "HAUS"));
+        fields.add(new Field(10, 0.42f, 0.35f, "HOUSE"));
         nextFieldsList.add(List.of(11));
         
-        fields.add(new Field(11, 0.44f, 0.31f, "AKTION"));
+        fields.add(new Field(11, 0.44f, 0.31f, "ACTION"));
         nextFieldsList.add(List.of(12));
         
-        fields.add(new Field(12, 0.47f, 0.27f, "ZAHLTAG"));
+        fields.add(new Field(12, 0.47f, 0.27f, "PAYDAY"));
         nextFieldsList.add(List.of(13));
         
-        fields.add(new Field(13, 0.51f, 0.23f, "AKTION"));
+        fields.add(new Field(13, 0.51f, 0.23f, "ACTION"));
         nextFieldsList.add(List.of(14));
         
-        fields.add(new Field(14, 0.55f, 0.20f, "FREUND"));
+        fields.add(new Field(14, 0.55f, 0.20f, "STOP_FAMILY"));
         nextFieldsList.add(List.of(15));
         
-        fields.add(new Field(15, 0.59f, 0.17f, "AKTION"));
+        fields.add(new Field(15, 0.59f, 0.17f, "ACTION"));
         nextFieldsList.add(List.of(16));
         
-        fields.add(new Field(16, 0.63f, 0.14f, "HEIRAT"));
+        fields.add(new Field(16, 0.63f, 0.14f, "STOP_MARRIAGE"));
         nextFieldsList.add(List.of(16)); // Selbstreferenz, Endfeld
         
         // Universitäts-Start und Felder
-        fields.add(new Field(17, 0.25f, 0.75f, "STARTUNI"));
+        fields.add(new Field(17, 0.25f, 0.75f, "START_UNIVERSITY"));
         nextFieldsList.add(List.of(18));
         
-        fields.add(new Field(18, 0.30f, 0.72f, "ZAHLTAG"));
+        fields.add(new Field(18, 0.30f, 0.72f, "PAYDAY"));
         nextFieldsList.add(List.of(19));
         
-        fields.add(new Field(19, 0.35f, 0.70f, "EXAMEN"));
+        fields.add(new Field(19, 0.35f, 0.70f, "STOP_EXAM"));
         nextFieldsList.add(List.of(5)); // Nach dem Examen geht es zum Freund-Feld (5)
         
         // Setze die nextFields für alle Felder

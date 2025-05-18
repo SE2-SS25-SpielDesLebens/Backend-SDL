@@ -83,27 +83,27 @@ public class AdvancedBoardServiceTest {
         
         // Spieler auf das Uni-Startfeld setzen
         boardService.setPlayerPosition(playerId, 17);
-        assertEquals("STARTUNI", boardService.getPlayerField(playerId).getType());
+        assertEquals("START_UNIVERSITY", boardService.getPlayerField(playerId).getType());
         
         // Einen Schritt bewegen (zu Zahltag)
         boardService.movePlayer(playerId, 1);
         assertEquals(18, boardService.getPlayerField(playerId).getIndex());
-        assertEquals("ZAHLTAG", boardService.getPlayerField(playerId).getType());
+        assertEquals("PAYDAY", boardService.getPlayerField(playerId).getType());
         
         // Noch einen Schritt (zu Examen)
         boardService.movePlayer(playerId, 1);
         assertEquals(19, boardService.getPlayerField(playerId).getIndex());
-        assertEquals("EXAMEN", boardService.getPlayerField(playerId).getType());
+        assertEquals("STOP_EXAM", boardService.getPlayerField(playerId).getType());
         
         // Nach Examen sollte der Spieler zum Freund-Feld gehen
         boardService.movePlayer(playerId, 1);
         assertEquals(5, boardService.getPlayerField(playerId).getIndex());
-        assertEquals("FREUND", boardService.getPlayerField(playerId).getType());
+        assertEquals("STOP_FAMILY", boardService.getPlayerField(playerId).getType());
         
         // Von dort aus normal weitergehen
         boardService.movePlayer(playerId, 1);
         assertEquals(6, boardService.getPlayerField(playerId).getIndex());
-        assertEquals("AKTION", boardService.getPlayerField(playerId).getType());
+        assertEquals("ACTION", boardService.getPlayerField(playerId).getType());
     }
     
     @Test
