@@ -97,7 +97,7 @@ public class Player {
     }
 
     public void addHouse(int houseId, int houseValue) {
-        this.houseID.put(houseId, houseValue);  // Fügt das Haus zur Map hinzu
+        this.houseID.put(Integer.valueOf(houseId), Integer.valueOf(houseValue));  // Fügt das Haus zur Map hinzu
     }
 
 
@@ -109,7 +109,7 @@ public class Player {
 
 
     public void removeHouse(int houseId) {
-        this.houseID.remove(houseId);
+        this.houseID.remove(Integer.valueOf(houseId));
     }
 
 
@@ -141,6 +141,10 @@ public class Player {
     @JsonProperty("jobId") public Job getJobId() { return job; }
     @JsonProperty("houseId") public Map<Integer,Integer> getHouseId() { return houseID; }
     @JsonProperty("fieldId") public int getFieldID(){return fieldId;}
+    
+    public void setFieldId(int fieldId) {
+        this.fieldId = fieldId;
+    }
 }
 
 

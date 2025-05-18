@@ -1,5 +1,6 @@
 package at.aau.serg.websocketserver.game;
 
+import at.aau.serg.websocketserver.board.FieldType;
 import at.aau.serg.websocketserver.player.Player;
 import at.aau.serg.websocketserver.board.BoardService;
 import at.aau.serg.websocketserver.board.Field;
@@ -133,12 +134,10 @@ public class GameLogic {
         // 2. Normale Spiellogik
         if (boardService == null) {
             throw new IllegalStateException("BoardService wurde nicht gesetzt.");
-        }
-
-        int playerIdInt = Integer.parseInt(player.getId());
-        int startIndex = boardService.getPlayerField(playerIdInt).getIndex();
-        boardService.movePlayer(playerIdInt, spinResult);
-        Field endField = boardService.getPlayerField(playerIdInt);
+        }        String playerId = player.getId();
+        int startIndex = boardService.getPlayerField(playerId).getIndex();
+        boardService.movePlayer(playerId, spinResult);
+        Field endField = boardService.getPlayerField(playerId);
 
         for (int i = 1; i <= spinResult; i++) {
             Field intermediate = boardService.getFieldByIndex(startIndex + i);
@@ -170,17 +169,34 @@ public class GameLogic {
 
 
     void handleField(Player player, Field field) {
-        String type = field.getType();
-        switch (type) {
-            case "ZAHLTAG" -> handleSalaryField(player, true);
-            case "AKTION" -> handleActionField(player);
-            case "HAUS" -> handleHouseField(player);
-            case "BERUF" -> handleJobField(player);
-            case "ANLAGE" -> handleInvestmentField(player);
-            case "FREUND" -> handleFriendField(player, field);
-            case "HEIRAT" -> handleMarriageField(player);
-            case "EXAMEN" -> handleExamField(player);
-            default -> System.out.println("[INFO] Kein spezielles Verhalten für Feldtyp: " + type);
+        FieldType type = field.getType();        switch (type) {
+            case ZAHLTAG:
+                handleSalaryField(player, true);
+                break;
+            case AKTION:
+                handleActionField(player);
+                break;
+            case HAUS:
+                handleHouseField(player);
+                break;
+            case BERUF:
+                handleJobField(player);
+                break;
+            case ANLAGE:
+                handleInvestmentField(player);
+                break;
+            case FREUND:
+                handleFriendField(player, field);
+                break;
+            case HEIRAT:
+                handleMarriageField(player);
+                break;
+            case EXAMEN:
+                handleExamField(player);
+                break;
+            default:
+                System.out.println("[INFO] Kein spezielles Verhalten für Feldtyp: " + type);
+                break;
         }
     }
 
@@ -198,22 +214,22 @@ public class GameLogic {
 
         // Platzhalter: Simuliere eine zufällige Aktion für den Spieler
         SecureRandom random = new SecureRandom();
-        int event = random.nextInt(3);
-
-        switch (event) {
-            case 0 -> {
+        int event = random.nextInt(3);        switch (event) {
+            case 0:
                 player.addMoney(10000);
                 System.out.println("[AKTION] Spieler " + player.getId() + " gewinnt 10.000 € durch eine Aktionskarte.");
-            }
-            case 1 -> {
+                break;
+            case 1:
                 player.removeMoney(15000);
                 System.out.println("[AKTION] Spieler " + player.getId() + " verliert 15.000 € durch eine Aktionskarte.");
-            }
-            case 2 -> {
+                break;
+            case 2:
                 player.addChild();
                 System.out.println("[AKTION] Spieler " + player.getId() + " bekommt ein Kind durch eine Aktionskarte.");
-            }
-            default -> System.out.println("[AKTION] Keine Aktion gefunden.");
+                break;
+            default:
+                System.out.println("[AKTION] Keine Aktion gefunden.");
+                break;
         }
 
         // Später: Aktionskarte ziehen, anzeigen, auswählen (falls Optionen), ausführen und zurück unter Stapel legen
@@ -228,7 +244,7 @@ public class GameLogic {
             // Haus kaufen: zufällig einen Preis festlegen und Geld abziehen
             int housePrice = 200000;
             player.removeMoney(housePrice);
-            player.getHouseId().put(random.nextInt(1000), housePrice); // Dummy-ID und Wert
+            player.getHouseId().put(Integer.valueOf(random.nextInt(1000)), Integer.valueOf(housePrice)); // Dummy-ID und Wert
             System.out.println("[HAUS] Spieler " + player.getId() + " kauft ein Haus für " + housePrice + " €.");
         } else if (!player.getHouseId().isEmpty()) {
             // Haus verkaufen: zufällig ein Haus auswählen und Wert zurückgeben (50 % oder 150 %)
@@ -302,15 +318,23 @@ public class GameLogic {
                 int newSlot = 1 + random.nextInt(10);
                 player.setInvestments(newSlot);
                 player.setInvestmentPayout(0);
-                System.out.println("[ANLAGE] Spieler " + player.getId() + " steckt seine Investition kostenlos auf Zahl " + newSlot + " um (Rücksetzung auf 10.000 € Stufe).");
-            } else {
+                System.out.println("[ANLAGE] Spieler " + player.getId() + " steckt seine Investition kostenlos auf Zahl " + newSlot + " um (Rücksetzung auf 10.000 € Stufe).");            } else {
                 int payoutStage = player.getInvestmentPayout();
-                int payoutAmount = switch (payoutStage) {
-                    case 0 -> 10000;
-                    case 1 -> 20000;
-                    case 2 -> 20000;
-                    default -> 0;
-                };
+                int payoutAmount;
+                switch (payoutStage) {
+                    case 0:
+                        payoutAmount = 10000;
+                        break;
+                    case 1:
+                        payoutAmount = 20000;
+                        break;
+                    case 2:
+                        payoutAmount = 20000;
+                        break;
+                    default:
+                        payoutAmount = 0;
+                        break;
+                }
                 if (payoutAmount > 0) {
                     player.addMoney(payoutAmount);
                     player.setInvestmentPayout(payoutStage + 1);
@@ -343,14 +367,22 @@ public class GameLogic {
     public void checkAndPayoutInvestment(String spinningPlayerId, int spinResult) {
         for (Player p : players.values()) {
             int slot = p.getInvestments();
-            if (slot == spinResult) {
-                int payoutStage = p.getInvestmentPayout();
-                int payoutAmount = switch (payoutStage) {
-                    case 0 -> 10000;
-                    case 1 -> 20000;
-                    case 2 -> 20000;
-                    default -> 0;
-                };
+            if (slot == spinResult) {                int payoutStage = p.getInvestmentPayout();
+                int payoutAmount;
+                switch (payoutStage) {
+                    case 0:
+                        payoutAmount = 10000;
+                        break;
+                    case 1:
+                        payoutAmount = 20000;
+                        break;
+                    case 2:
+                        payoutAmount = 20000;
+                        break;
+                    default:
+                        payoutAmount = 0;
+                        break;
+                }
 
                 if (payoutAmount > 0) {
                     p.addMoney(payoutAmount);
@@ -366,8 +398,8 @@ public class GameLogic {
 
     void handleFriendField(Player player, Field field) {
         // Einheitliche Behandlung für Baby-, Freund- oder Haustierfelder als 1 Stift im Auto
-        String type = field.getType();
-        if ("FREUND".equals(type)) {
+        FieldType type = field.getType();
+        if (FieldType.FREUND.equals(type)) {
             player.addChild();
             System.out.println("[STIFT] Spieler " + player.getId() + " landet auf einem " + type + "-Feld und bekommt 1 Stift ins Auto gesetzt.");
         }
@@ -468,13 +500,19 @@ public class GameLogic {
     public void playerRetires(String playerName) {
         Player player = getPlayerByName(playerName);
         player.retire();
-        retirementOrder.add(playerName);
-
-        switch (retirementOrder.size()) {
-            case 1 -> player.addMoney(250000);
-            case 2 -> player.addMoney(100000);
-            case 3 -> player.addMoney(50000);
-            case 4 -> player.addMoney(10000);
+        retirementOrder.add(playerName);        switch (retirementOrder.size()) {
+            case 1:
+                player.addMoney(250000);
+                break;
+            case 2:
+                player.addMoney(100000);
+                break;
+            case 3:
+                player.addMoney(50000);
+                break;
+            case 4:
+                player.addMoney(10000);
+                break;
         }
 
         player.clearJob();

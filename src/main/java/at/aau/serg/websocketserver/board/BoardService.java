@@ -2,225 +2,162 @@ package at.aau.serg.websocketserver.board;
 
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
-/**
- * Service für die Verwaltung des Spielbretts und der Spielerbewegungen.
- */
 @Service
 public class BoardService {
-    
-    // Mapping von Spieler-ID zu aktuellem Feldindex
-    private final Map<Integer, Integer> playerPositions = new HashMap<>();
-    
-    // Das Spielbrett mit allen Feldern
     private final List<Field> board;
-    
+    private final Map<String, Integer> playerPositions = new ConcurrentHashMap<>();  // playerId → fieldIndex
+
     public BoardService() {
-        // Initialisiere das Spielbrett mit den definierten Feldern
-        board = createBoard();
+        this.board = BoardData.getBoard();
     }
     
-    /**
-     * Erstellt das Spielbrett mit den verschiedenen Feldern und deren Positionen.
-     */
-    private List<Field> createBoard() {
-        List<Field> fields = new ArrayList<>();
+    // Fügt einen Spieler zum Board hinzu
+    public void addPlayer(String playerId, int startFieldIndex) {
+        playerPositions.put(playerId, Integer.valueOf(startFieldIndex));
+    }
+      // Bewegt einen Spieler um die angegebene Anzahl an Schritten vorwärts
+    public void movePlayer(String playerId, int steps) {
+        int currentFieldIndex = playerPositions.getOrDefault(playerId, Integer.valueOf(1));
         
-        // Erstelle Liste für die Felder (um später nextFields zu setzen)
-        List<List<Integer>> nextFieldsList = new ArrayList<>();
-        
-        // Definieren der Felder mit ihren Koordinaten (x, y sind Prozentangaben, 0.0-1.0)
-        fields.add(new Field(0, 0.115f, 0.65f, "START_NORMAL"));
-        nextFieldsList.add(List.of(1));
-        
-        fields.add(new Field(1, 0.15f, 0.617f, "PAYDAY"));
-        nextFieldsList.add(List.of(2));
-        
-        fields.add(new Field(2, 0.184f, 0.6f, "ACTION"));
-        nextFieldsList.add(List.of(3));
-        
-        fields.add(new Field(3, 0.2f, 0.58f, "INVESTMENT"));
-        nextFieldsList.add(List.of(4));
-        
-        fields.add(new Field(4, 0.23f, 0.55f, "ACTION"));
-        nextFieldsList.add(List.of(5));
-        
-        fields.add(new Field(5, 0.27f, 0.52f, "STOP_FAMILY"));
-        nextFieldsList.add(List.of(6));
-        
-        fields.add(new Field(6, 0.31f, 0.49f, "ACTION"));
-        nextFieldsList.add(List.of(7));
-        
-        fields.add(new Field(7, 0.35f, 0.46f, "BERUF"));
-        nextFieldsList.add(List.of(8));
-        
-        fields.add(new Field(8, 0.39f, 0.43f, "PAYDAY"));
-        nextFieldsList.add(List.of(9));
-        
-        fields.add(new Field(9, 0.405f, 0.39f, "ACTION"));
-        nextFieldsList.add(List.of(10));
-        
-        fields.add(new Field(10, 0.42f, 0.35f, "HOUSE"));
-        nextFieldsList.add(List.of(11));
-        
-        fields.add(new Field(11, 0.44f, 0.31f, "ACTION"));
-        nextFieldsList.add(List.of(12));
-        
-        fields.add(new Field(12, 0.47f, 0.27f, "PAYDAY"));
-        nextFieldsList.add(List.of(13));
-        
-        fields.add(new Field(13, 0.51f, 0.23f, "ACTION"));
-        nextFieldsList.add(List.of(14));
-        
-        fields.add(new Field(14, 0.55f, 0.20f, "STOP_FAMILY"));
-        nextFieldsList.add(List.of(15));
-        
-        fields.add(new Field(15, 0.59f, 0.17f, "ACTION"));
-        nextFieldsList.add(List.of(16));
-        
-        fields.add(new Field(16, 0.63f, 0.14f, "STOP_MARRIAGE"));
-        nextFieldsList.add(List.of(16)); // Selbstreferenz, Endfeld
-        
-        // Universitäts-Start und Felder
-        fields.add(new Field(17, 0.25f, 0.75f, "START_UNIVERSITY"));
-        nextFieldsList.add(List.of(18));
-        
-        fields.add(new Field(18, 0.30f, 0.72f, "PAYDAY"));
-        nextFieldsList.add(List.of(19));
-        
-        fields.add(new Field(19, 0.35f, 0.70f, "STOP_EXAM"));
-        nextFieldsList.add(List.of(5)); // Nach dem Examen geht es zum Freund-Feld (5)
-        
-        // Setze die nextFields für alle Felder
-        for (int i = 0; i < fields.size(); i++) {
-            Field field = fields.get(i);
-            List<Integer> nextFields = nextFieldsList.get(i);
-            
-            for (Integer nextFieldIndex : nextFields) {
-                ((Field)field).addNextField(nextFieldIndex);
+        for (int i = 0; i < steps; i++) {
+            Field currentField = getFieldByIndex(currentFieldIndex);
+            if (currentField != null && !currentField.getNextFields().isEmpty()) {
+                // Einfache Implementierung: Nimm immer das erste nächste Feld
+
+                currentFieldIndex = currentField.getNextFields().get(0);
             }
         }
         
-        return fields;
+        playerPositions.put(playerId, Integer.valueOf(currentFieldIndex));
     }
     
-    /**
-     * Fügt einen neuen Spieler zum Brett hinzu.
-     */
-    public void addPlayer(int playerId, int startFieldIndex) {
-        if (startFieldIndex >= 0 && startFieldIndex < board.size()) {
-            playerPositions.put(playerId, startFieldIndex);
-        } else {
-            // Bei ungültigem Index auf Startfeld setzen
-            playerPositions.put(playerId, 0);
-        }
-    }
-    
-    /**
-     * Bewegt einen Spieler um die angegebene Anzahl von Schritten.
-     * Berücksichtigt die erlaubten nextFields für eine korrekte Bewegung.
-     */
-    public void movePlayer(int playerId, int steps) {
-        // Hole aktuelle Position oder verwende 0 als Default
-        int currentPosition = playerPositions.getOrDefault(playerId, 0);
-        Field currentField = board.get(currentPosition);
+    // Bewegt einen Spieler um die angegebene Anzahl an Schritten mit Entscheidungslogik für Verzweigungen
+    public List<Integer> getMoveOptions(String playerId, int steps) {
+        int currentFieldIndex = playerPositions.getOrDefault(playerId, Integer.valueOf(1));
+        List<Integer> endOptions = new ArrayList<>();
         
-        // Wenn keine Bewegung gewünscht oder möglich, behalten wir die aktuelle Position bei
-        if (steps <= 0 || currentField.getNextFields().isEmpty()) {
-            return;
-        }
+        // Startposition hinzufügen
+        List<Integer> positions = new ArrayList<>();
+        positions.add(Integer.valueOf(currentFieldIndex));
         
-        // Bewege den Spieler entsprechend der nextFields-Konfiguration
-        int newPosition = currentPosition;
-        int remainingSteps = steps;
-        
-        while (remainingSteps > 0) {
-            Field field = board.get(newPosition);
-            List<Integer> nextFieldIndices = field.getNextFields();
-            
-            // Wenn keine Weiterführung möglich ist oder Endfeld erreicht (z.B. Heirat), abbrechen
-            if (nextFieldIndices.isEmpty() || (nextFieldIndices.size() == 1 && nextFieldIndices.get(0) == newPosition)) {
-                break;
+        // Für jeden Schritt alle möglichen Pfade verfolgen
+        for (int i = 0; i < steps; i++) {
+            List<Integer> newPositions = new ArrayList<>();
+            for (Integer pos : positions) {
+                Field field = getFieldByIndex(pos);
+                if (field != null) {
+                    newPositions.addAll(field.getNextFields());
+                }
             }
-            
-            // Nehme die erste mögliche Weiterführung (später könnten hier Entscheidungen eingebaut werden)
-            newPosition = nextFieldIndices.get(0);
-            remainingSteps--;
+            positions = newPositions;
         }
         
-        // Aktualisiere Spielerposition
-        playerPositions.put(playerId, newPosition);
+        // Duplikate entfernen
+        return positions.stream().distinct().collect(Collectors.toList());
     }
     
-    /**
-     * Bestimmt die zulässigen nächsten Felder ausgehend vom aktuellen Feld eines Spielers.
-     */
-    public List<Field> getValidNextFields(int playerId) {
-        int currentPosition = playerPositions.getOrDefault(playerId, 0);
-        Field currentField = board.get(currentPosition);
-        List<Field> validNextFields = new ArrayList<>();
+    // Bewegt einen Spieler direkt zu einem bestimmten Feld
+    public boolean movePlayerToField(String playerId, int targetFieldIndex) {
+        int currentFieldIndex = playerPositions.getOrDefault(playerId, Integer.valueOf(1));
+        Field currentField = getFieldByIndex(currentFieldIndex);
         
-        for (Integer nextFieldIndex : currentField.getNextFields()) {
-            if (nextFieldIndex >= 0 && nextFieldIndex < board.size()) {
-                validNextFields.add(board.get(nextFieldIndex));
-            }
-        }
-        
-        return validNextFields;
-    }
-    
-    /**
-     * Bewegt einen Spieler direkt zu einem bestimmten Feld, wenn es ein gültiger Zug ist.
-     * Gibt true zurück, wenn der Zug erfolgreich war, sonst false.
-     */
-    public boolean movePlayerToField(int playerId, int targetFieldIndex) {
-        int currentPosition = playerPositions.getOrDefault(playerId, 0);
-        Field currentField = board.get(currentPosition);
-        
-        // Überprüfe, ob das Zielfeld in den erlaubten nextFields liegt
-        if (currentField.getNextFields().contains(targetFieldIndex)) {
-            playerPositions.put(playerId, targetFieldIndex);
+        // Prüfe, ob das Zielfeld ein erlaubtes nächstes Feld ist
+        if (currentField != null && currentField.getNextFields().contains(Integer.valueOf(targetFieldIndex))) {
+            playerPositions.put(playerId, Integer.valueOf(targetFieldIndex));
             return true;
         }
         
         return false;
     }
     
-    /**
-     * Ermittelt das aktuelle Feld eines Spielers.
-     */
-    public Field getPlayerField(int playerId) {
-        int fieldIndex = playerPositions.getOrDefault(playerId, 0);
-        return board.get(fieldIndex);
+    // Gibt das Feld zurück, auf dem sich der Spieler gerade befindet
+    public Field getPlayerField(String playerId) {
+        int fieldIndex = playerPositions.getOrDefault(playerId, Integer.valueOf(1));
+        return getFieldByIndex(fieldIndex);
     }
-    
-    /**
-     * Liefert das Feld mit dem angegebenen Index zurück.
-     */
+
+
+
+
+    // Gibt ein Feld anhand seines Indexes zurück
     public Field getFieldByIndex(int index) {
-        if (index >= 0 && index < board.size()) {
-            return board.get(index);
-        }
-        return null;
+        return BoardData.getFieldByIndex(index);
     }
     
-    /**
-     * Liefert die Größe des Spielbretts (Anzahl der Felder).
-     */
+    // Gibt alle gültigen nächsten Felder für einen Spieler zurück
+    public List<Field> getValidNextFields(String playerId) {
+        Field currentField = getPlayerField(playerId);
+        if (currentField == null) {
+            return Collections.emptyList();
+        }
+        
+        List<Field> validFields = new ArrayList<>();
+        for (Integer nextIndex : currentField.getNextFields()) {
+            Field nextField = getFieldByIndex(nextIndex);
+            if (nextField != null) {
+                validFields.add(nextField);
+            }
+        }
+        
+        return validFields;
+    }
+    
+    // Setzt die Position eines Spielers direkt
+    public void setPlayerPosition(String playerId, int fieldIndex) {
+        if (fieldIndex >= 1 && fieldIndex <= board.size()) {
+            playerPositions.put(playerId, Integer.valueOf(fieldIndex));
+        }
+    }
+    
+    // Gibt die Größe des Boards zurück
     public int getBoardSize() {
         return board.size();
     }
     
-    /**
-     * Setzt die Position eines Spielers auf ein bestimmtes Feld.
-     */
-    public void setPlayerPosition(int playerId, int fieldIndex) {
-        if (fieldIndex >= 0 && fieldIndex < board.size()) {
-            playerPositions.put(playerId, fieldIndex);
-        }
+    // Gibt das gesamte Board zurück
+    public List<Field> getBoard() {
+        return Collections.unmodifiableList(board);
+    }
+    
+    // Prüft, ob ein Spieler auf einem bestimmten Feld steht
+    public boolean isPlayerOnField(String playerId, int fieldIndex) {
+        Integer position = playerPositions.get(playerId);
+        return position != null && position == fieldIndex;
+    }
+      // Gibt die Position eines Spielers zurück
+    public int getPlayerPosition(String playerId) {
+        return playerPositions.getOrDefault(playerId, Integer.valueOf(1));
+    }
+    
+    // Gibt alle Spieler zurück, die sich auf einem bestimmten Feld befinden
+    public List<String> getPlayersOnField(int fieldIndex) {
+        return playerPositions.entrySet().stream()
+                .filter(entry -> entry.getValue() == fieldIndex)
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
+    }
+    
+    // Entfernt einen Spieler vom Board
+    public void removePlayer(String playerId) {
+        playerPositions.remove(playerId);
+    }
+    
+    // Gibt alle Spielerpositionen zurück
+    public Map<String, Integer> getAllPlayerPositions() {
+        return new HashMap<>(playerPositions);
+    }
+    
+    // Prüft, ob sich irgendein Spieler auf einem Feld befindet
+    public boolean isAnyPlayerOnField(int fieldIndex) {
+        return playerPositions.containsValue(Optional.of(fieldIndex));
+    }
+    
+    // Reset aller Spielerpositionen
+    public void resetAllPlayerPositions() {
+        playerPositions.clear();
     }
 }

@@ -1,63 +1,60 @@
 package at.aau.serg.websocketserver.board;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
-/**
- * Repräsentiert ein Feld auf dem Spielbrett.
- */
 public class Field {
-    private final int index;
-    private final float x;
-    private final float y;
-    private final String type;
-    private final List<Integer> nextFields;
-    
-    public Field(int index, float x, float y, String type) {
+    private int index;
+    private double x;
+    private double y;
+    private List<Integer> nextFields;
+    private FieldType type;
+
+    public Field(int index, double x, double y, List<Integer> nextFields, FieldType type) {
         this.index = index;
         this.x = x;
         this.y = y;
-        this.type = type;
-        this.nextFields = new ArrayList<>();
-    }
-    
-    public Field(int index, float x, float y, List<Integer> nextFields, String type) {
-        this.index = index;
-        this.x = x;
-        this.y = y;
-        this.type = type;
         this.nextFields = new ArrayList<>(nextFields);
+        this.type = type;
     }
-    
+
     public int getIndex() {
         return index;
     }
-    
-    public float getX() {
+
+    public void setIndex(int index) {
+        this.index = index;
+    }
+
+    public double getX() {
         return x;
     }
-    
-    public float getY() {
+
+    public void setX(double x) {
+        this.x = x;
+    }
+
+    public double getY() {
         return y;
     }
-    
-    public String getType() {
+
+    public void setY(double y) {
+        this.y = y;
+    }
+
+    public List<Integer> getNextFields() {
+        return nextFields;
+    }
+
+    public void setNextFields(List<Integer> nextFields) {
+        this.nextFields = new ArrayList<>(nextFields);
+    }
+
+    public FieldType getType() {
         return type;
     }
-    
-    /**
-     * Gibt die Liste der möglichen nächsten Felder zurück.
-     */
-    public List<Integer> getNextFields() {
-        return new ArrayList<>(nextFields);
-    }
-    
-    /**
-     * Fügt ein mögliches nächstes Feld hinzu.
-     */
-    public void addNextField(int fieldIndex) {
-        if (!nextFields.contains(fieldIndex)) {
-            nextFields.add(fieldIndex);
-        }
+
+    public void setType(FieldType type) {
+        this.type = type;
     }
 }
