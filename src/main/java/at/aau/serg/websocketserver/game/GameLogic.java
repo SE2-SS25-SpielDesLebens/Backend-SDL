@@ -169,20 +169,39 @@ public class GameLogic {
     }
 
 
-    void handleField(Player player, Field field) {
+    private void handleField(Player player, Field field) {
         String type = field.getType();
         switch (type) {
-            case "ZAHLTAG" -> handleSalaryField(player, true);
-            case "AKTION" -> handleActionField(player);
-            case "HAUS" -> handleHouseField(player);
-            case "BERUF" -> handleJobField(player);
-            case "ANLAGE" -> handleInvestmentField(player);
-            case "FREUND" -> handleFriendField(player, field);
-            case "HEIRAT" -> handleMarriageField(player);
-            case "EXAMEN" -> handleExamField(player);
-            default -> System.out.println("[INFO] Kein spezielles Verhalten für Feldtyp: " + type);
+            case "ZAHLTAG":
+                handleSalaryField(player, true);
+                break;
+            case "AKTION":
+                handleActionField(player);
+                break;
+            case "HAUS":
+                handleHouseField(player);
+                break;
+            case "BERUF":
+                handleJobField(player);
+                break;
+            case "ANLAGE":
+                handleInvestmentField(player);
+                break;
+            case "FREUND":
+                handleFriendField(player, field);
+                break;
+            case "HEIRAT":
+                handleMarriageField(player);
+                break;
+            case "EXAMEN":
+                handleExamField(player);
+                break;
+            default:
+                System.out.println("[INFO] Kein spezielles Verhalten für Feldtyp: " + type);
+                break;
         }
     }
+
 
     private void handleSalaryField(Player player, boolean landedDirectly) {
         Job job = player.getJobId();
@@ -201,23 +220,28 @@ public class GameLogic {
         int event = random.nextInt(3);
 
         switch (event) {
-            case 0 -> {
+            case 0:
                 player.addMoney(10000);
-                System.out.println("[AKTION] Spieler " + player.getId() + " gewinnt 10.000 € durch eine Aktionskarte.");
-            }
-            case 1 -> {
+                System.out.println("[AKTION] Spieler "
+                        + player.getId()
+                        + " gewinnt 10.000 € durch eine Aktionskarte.");
+                break;
+            case 1:
                 player.removeMoney(15000);
-                System.out.println("[AKTION] Spieler " + player.getId() + " verliert 15.000 € durch eine Aktionskarte.");
-            }
-            case 2 -> {
+                System.out.println("[AKTION] Spieler "
+                        + player.getId()
+                        + " verliert 15.000 € durch eine Aktionskarte.");
+                break;
+            case 2:
                 player.addChild();
-                System.out.println("[AKTION] Spieler " + player.getId() + " bekommt ein Kind durch eine Aktionskarte.");
-            }
-            default -> System.out.println("[AKTION] Keine Aktion gefunden.");
+                System.out.println("[AKTION] Spieler "
+                        + player.getId()
+                        + " bekommt ein Kind durch eine Aktionskarte.");
+                break;
+            default:
+                System.out.println("[AKTION] Keine Aktion gefunden.");
+                break;
         }
-
-        // Später: Aktionskarte ziehen, anzeigen, auswählen (falls Optionen), ausführen und zurück unter Stapel legen
-        // Kartenmechanik fehlt noch -> Aktionskarten-Stapel hier einbinden
     }
 
     void handleHouseField(Player player) {
@@ -292,7 +316,7 @@ public class GameLogic {
         // Später: Spielerentscheidung durch UI/Frontend
     }
 
-    void handleInvestmentField(Player player) {
+    private void handleInvestmentField(Player player) {
         int currentSlot = player.getInvestments();
         SecureRandom random = new SecureRandom();
 
@@ -302,19 +326,36 @@ public class GameLogic {
                 int newSlot = 1 + random.nextInt(10);
                 player.setInvestments(newSlot);
                 player.setInvestmentPayout(0);
-                System.out.println("[ANLAGE] Spieler " + player.getId() + " steckt seine Investition kostenlos auf Zahl " + newSlot + " um (Rücksetzung auf 10.000 € Stufe).");
+                System.out.println("[ANLAGE] Spieler "
+                        + player.getId()
+                        + " steckt seine Investition kostenlos auf Zahl "
+                        + newSlot
+                        + " um (Rücksetzung auf 10.000 € Stufe).");
             } else {
                 int payoutStage = player.getInvestmentPayout();
-                int payoutAmount = switch (payoutStage) {
-                    case 0 -> 10000;
-                    case 1 -> 20000;
-                    case 2 -> 20000;
-                    default -> 0;
-                };
+                int payoutAmount;
+                switch (payoutStage) {
+                    case 0:
+                        payoutAmount = 10000;
+                        break;
+                    case 1:
+                    case 2:
+                        payoutAmount = 20000;
+                        break;
+                    default:
+                        payoutAmount = 0;
+                        break;
+                }
                 if (payoutAmount > 0) {
                     player.addMoney(payoutAmount);
                     player.setInvestmentPayout(payoutStage + 1);
-                    System.out.println("[ANLAGE] Spieler " + player.getId() + " bleibt bei Zahl " + currentSlot + ", schiebt vor und erhält " + payoutAmount + " €.");
+                    System.out.println("[ANLAGE] Spieler "
+                            + player.getId()
+                            + " bleibt bei Zahl "
+                            + currentSlot
+                            + ", schiebt vor und erhält "
+                            + payoutAmount
+                            + " €.");
                 }
             }
             return;
@@ -323,12 +364,16 @@ public class GameLogic {
         boolean wantsToInvest = random.nextBoolean();
 
         if (!wantsToInvest) {
-            System.out.println("[ANLAGE] Spieler " + player.getId() + " entscheidet sich gegen eine Investition.");
+            System.out.println("[ANLAGE] Spieler "
+                    + player.getId()
+                    + " entscheidet sich gegen eine Investition.");
             return;
         }
 
         if (player.getMoney() < 50000) {
-            System.out.println("[ANLAGE] Spieler " + player.getId() + " hat nicht genug Geld für eine Investition.");
+            System.out.println("[ANLAGE] Spieler "
+                    + player.getId()
+                    + " hat nicht genug Geld für eine Investition.");
             return;
         }
 
@@ -337,20 +382,32 @@ public class GameLogic {
         player.setInvestments(chosenNumber);
         player.setInvestmentPayout(0);
 
-        System.out.println("[ANLAGE] Spieler " + player.getId() + " investiert 50.000 € auf Zahl " + chosenNumber + ".");
+        System.out.println("[ANLAGE] Spieler "
+                + player.getId()
+                + " investiert 50.000 € auf Zahl "
+                + chosenNumber
+                + ".");
     }
+
 
     public void checkAndPayoutInvestment(String spinningPlayerId, int spinResult) {
         for (Player p : players.values()) {
             int slot = p.getInvestments();
             if (slot == spinResult) {
                 int payoutStage = p.getInvestmentPayout();
-                int payoutAmount = switch (payoutStage) {
-                    case 0 -> 10000;
-                    case 1 -> 20000;
-                    case 2 -> 20000;
-                    default -> 0;
-                };
+                int payoutAmount;
+                switch (payoutStage) {
+                    case 0:
+                        payoutAmount = 10000;
+                        break;
+                    case 1:
+                    case 2:
+                        payoutAmount = 20000;
+                        break;
+                    default:
+                        payoutAmount = 0;
+                        break;
+                }
 
                 if (payoutAmount > 0) {
                     p.addMoney(payoutAmount);
@@ -362,6 +419,7 @@ public class GameLogic {
             }
         }
     }
+
 
 
     void handleFriendField(Player player, Field field) {
@@ -471,15 +529,29 @@ public class GameLogic {
         retirementOrder.add(playerName);
 
         switch (retirementOrder.size()) {
-            case 1 -> player.addMoney(250000);
-            case 2 -> player.addMoney(100000);
-            case 3 -> player.addMoney(50000);
-            case 4 -> player.addMoney(10000);
+            case 1:
+                player.addMoney(250000);
+                break;
+            case 2:
+                player.addMoney(100000);
+                break;
+            case 3:
+                player.addMoney(50000);
+                break;
+            case 4:
+                player.addMoney(10000);
+                break;
+            default:
+                // Keine zusätzliche Auszahlung
+                break;
         }
 
         player.clearJob();
-        if (allPlayersRetired()) endGame();
+        if (allPlayersRetired()) {
+            endGame();
+        }
     }
+
 
     public void endGame() {
         gameEnded = true;
