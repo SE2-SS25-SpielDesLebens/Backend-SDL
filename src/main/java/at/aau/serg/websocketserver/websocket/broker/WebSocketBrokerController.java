@@ -25,6 +25,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 
 @Controller
@@ -182,18 +183,31 @@ public class WebSocketBrokerController {
         if (action == null) {
             content = "❌ Keine Aktion angegeben.";
         } else {
-            content = switch (action) {
-                case "createLobby" -> "🆕 Lobby [" + gameId + "] von " + message.getPlayerName() + " erstellt.";
-                case "joinLobby" -> "✅ " + message.getPlayerName() + " ist Lobby [" + gameId + "] beigetreten.";
-                default -> "Unbekannte Lobby-Aktion.";
-            };
+            switch (action) {
+                case "createLobby":
+                    content = "🆕 Lobby [" + gameId + "] von " + message.getPlayerName() + " erstellt.";
+                    break;
+                case "joinLobby":
+                    content = "✅ " + message.getPlayerName() + " ist Lobby [" + gameId + "] beigetreten.";
+                    break;
+                default:
+                    content = "Unbekannte Lobby-Aktion.";
+                    break;
+            }
         }
 
         System.out.println("[LOBBY] [" + gameId + "] " + message.getPlayerName() + ": " + content);
 
-        messagingTemplate.convertAndSend("/topic/lobby",
-                new OutputMessage(message.getPlayerName(), content, LocalDateTime.now().toString()));
+        messagingTemplate.convertAndSend(
+                "/topic/lobby",
+                new OutputMessage(
+                        message.getPlayerName(),
+                        content,
+                        LocalDateTime.now().toString()
+                )
+        );
     }
+
 
     @MessageMapping("/lobby/create")
     @SendTo("/queue/lobby/created")
@@ -307,7 +321,6 @@ public class WebSocketBrokerController {
     public void handleJobRequest(@DestinationVariable int gameId,
                                  @DestinationVariable String playerName,
                                  @Payload JobRequestMessage msg) {
-
         boolean hasDegree = msg.hasDegree();
         var repo = jobService.getOrCreateRepository(gameId);
         List<Job> jobsToSend = new ArrayList<>();
@@ -322,6 +335,13 @@ public class WebSocketBrokerController {
             jobsToSend = repo.getRandomAvailableJobs(hasDegree, 2);
         }
 
+        // Debug-Ausgabe: welche beiden Jobs gleich verschickt werden
+        System.out.println("[INFO] Jobs an Spieler " + playerName + " für Spiel " + gameId + ": " +
+                jobsToSend.stream()
+                        .map(j -> j.getJobId() + "=\"" + j.getTitle() + "\"")
+                        .collect(Collectors.joining(", "))
+        );
+
         List<JobMessage> dtos = jobsToSend.stream()
                 .map(j -> new JobMessage(
                         j.getJobId(),
@@ -332,7 +352,7 @@ public class WebSocketBrokerController {
                         j.isTaken(),
                         gameId
                 ))
-                .toList();
+                .collect(Collectors.toList());
 
         String dest = String.format("/topic/%d/jobs/%s", gameId, playerName);
         messagingTemplate.convertAndSend(dest, dtos);
