@@ -48,6 +48,26 @@ public class WebSocketBrokerController {
         this.boardService = boardService;
     }
 
+    /**
+     * Nur das Job-Repository für das gegebene Spiel anlegen, ohne das Spiel zu starten.
+     */
+    @MessageMapping("/game/createJobRepo/{gameId}")
+    public void handleJobRepoCreation(@DestinationVariable int gameId) {
+        // Erzeugt (oder gibt zurück) das Job-Repository für dieses Spiel
+        jobService.getOrCreateRepository(gameId);
+
+        // Optional: sende eine Statusmeldung an alle Clients
+        String destination = "/topic/game/" + gameId + "/status";
+        messagingTemplate.convertAndSend(
+                destination,
+                new OutputMessage(
+                        "System",
+                        "Job-Repository für Spiel " + gameId + " wurde angelegt.",
+                        now()
+                )
+        );
+    }
+
     @MessageMapping("/move")
     public void handleMove(StompMessage message) {
         int playerId;
@@ -93,7 +113,7 @@ public class WebSocketBrokerController {
             try {
                 int targetFieldIndex = Integer.parseInt(action.substring(5));
                 boolean success = boardService.movePlayerToField(playerId, targetFieldIndex);
-                  if (success) {
+                if (success) {
                     Field currentField = boardService.getPlayerField(playerId);
                     List<Integer> nextPossibleFieldIndices = new ArrayList<>();
                     for (Field nextField : boardService.getValidNextFields(playerId)) {
@@ -148,20 +168,20 @@ public class WebSocketBrokerController {
         }
 
         boardService.movePlayer(playerId, steps);                Field currentField = boardService.getPlayerField(playerId);
-                List<Integer> nextPossibleFieldIndices = new ArrayList<>();
-                for (Field nextField : boardService.getValidNextFields(playerId)) {
-                    nextPossibleFieldIndices.add(nextField.getIndex());
-                }
+        List<Integer> nextPossibleFieldIndices = new ArrayList<>();
+        for (Field nextField : boardService.getValidNextFields(playerId)) {
+            nextPossibleFieldIndices.add(nextField.getIndex());
+        }
 
-                MoveMessage moveMessage = new MoveMessage(
-                        message.getPlayerName(),
-                        currentField.getIndex(),
-                        currentField.getType(),
-                        LocalDateTime.now().toString(),
-                        nextPossibleFieldIndices
-                );
+        MoveMessage moveMessage = new MoveMessage(
+                message.getPlayerName(),
+                currentField.getIndex(),
+                currentField.getType(),
+                LocalDateTime.now().toString(),
+                nextPossibleFieldIndices
+        );
 
-                messagingTemplate.convertAndSend("/topic/game", moveMessage);
+        messagingTemplate.convertAndSend("/topic/game", moveMessage);
 
         Lobby lobby = LobbyService.getInstance().getLobby(message.getGameId());
         if (lobby != null && lobby.isStarted()) {
@@ -200,14 +220,9 @@ public class WebSocketBrokerController {
 
         messagingTemplate.convertAndSend(
                 "/topic/lobby",
-                new OutputMessage(
-                        message.getPlayerName(),
-                        content,
-                        LocalDateTime.now().toString()
-                )
+                new OutputMessage(message.getPlayerName(), content, LocalDateTime.now().toString())
         );
     }
-
 
     @MessageMapping("/lobby/create")
     @SendTo("/queue/lobby/created")
