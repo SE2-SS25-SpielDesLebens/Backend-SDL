@@ -172,15 +172,32 @@ public class GameLogic {
     void handleField(Player player, Field field) {
         String type = field.getType();
         switch (type) {
-            case "ZAHLTAG" -> handleSalaryField(player, true);
-            case "AKTION" -> handleActionField(player);
-            case "HAUS" -> handleHouseField(player);
-            case "BERUF" -> handleJobField(player);
-            case "ANLAGE" -> handleInvestmentField(player);
-            case "FREUND" -> handleFriendField(player, field);
-            case "HEIRAT" -> handleMarriageField(player);
-            case "EXAMEN" -> handleExamField(player);
-            default -> System.out.println("[INFO] Kein spezielles Verhalten für Feldtyp: " + type);
+            case "ZAHLTAG":
+                handleSalaryField(player, true);
+                break;
+            case "AKTION":
+                handleActionField(player);
+                break;
+            case "HAUS":
+                handleHouseField(player);
+                break;
+            case "BERUF":
+                handleJobField(player);
+                break;
+            case "ANLAGE":
+                handleInvestmentField(player);
+                break;
+            case "FREUND":
+                handleFriendField(player, field);
+                break;
+            case "HEIRAT":
+                handleMarriageField(player);
+                break;
+            case "EXAMEN":
+                handleExamField(player);
+                break;
+            default:
+                System.out.println("[INFO] Kein spezielles Verhalten für Feldtyp: " + type);
         }
     }
 
@@ -194,31 +211,31 @@ public class GameLogic {
     }
 
     private void handleActionField(Player player) {
-        // TODO: Aktionskarten-Mechanik integrieren
-
-        // Platzhalter: Simuliere eine zufällige Aktion für den Spieler
         SecureRandom random = new SecureRandom();
         int event = random.nextInt(3);
 
         switch (event) {
-            case 0 -> {
+            case 0:
                 player.addMoney(10000);
                 System.out.println("[AKTION] Spieler " + player.getId() + " gewinnt 10.000 € durch eine Aktionskarte.");
-            }
-            case 1 -> {
+                break;
+            case 1:
                 player.removeMoney(15000);
                 System.out.println("[AKTION] Spieler " + player.getId() + " verliert 15.000 € durch eine Aktionskarte.");
-            }
-            case 2 -> {
+                break;
+            case 2:
                 player.addChild();
                 System.out.println("[AKTION] Spieler " + player.getId() + " bekommt ein Kind durch eine Aktionskarte.");
-            }
-            default -> System.out.println("[AKTION] Keine Aktion gefunden.");
+                break;
+            default:
+                System.out.println("[AKTION] Keine Aktion gefunden.");
         }
-
         // Später: Aktionskarte ziehen, anzeigen, auswählen (falls Optionen), ausführen und zurück unter Stapel legen
         // Kartenmechanik fehlt noch -> Aktionskarten-Stapel hier einbinden
     }
+
+
+
 
     void handleHouseField(Player player) {
         SecureRandom random = new SecureRandom();
@@ -305,12 +322,26 @@ public class GameLogic {
                 System.out.println("[ANLAGE] Spieler " + player.getId() + " steckt seine Investition kostenlos auf Zahl " + newSlot + " um (Rücksetzung auf 10.000 € Stufe).");
             } else {
                 int payoutStage = player.getInvestmentPayout();
-                int payoutAmount = switch (payoutStage) {
-                    case 0 -> 10000;
-                    case 1 -> 20000;
-                    case 2 -> 20000;
-                    default -> 0;
-                };
+                int payoutAmount;
+                switch (payoutStage) {
+                    case 0:
+                        payoutAmount = 10000;
+                        break;
+                    case 1:
+                        payoutAmount = 20000;
+                        break;
+                    case 2:
+                        payoutAmount = 30000;
+                        break;
+                    case 3:
+                        payoutAmount = 40000;
+                        break;
+                    case 4:
+                        payoutAmount = 50000;
+                        break;
+                    default:
+                        payoutAmount = 0;
+                }
                 if (payoutAmount > 0) {
                     player.addMoney(payoutAmount);
                     player.setInvestmentPayout(payoutStage + 1);
@@ -345,18 +376,32 @@ public class GameLogic {
             int slot = p.getInvestments();
             if (slot == spinResult) {
                 int payoutStage = p.getInvestmentPayout();
-                int payoutAmount = switch (payoutStage) {
-                    case 0 -> 10000;
-                    case 1 -> 20000;
-                    case 2 -> 20000;
-                    default -> 0;
-                };
+                int payoutAmount;
+                switch (payoutStage) {
+                    case 0:
+                        payoutAmount = 10000;
+                        break;
+                    case 1:
+                        payoutAmount = 20000;
+                        break;
+                    case 2:
+                        payoutAmount = 30000;
+                        break;
+                    case 3:
+                        payoutAmount = 40000;
+                        break;
+                    case 4:
+                        payoutAmount = 50000;
+                        break;
+                    default:
+                        payoutAmount = 0;
+                }
 
                 if (payoutAmount > 0) {
                     p.addMoney(payoutAmount);
                     p.setInvestmentPayout(payoutStage + 1);
                     System.out.println("[ANLAGE] Spieler " + p.getId()
-                            + " erhält " + payoutAmount + " €, weil "
+                            + " erhält " + payoutAmount + " �, weil "
                             + spinningPlayerId + " seine Anlagezahl " + spinResult + " gedreht hat.");
                 }
             }
@@ -470,11 +515,20 @@ public class GameLogic {
         player.retire();
         retirementOrder.add(playerName);
 
-        switch (retirementOrder.size()) {
-            case 1 -> player.addMoney(250000);
-            case 2 -> player.addMoney(100000);
-            case 3 -> player.addMoney(50000);
-            case 4 -> player.addMoney(10000);
+        int position = retirementOrder.size();
+        switch (position) {
+            case 1:
+                player.addMoney(250000);
+                break;
+            case 2:
+                player.addMoney(100000);
+                break;
+            case 3:
+                player.addMoney(50000);
+                break;
+            case 4:
+                player.addMoney(10000);
+                break;
         }
 
         player.clearJob();

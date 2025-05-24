@@ -25,6 +25,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 
 @Controller
@@ -45,6 +46,26 @@ public class WebSocketBrokerController {
         playerService = PlayerService.getInstance();
         lobbyService = LobbyService.getInstance();
         this.boardService = boardService;
+    }
+
+    /**
+     * Nur das Job-Repository für das gegebene Spiel anlegen, ohne das Spiel zu starten.
+     */
+    @MessageMapping("/game/createJobRepo/{gameId}")
+    public void handleJobRepoCreation(@DestinationVariable int gameId) {
+        // Erzeugt (oder gibt zurück) das Job-Repository für dieses Spiel
+        jobService.getOrCreateRepository(gameId);
+
+        // Optional: sende eine Statusmeldung an alle Clients
+        String destination = "/topic/game/" + gameId + "/status";
+        messagingTemplate.convertAndSend(
+                destination,
+                new OutputMessage(
+                        "System",
+                        "Job-Repository für Spiel " + gameId + " wurde angelegt.",
+                        now()
+                )
+        );
     }
 
     @MessageMapping("/move")
@@ -92,7 +113,7 @@ public class WebSocketBrokerController {
             try {
                 int targetFieldIndex = Integer.parseInt(action.substring(5));
                 boolean success = boardService.movePlayerToField(playerId, targetFieldIndex);
-                  if (success) {
+                if (success) {
                     Field currentField = boardService.getPlayerField(playerId);
                     List<Integer> nextPossibleFieldIndices = new ArrayList<>();
                     for (Field nextField : boardService.getValidNextFields(playerId)) {
@@ -147,20 +168,20 @@ public class WebSocketBrokerController {
         }
 
         boardService.movePlayer(playerId, steps);                Field currentField = boardService.getPlayerField(playerId);
-                List<Integer> nextPossibleFieldIndices = new ArrayList<>();
-                for (Field nextField : boardService.getValidNextFields(playerId)) {
-                    nextPossibleFieldIndices.add(nextField.getIndex());
-                }
+        List<Integer> nextPossibleFieldIndices = new ArrayList<>();
+        for (Field nextField : boardService.getValidNextFields(playerId)) {
+            nextPossibleFieldIndices.add(nextField.getIndex());
+        }
 
-                MoveMessage moveMessage = new MoveMessage(
-                        message.getPlayerName(),
-                        currentField.getIndex(),
-                        currentField.getType(),
-                        LocalDateTime.now().toString(),
-                        nextPossibleFieldIndices
-                );
+        MoveMessage moveMessage = new MoveMessage(
+                message.getPlayerName(),
+                currentField.getIndex(),
+                currentField.getType(),
+                LocalDateTime.now().toString(),
+                nextPossibleFieldIndices
+        );
 
-                messagingTemplate.convertAndSend("/topic/game", moveMessage);
+        messagingTemplate.convertAndSend("/topic/game", moveMessage);
 
         Lobby lobby = LobbyService.getInstance().getLobby(message.getGameId());
         if (lobby != null && lobby.isStarted()) {
@@ -182,17 +203,25 @@ public class WebSocketBrokerController {
         if (action == null) {
             content = "❌ Keine Aktion angegeben.";
         } else {
-            content = switch (action) {
-                case "createLobby" -> "🆕 Lobby [" + gameId + "] von " + message.getPlayerName() + " erstellt.";
-                case "joinLobby" -> "✅ " + message.getPlayerName() + " ist Lobby [" + gameId + "] beigetreten.";
-                default -> "Unbekannte Lobby-Aktion.";
-            };
+            switch (action) {
+                case "createLobby":
+                    content = "🆕 Lobby [" + gameId + "] von " + message.getPlayerName() + " erstellt.";
+                    break;
+                case "joinLobby":
+                    content = "✅ " + message.getPlayerName() + " ist Lobby [" + gameId + "] beigetreten.";
+                    break;
+                default:
+                    content = "Unbekannte Lobby-Aktion.";
+                    break;
+            }
         }
 
         System.out.println("[LOBBY] [" + gameId + "] " + message.getPlayerName() + ": " + content);
 
-        messagingTemplate.convertAndSend("/topic/lobby",
-                new OutputMessage(message.getPlayerName(), content, LocalDateTime.now().toString()));
+        messagingTemplate.convertAndSend(
+                "/topic/lobby",
+                new OutputMessage(message.getPlayerName(), content, LocalDateTime.now().toString())
+        );
     }
 
     @MessageMapping("/lobby/create")
@@ -307,7 +336,6 @@ public class WebSocketBrokerController {
     public void handleJobRequest(@DestinationVariable int gameId,
                                  @DestinationVariable String playerName,
                                  @Payload JobRequestMessage msg) {
-
         boolean hasDegree = msg.hasDegree();
         var repo = jobService.getOrCreateRepository(gameId);
         List<Job> jobsToSend = new ArrayList<>();
@@ -322,6 +350,13 @@ public class WebSocketBrokerController {
             jobsToSend = repo.getRandomAvailableJobs(hasDegree, 2);
         }
 
+        // Debug-Ausgabe: welche beiden Jobs gleich verschickt werden
+        System.out.println("[INFO] Jobs an Spieler " + playerName + " für Spiel " + gameId + ": " +
+                jobsToSend.stream()
+                        .map(j -> j.getJobId() + "=\"" + j.getTitle() + "\"")
+                        .collect(Collectors.joining(", "))
+        );
+
         List<JobMessage> dtos = jobsToSend.stream()
                 .map(j -> new JobMessage(
                         j.getJobId(),
@@ -332,7 +367,7 @@ public class WebSocketBrokerController {
                         j.isTaken(),
                         gameId
                 ))
-                .toList();
+                .collect(Collectors.toList());
 
         String dest = String.format("/topic/%d/jobs/%s", gameId, playerName);
         messagingTemplate.convertAndSend(dest, dtos);
