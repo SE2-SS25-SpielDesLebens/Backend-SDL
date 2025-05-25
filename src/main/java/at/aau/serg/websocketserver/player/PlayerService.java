@@ -101,5 +101,30 @@ public class PlayerService {
         return true;
     }
 
+    public boolean addMoneyToPlayer(String playerId, int amount) {
+        Player player = getPlayerById(playerId);
+        if (player == null) {
+            throw new IllegalArgumentException("Spieler mit ID " + playerId + " nicht gefunden.");
+        }
+        player.setMoney(player.getMoney() + amount);
+        updatePlayer(player.getId(), player);
+        System.out.println("💰 Spieler " + player.getId() + " hat " + amount + "€ erhalten. Neuer Kontostand: " + player.getMoney() + "€.");
+        return true;
+    }
+
+    public boolean removeMoneyFromPlayer(String playerId, int amount) {
+        Player player = getPlayerById(playerId);
+        if (player == null) {
+            throw new IllegalArgumentException("Spieler mit ID " + playerId + " nicht gefunden.");
+        }
+        if (player.getMoney() < amount) {
+            throw new IllegalArgumentException("Nicht genug Geld. Aktueller Kontostand: " + player.getMoney() + "€.");
+        }
+        player.setMoney(player.getMoney() - amount);
+        updatePlayer(player.getId(), player);
+        System.out.println("💸 Spieler " + player.getId() + " hat " + amount + "€ ausgegeben. Neuer Kontostand: " + player.getMoney() + "€.");
+        return true;
+    }
+
 }
 
