@@ -1,0 +1,81 @@
+{
+  "houses": [
+    {
+      "houseId": 1,
+      "bezeichnung": "Holzhaus",
+      "kaufpreis": 180000,
+      "verkaufspreisRot": 160000,
+      "verkaufspreisSchwarz": 220000
+    },
+    {
+      "houseId": 2,
+      "bezeichnung": "Einzimmerwohnung",
+      "kaufpreis": 140000,
+      "verkaufspreisRot": 140000,
+      "verkaufspreisSchwarz": 160000
+    },
+    {
+      "houseId": 3,
+      "bezeichnung": "Einfamilienhaus",
+      "kaufpreis": 160000,
+      "verkaufspreisRot": 140000,
+      "verkaufspreisSchwarz": 200000
+    },
+    {
+      "houseId": 4,
+      "bezeichnung": "Strandhütte",
+      "kaufpreis": 100000,
+      "verkaufspreisRot": 100000,
+      "verkaufspreisSchwarz": 120000
+    },
+    {
+      "houseId": 5,
+      "bezeichnung": "Öko-Haus",
+      "kaufpreis": 140000,
+      "verkaufspreisRot": 120000,
+      "verkaufspreisSchwarz": 180000
+    },
+    {
+      "houseId": 6,
+      "bezeichnung": "Hausboot",
+      "kaufpreis": 120000,
+      "verkaufspreisRot": 100000,
+      "verkaufspreisSchwarz": 160000
+    },
+    {
+      "houseId": 7,
+      "bezeichnung": "Berghütte",
+      "kaufpreis": 200000,
+      "verkaufspreisRot": 150000,
+      "verkaufspreisSchwarz": 250000
+    },
+    {
+      "houseId": 8,
+      "bezeichnung": "Luxus-Penthouse",
+      "kaufpreis": 250000,
+      "verkaufspreisRot": 200000,
+      "verkaufspreisSchwarz": 300000
+    },
+    {
+      "houseId": 9,
+      "bezeichnung": "Bauernhof",
+      "kaufpreis": 200000,
+      "verkaufspreisRot": 200000,
+      "verkaufspreisSchwarz": 220000
+    },
+    {
+      "houseId": 10,
+      "bezeichnung": "Landhaus",
+      "kaufpreis": 100000,
+      "verkaufspreisRot": 80000,
+      "verkaufspreisSchwarz": 140000
+    },
+    {
+      "houseId": 11,
+      "bezeichnung": "Traumvilla",
+      "kaufpreis": 300000,
+      "verkaufspreisRot": 250000,
+      "verkaufspreisSchwarz": 400000
+    }
+  ]
+}
