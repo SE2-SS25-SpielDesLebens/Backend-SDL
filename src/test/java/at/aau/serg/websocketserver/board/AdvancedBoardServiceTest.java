@@ -1,15 +1,9 @@
 package at.aau.serg.websocketserver.board;
 
+import at.aau.serg.websocketserver.session.board.BoardService;
+import at.aau.serg.websocketserver.session.board.Field;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.jupiter.api.Assertions.*;
 
