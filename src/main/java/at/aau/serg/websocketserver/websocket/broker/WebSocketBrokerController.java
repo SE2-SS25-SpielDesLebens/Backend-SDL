@@ -10,6 +10,7 @@ import at.aau.serg.websocketserver.session.board.Field;
 import at.aau.serg.websocketserver.lobby.Lobby;
 import at.aau.serg.websocketserver.lobby.LobbyService;
 import at.aau.serg.websocketserver.messaging.dtos.*;
+import at.aau.serg.websocketserver.session.house.HouseService;
 import at.aau.serg.websocketserver.session.job.Job;
 import at.aau.serg.websocketserver.session.job.JobService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,17 +37,23 @@ public class WebSocketBrokerController {
     private final LobbyService lobbyService;
     private final SimpMessagingTemplate messagingTemplate;
     private final BoardService boardService;
+    private final HouseService houseService;
 
     @Autowired
     public WebSocketBrokerController(JobService jobService,
                                      SimpMessagingTemplate messagingTemplate,
-                                     BoardService boardService) {
+                                     BoardService boardService,
+                                     HouseService houseService) {
         this.jobService = jobService;
         this.messagingTemplate = messagingTemplate;
-        playerService = PlayerService.getInstance();
-        lobbyService = LobbyService.getInstance();
         this.boardService = boardService;
+        this.houseService = houseService;
+
+        // Singleton-Services
+        this.playerService = PlayerService.getInstance();
+        this.lobbyService  = LobbyService.getInstance();
     }
+
 
     /**
      * Nur das Job-Repository für das gegebene Spiel anlegen, ohne das Spiel zu starten.
@@ -388,4 +395,47 @@ public class WebSocketBrokerController {
         repo.findJobById(msg.getJobId())
                 .ifPresent(job -> repo.assignJobToPlayer(playerName, job));
     }
+    /**
+     * 1) Auswahl-Request:
+     *    Pfad enthält gameId und playerID, damit nur der richtige Client die Nachricht bekommt.
+     */
+    @MessageMapping("/houses/{gameId}/{playerID}/choose")
+    public void handleHouseAction(@DestinationVariable int gameId,
+                                  @DestinationVariable String playerID,
+                                  @Payload HouseBuyElseSellMessage msg) {
+        List<HouseMessage> options = houseService.handleHouseAction(
+                gameId,
+                playerID,
+                msg.isBuyElseSell()
+        );
+
+        String dest = String.format("/topic/%d/houses/%s/options",
+                gameId,
+                playerID
+        );
+        messagingTemplate.convertAndSend(dest, options);
+    }
+
+    /**
+     * 2) Final-Request:
+     *    Pfad enthält gameId und playerID, colorValue wird intern gerollt.
+     */
+    @MessageMapping("/houses/{gameId}/{playerID}/finalize")
+    public void finalizeHouseAction(@DestinationVariable int gameId,
+                                    @DestinationVariable String playerID,
+                                    @Payload HouseMessage houseMsg) {
+        // Aufruf auf der Bean-Instanz, nicht statisch
+        HouseMessage confirmation = houseService.finalizeHouseAction(
+                gameId,
+                playerID,
+                houseMsg.getHouseId()
+        );
+
+        String dest = String.format("/topic/%d/houses/%s/confirmation",
+                gameId,
+                playerID
+        );
+        messagingTemplate.convertAndSend(dest, confirmation);
+    }
+
 }

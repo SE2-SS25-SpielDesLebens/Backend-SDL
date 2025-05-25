@@ -1,18 +1,14 @@
 package at.aau.serg.websocketserver.session.house;
 
+import at.aau.serg.websocketserver.messaging.dtos.HouseMessage;
 import at.aau.serg.websocketserver.player.PlayerService;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
-
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.NoSuchElementException;
 
-/**
- * Verwaltet pro Spiel‐ID (int) genau eine HouseRepository‐Instanz und erlaubt Kauf/Verkauf von Häusern.
- */
 @Service
 public class HouseService {
 
@@ -27,7 +23,7 @@ public class HouseService {
     }
 
     /**
-     * Holt das vorhandene Repository zur gameId oder legt ein neues an.
+     * Holt oder legt das Repository für eine gegebene Game-ID an.
      */
     public HouseRepository getOrCreateRepository(int gameId) {
         return repositories.computeIfAbsent(gameId, id -> {
@@ -44,24 +40,68 @@ public class HouseService {
     }
 
     /**
-     * Entfernt das Repository, z. B. beim Beenden einer Spiel‐Session.
+     * Entfernt das Repository, z. B. beim Ende einer Session.
      */
     public void removeRepository(int gameId) {
         repositories.remove(gameId);
     }
 
     /**
-     * Ermöglicht einem Spieler, ein Haus zu kaufen.
-     *
-     * @param gameId      Spiel-ID
-     * @param playerId    ID des Spielers (aus Player.getId())
-     * @param houseId     ID des zu kaufenden Hauses
-     * @return das erworbene Haus
+     * Liefert je nach buyElseSell-Flag:
+     *  - true: bis zu 2 zufällige, freie Häuser
+     *  - false: alle dem Spieler aktuell zugewiesenen Häuser
      */
+    public List<HouseMessage> handleHouseAction(int gameId,
+                                                String playerId,
+                                                boolean buyElseSell) {
+        HouseRepository repo = getOrCreateRepository(gameId);
+        List<HouseMessage> messages = new ArrayList<>();
+
+        if (buyElseSell) {
+            List<House> available = repo.getRandomAvailableHouses(2);
+            for (House h : available) {
+                messages.add(mapToDto(h, gameId));
+            }
+        } else {
+            repo.getCurrentHouseForPlayer(playerId)
+                    .ifPresent(h -> messages.add(mapToDto(h, gameId)));
+        }
+
+        return messages;
+    }
+
+    /**
+     * Finalisiert den Kauf oder Verkauf:
+     *   - erzeugt intern einen colorValue (1–6)
+     *   - verkauft, wenn Spieler das Haus besitzt; andernfalls kauft er es
+     */
+    public HouseMessage finalizeHouseAction(int gameId,
+                                            String playerId,
+                                            int houseId) {
+        HouseRepository repo = getOrCreateRepository(gameId);
+        House house = repo.findHouseById(houseId)
+                .orElseThrow(() -> new NoSuchElementException(
+                        "Haus nicht gefunden: " + houseId));
+
+        House result;
+
+        if (house.isTaken() && playerId.equals(house.getAssignedToPlayerName())) {
+            //ToDo: Methodenaufruf für Wheel of Fortune
+            //int colorValue = ???
+            result = sellHouse(gameId, playerId, /*colorValue*/ 1 );
+        } else {
+            result = buyHouse(gameId, playerId, houseId);
+        }
+
+        return mapToDto(result, gameId);
+    }
+
+    /** Domänen-Logik: Haus kaufen */
     public House buyHouse(int gameId, String playerId, int houseId) {
         HouseRepository repo = getOrCreateRepository(gameId);
         House house = repo.findHouseById(houseId)
-                .orElseThrow(() -> new NoSuchElementException("Haus nicht gefunden: " + houseId));
+                .orElseThrow(() -> new NoSuchElementException(
+                        "Haus nicht gefunden: " + houseId));
         if (house.isTaken()) {
             throw new IllegalStateException("Haus bereits vergeben: " + houseId);
         }
@@ -69,27 +109,33 @@ public class HouseService {
         return house;
     }
 
-    /**
-     * Ermöglicht einem Spieler, sein aktuelles Haus zu verkaufen, bestimmt den Verkaufspreis und bucht das Geld gut.
-     * Ungerade colorValue führt zum schwarzen Preis, gerade zum roten Preis.
-     *
-     * @param gameId      Spiel-ID
-     * @param playerId    ID des Spielers (aus Player.getId())
-     * @param colorValue  Integer-Wert zur Bestimmung der Preisfarbe (ungerade = schwarz, gerade = rot)
-     * @return das Haus nach Verkaufsfreigabe
-     */
+    /** Domänen-Logik: Haus verkaufen */
     public House sellHouse(int gameId, String playerId, int colorValue) {
         HouseRepository repo = getOrCreateRepository(gameId);
-        Optional<House> optionalHouse = repo.getCurrentHouseForPlayer(playerId);
-        House house = optionalHouse
-                .orElseThrow(() -> new IllegalStateException("Kein Haus zu verkaufen für Spieler " + playerId));
-        // Bestimme Verkaufspreis anhand Lombok-Getter
+        House house = repo.getCurrentHouseForPlayer(playerId)
+                .orElseThrow(() -> new IllegalStateException(
+                        "Kein Haus zu verkaufen für Spieler " + playerId));
         boolean isBlack = (colorValue % 2 != 0);
-        int salePrice = isBlack ? house.getVerkaufspreisSchwarz() : house.getVerkaufspreisRot();
-        // Gutschrift beim Spieler
-        playerService.addMoneyToPlayer(playerId, salePrice);
-        // Haus freigeben
+        int price = isBlack
+                ? house.getVerkaufspreisSchwarz()
+                : house.getVerkaufspreisRot();
+        playerService.addMoneyToPlayer(playerId, price);
         repo.releaseHouse(house);
         return house;
+    }
+
+
+    /** Helfer: konvertiert Domain → DTO */
+    private HouseMessage mapToDto(House house, int gameId) {
+        return new HouseMessage(
+                house.getHouseId(),
+                house.getBezeichnung(),
+                house.getKaufpreis(),
+                house.getVerkaufspreisRot(),
+                house.getVerkaufspreisSchwarz(),
+                house.isTaken(),
+                house.getAssignedToPlayerName(),
+                gameId
+        );
     }
 }
