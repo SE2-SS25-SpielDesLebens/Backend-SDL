@@ -1,4 +1,4 @@
-package at.aau.serg.websocketserver.session;
+package at.aau.serg.websocketserver.session.job;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

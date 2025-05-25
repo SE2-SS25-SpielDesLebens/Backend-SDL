@@ -1,6 +1,6 @@
 package at.aau.serg.websocketserver.player;
 
-import at.aau.serg.websocketserver.session.Job;
+import at.aau.serg.websocketserver.session.job.Job;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
