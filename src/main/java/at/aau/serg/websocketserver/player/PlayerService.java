@@ -24,36 +24,25 @@ public class PlayerService {
 
     public Player getPlayerById(String id) {
         return players.get(id);
-    }    /**
-     * Aktualisiert die Daten eines vorhandenen Spielers.
-     */
-    public boolean updatePlayer(String id, Player updatedPlayer) {
-        if (!players.containsKey(id)) {
-            return false;
-        }
-        
-        players.put(id, updatedPlayer);
-        return true;
     }
 
-    public Player addPlayer(String name) {
-        if (name == null || name.trim().isEmpty()) {
-            throw new IllegalArgumentException("Spielername darf nicht leer sein.");
-        }
+    //TODO: anpassen
+    public boolean updatePlayer(String id, Player updatedPlayer) {
+        /*for (int i = 0; i < players.size(); i++) {
+            if (players.get(i).getId().equals(id)) {
+                players.put(i, updatedPlayer);
+                return true;
+            }
+        }*/
+        return false;
+    }
 
-        if (players.containsKey(name)) {
-            throw new IllegalArgumentException("Ein Spieler mit dem Namen " + name + " existiert bereits.");
-        }
-
-        Player newPlayer = new Player(name);
-        players.put(name, newPlayer); // Map.put statt players.add verwenden
-
-        // Logger verwenden statt System.out.println
-        // logger.info("Neuer Spieler hinzugefügt: {}", newPlayer.getId());
-
+    public Player addPlayer(String id) {
+        Player newPlayer = new Player(id);
+        players.put(id, newPlayer);
+        System.out.println("Neuer Spieler hinzugefügt: " + newPlayer.getId() + " mit ID " + newPlayer.getId());
         return newPlayer;
     }
-
 
     public boolean addChildToPlayer(String playerId) {
         Player player = getPlayerById(playerId);
@@ -113,4 +102,3 @@ public class PlayerService {
     }
 
 }
-
