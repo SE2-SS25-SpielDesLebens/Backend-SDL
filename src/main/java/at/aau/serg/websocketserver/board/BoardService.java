@@ -58,17 +58,17 @@ public class BoardService {
           // Ruft die ursprüngliche Methode mit der String-ID auf
           movePlayer(playerIdStr, steps);
       }    public void movePlayer(String playerId, int steps) {
-        int currentFieldIndex = playerPositions.getOrDefault(playerId, 1);
+        // Berechne alle möglichen Zielfelder
+        List<Integer> moveOptions = getMoveOptions(playerId, steps);
         
-        for (int i = 0; i < steps; i++) {
-            Field currentField = getFieldByIndex(currentFieldIndex);
-            if (currentField != null && !currentField.getNextFields().isEmpty()) {
-                // Einfache Implementierung: Nimm immer das erste nächste Feld
-                currentFieldIndex = currentField.getNextFields().get(0);
-            }
+        // Aktualisiere die Position des Spielers
+        if (!moveOptions.isEmpty()) {
+            // Bei nur einer Option wird der Spieler direkt dorthin bewegt
+            // Bei mehreren Optionen nehmen wir die erste Option, um Abwärtskompatibilität für Tests zu gewährleisten
+            // Die eigentliche Spiellogik verwendet getMoveOptions + movePlayerToField
+            int targetFieldIndex = moveOptions.get(0);
+            playerPositions.put(playerId, targetFieldIndex);
         }
-        
-        playerPositions.put(playerId, currentFieldIndex);
     }
       // Bewegt einen Spieler um die angegebene Anzahl an Schritten mit Entscheidungslogik für Verzweigungen
     public List<Integer> getMoveOptions(String playerId, int steps) {

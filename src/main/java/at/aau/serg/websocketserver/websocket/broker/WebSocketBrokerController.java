@@ -35,19 +35,33 @@ public class WebSocketBrokerController {
     private final PlayerService playerService;
     private final LobbyService lobbyService;
     private final SimpMessagingTemplate messagingTemplate;
-    private final BoardService boardService;
-
-    @Autowired
+    private final BoardService boardService;    @Autowired
     public WebSocketBrokerController(JobService jobService,
                                      SimpMessagingTemplate messagingTemplate,
                                      BoardService boardService) {
         this.jobService = jobService;
         this.messagingTemplate = messagingTemplate;
-        playerService = PlayerService.getInstance();
-        lobbyService = LobbyService.getInstance();
+        this.playerService = PlayerService.getInstance();
+        this.lobbyService = LobbyService.getInstance();
         this.boardService = boardService;
     }
 
+    /**
+     * Liefert die aktuellen Spielbrettdaten an den Client.
+     * Diese Methode kann vom Frontend aufgerufen werden, um die vollständigen Board-Daten zu erhalten.
+     */
+    @MessageMapping("/board/data")
+    public void handleBoardDataRequest() {
+        // Erstelle eine neue BoardDataMessage mit den aktuellen Feldern
+        BoardDataMessage boardDataMessage = new BoardDataMessage(
+                boardService.getBoard(),
+                now()
+        );
+        
+        // Sende die Nachricht an alle verbundenen Clients
+        messagingTemplate.convertAndSend("/topic/board/data", boardDataMessage);
+    }
+    
     /**
      * Nur das Job-Repository für das gegebene Spiel anlegen, ohne das Spiel zu starten.
      */
@@ -165,14 +179,37 @@ public class WebSocketBrokerController {
                     // Ignoriere Fehler hier
                 }
             }
+        }        // Anstatt direkt zu bewegen, berechnen wir die möglichen Zielfelder
+        List<Integer> moveOptions = boardService.getMoveOptions(String.valueOf(playerId), steps);
+        
+        // Aktuelle Position und Feld des Spielers
+        Field currentField = boardService.getPlayerField(playerId);
+        
+        // Bestimme das Zielfeld basierend auf der gewürfelten Zahl
+        int targetIndex;
+        
+        // Prüfe, ob wir direkt auf ein Feld basierend auf der Würfelzahl (steps) setzen können
+        if (steps > 0 && steps <= moveOptions.size()) {
+            // Die gewürfelte Zahl ist im gültigen Bereich der Optionen
+            // Wir verwenden steps-1 als Index, da die Liste bei 0 beginnt, aber die Würfelzahl bei 1
+            targetIndex = moveOptions.get(steps - 1);
+            boardService.movePlayerToField(playerId, targetIndex);
+            currentField = boardService.getPlayerField(playerId); // Aktualisiere das Feld nach der Bewegung
+        } else if (steps > moveOptions.size() && !moveOptions.isEmpty()) {
+            // Die gewürfelte Zahl ist größer als die Anzahl der Optionen
+            // Wir bewegen zum letzten verfügbaren Feld (Stop-Feld)
+            targetIndex = moveOptions.get(moveOptions.size() - 1);
+            boardService.movePlayerToField(playerId, targetIndex);
+            currentField = boardService.getPlayerField(playerId); // Aktualisiere das Feld nach der Bewegung
         }
-
-        boardService.movePlayer(playerId, steps);                Field currentField = boardService.getPlayerField(playerId);
+        
+        // Hole die nächsten möglichen Felder nach der Bewegung
         List<Integer> nextPossibleFieldIndices = new ArrayList<>();
         for (Field nextField : boardService.getValidNextFields(playerId)) {
             nextPossibleFieldIndices.add(nextField.getIndex());
         }
-
+        
+        // Erstelle die Nachricht für den Client
         MoveMessage moveMessage = new MoveMessage(
                 message.getPlayerName(),
                 currentField.getIndex(),
@@ -250,11 +287,11 @@ public class WebSocketBrokerController {
             System.out.println("Spieler" + request.getPlayerName() + " ist beigetreten");
 
         } catch (Exception e) {
-            response = new LobbyResponseMessage(lobbyid, request.getPlayerName(), false, e.getMessage());
-        }finally {
+            response = new LobbyResponseMessage(lobbyid, request.getPlayerName(), false, e.getMessage());        }finally {
             String destination = String.format("/topic/%s", lobbyid);
-            assert response != null;
-            messagingTemplate.convertAndSend(destination, response);
+            if (response != null) {
+                messagingTemplate.convertAndSend(destination, response);
+            }
         }
     }
 

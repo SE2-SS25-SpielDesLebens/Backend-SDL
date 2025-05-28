@@ -14,29 +14,38 @@ public class BoardData implements BoardDataProvider {
 
     private static final List<Field> BOARD = Arrays.asList(
         // x größer ist rechts und y rauf ist kleiner
-        new Field(1, 0.115, 0.65, Collections.singletonList(2), FieldType.STARTNORMAL),
-        new Field(2, 0.15, 0.617, Collections.singletonList(3), FieldType.ZAHLTAG),
-        new Field(3, 0.184, 0.6, Collections.singletonList(4), FieldType.AKTION),
-        new Field(4, 0.21, 0.58, Collections.singletonList(5), FieldType.ANLAGE),
-        new Field(5, 0.25, 0.55, Collections.singletonList(6), FieldType.AKTION),
-        new Field(6, 0.30, 0.51, Collections.singletonList(7), FieldType.FREUND),
-        new Field(7, 0.35, 0.47, Collections.singletonList(8), FieldType.AKTION),
-        new Field(8, 0.40, 0.43, Collections.singletonList(9), FieldType.BERUF),
-        new Field(9, 0.45, 0.39, Collections.singletonList(10), FieldType.ZAHLTAG),
-        new Field(10, 0.50, 0.35, Collections.singletonList(11), FieldType.AKTION),
-        new Field(11, 0.55, 0.31, Collections.singletonList(12), FieldType.HAUS),
-        new Field(12, 0.60, 0.27, Collections.singletonList(13), FieldType.AKTION),
-        new Field(13, 0.65, 0.23, Collections.singletonList(14), FieldType.ZAHLTAG),
-        new Field(14, 0.70, 0.19, Collections.singletonList(15), FieldType.AKTION),
-        new Field(15, 0.75, 0.15, Collections.singletonList(16), FieldType.FREUND),
-        new Field(16, 0.80, 0.11, Collections.singletonList(17), FieldType.AKTION),
-        new Field(17, 0.85, 0.07, Collections.singletonList(1), FieldType.HEIRAT),
-        
-        // Uni-Start-Feld
-        new Field(18, 0.115, 0.75, Collections.singletonList(19), FieldType.STARTUNI),
-        new Field(19, 0.30, 0.72, Collections.singletonList(20), FieldType.ZAHLTAG),
-        new Field(20, 0.35, 0.70, Collections.singletonList(5), FieldType.EXAMEN)
-    );
+            new Field(1, 0.1, 0.64, Arrays.asList(1,2,3,4,5,6,7,8,9,20), FieldType.STARTNORMAL),
+            new Field(2, 0.145, 0.6205, Arrays.asList(2,3,4,5,6,7,8,9,20,21), FieldType.ZAHLTAG),
+            new Field(3, 0.18, 0.6, Collections.singletonList(3), FieldType.AKTION),
+            new Field(4, 0.2105, 0.571, Collections.singletonList(4), FieldType.ANLAGE),
+            new Field(5, 0.243, 0.598, Collections.singletonList(5), FieldType.AKTION),
+            new Field(6, 0.278, 0.57, Collections.singletonList(20), FieldType.AKTION),
+            new Field(7, 0.308, 0.548, Collections.singletonList(7), FieldType.AKTION),
+            new Field(8, 0.339, 0.57, Collections.singletonList(8), FieldType.BERUF),
+            new Field(9, 0.3715, 0.599, Collections.singletonList(9), FieldType.ZAHLTAG),
+
+// Uni-Start-Feld
+            new Field(10, 0.1, 0.8, Collections.singletonList(18), FieldType.STARTUNI),
+            new Field(11, 0.145, 0.785, Collections.singletonList(19), FieldType.AKTION),
+            new Field(12, 0.178, 0.806, Collections.singletonList(6), FieldType.FREUND),
+            new Field(13, 0.2102, 0.788, Collections.singletonList(20), FieldType.AKTION),
+            new Field(14, 0.243, 0.7605, Collections.singletonList(6), FieldType.FREUND),
+            new Field(15, 0.275, 0.735, Collections.singletonList(20), FieldType.AKTION),
+            new Field(16, 0.308, 0.712, Collections.singletonList(20), FieldType.AKTION),
+            new Field(17, 0.339, 0.738, Collections.singletonList(6), FieldType.FREUND),
+            new Field(18, 0.372, 0.71, Collections.singletonList(20), FieldType.AKTION),
+            new Field(19, 0.405, 0.68, Collections.singletonList(5), FieldType.EXAMEN),
+
+            new Field(20, 0.405, 0.618, Collections.singletonList(10), FieldType.AKTION),
+            new Field(21, 0.55, 0.31, Collections.singletonList(11), FieldType.HAUS),
+            new Field(22, 0.60, 0.27, Collections.singletonList(12), FieldType.AKTION),
+            new Field(23, 0.65, 0.23, Collections.singletonList(13), FieldType.ZAHLTAG),
+            new Field(24, 0.70, 0.19, Collections.singletonList(14), FieldType.AKTION),
+            new Field(25, 0.75, 0.15, Collections.singletonList(15), FieldType.FREUND),
+            new Field(26, 0.10, 0.11, Collections.singletonList(16), FieldType.AKTION),
+            new Field(27, 0.85, 0.07, Collections.singletonList(16), FieldType.HEIRAT)
+
+            );
 
     @Override
     public List<Field> getBoard() {
