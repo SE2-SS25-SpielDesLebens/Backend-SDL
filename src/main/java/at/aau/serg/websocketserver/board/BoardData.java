@@ -1,10 +1,16 @@
 package at.aau.serg.websocketserver.board;
 
+import org.springframework.stereotype.Component;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class BoardData {
+/**
+ * Standardimplementierung des BoardDataProvider-Interfaces.
+ * Diese Klasse enthält die statischen Daten des Spielbretts.
+ */
+@Component
+public class BoardData implements BoardDataProvider {
 
     private static final List<Field> BOARD = Arrays.asList(
         // x größer ist rechts und y rauf ist kleiner
@@ -32,11 +38,43 @@ public class BoardData {
         new Field(20, 0.35, 0.70, Collections.singletonList(5), FieldType.EXAMEN)
     );
 
-    public static List<Field> getBoard() {
+    @Override
+    public List<Field> getBoard() {
         return Collections.unmodifiableList(BOARD);
     }
 
-    public static Field getFieldByIndex(int index) {
+    @Override
+    public Field getFieldByIndex(int index) {
+        for (Field field : BOARD) {
+            if (field.getIndex() == index) {
+                return field;
+            }
+        }
+        return null;
+    }
+    
+    /**
+     * Statische Methode für Abwärtskompatibilität, sollte in neuen Code nicht verwendet werden.
+     * Verwenden Sie stattdessen die Instanzmethode.
+     *
+     * @return Eine unveränderbare Liste aller Felder
+     * @deprecated Verwende die Instanz über Dependency Injection
+     */
+    @Deprecated
+    public static List<Field> getBoardStatic() {
+        return Collections.unmodifiableList(BOARD);
+    }
+    
+    /**
+     * Statische Methode für Abwärtskompatibilität, sollte in neuen Code nicht verwendet werden.
+     * Verwenden Sie stattdessen die Instanzmethode.
+     *
+     * @param index Der Index des gesuchten Felds
+     * @return Das gefundene Feld oder null, wenn kein Feld mit diesem Index existiert
+     * @deprecated Verwende die Instanz über Dependency Injection
+     */
+    @Deprecated
+    public static Field getFieldByIndexStatic(int index) {
         for (Field field : BOARD) {
             if (field.getIndex() == index) {
                 return field;

@@ -1,7 +1,5 @@
 package at.aau.serg.websocketserver.websocket.broker;
 
-import java.util.stream.Collectors;
-
 import at.aau.serg.websocketserver.game.GameController;
 import at.aau.serg.websocketserver.game.GameLogic;
 import at.aau.serg.websocketserver.game.PlayerTurnManager;
@@ -48,9 +46,6 @@ public class WebSocketBrokerController {
         playerService = PlayerService.getInstance();
         lobbyService = LobbyService.getInstance();
         this.boardService = boardService;
-<<<<<<< HEAD
-    }    @MessageMapping("/move")
-=======
     }
 
     /**
@@ -74,11 +69,18 @@ public class WebSocketBrokerController {
     }
 
     @MessageMapping("/move")
->>>>>>> origin/main
     public void handleMove(StompMessage message) {
-        String playerId = message.getPlayerName(); // Verwende direkt den playerName als ID
+        int playerId;
+        try {
+            playerId = Integer.parseInt(message.getPlayerName()); // Annahme: playerName = ID
+        } catch (NumberFormatException e) {
+            messagingTemplate.convertAndSend("/topic/game",
+                    new OutputMessage(message.getPlayerName(), "❌ Ungültige Spieler-ID", LocalDateTime.now().toString()));
+            return;
+        }
 
-        String action = message.getAction();        // Prüfe, ob es ein "join:X" Befehl ist (Spieler betritt das Spielfeld)
+        String action = message.getAction();
+        // Prüfe, ob es ein "join:X" Befehl ist (Spieler betritt das Spielfeld)
         if (action != null && action.startsWith("join:")) {
             try {
                 int startFieldIndex = Integer.parseInt(action.substring(5));
@@ -88,7 +90,7 @@ public class WebSocketBrokerController {
                 // Get the possible next fields
                 List<Integer> nextPossibleFieldIndices = new ArrayList<>();
                 for (Field nextField : boardService.getValidNextFields(playerId)) {
-                    nextPossibleFieldIndices.add(Integer.valueOf(nextField.getIndex()));
+                    nextPossibleFieldIndices.add(nextField.getIndex());
                 }
 
                 MoveMessage moveMessage = new MoveMessage(
@@ -115,7 +117,7 @@ public class WebSocketBrokerController {
                     Field currentField = boardService.getPlayerField(playerId);
                     List<Integer> nextPossibleFieldIndices = new ArrayList<>();
                     for (Field nextField : boardService.getValidNextFields(playerId)) {
-                        nextPossibleFieldIndices.add(Integer.valueOf(nextField.getIndex()));
+                        nextPossibleFieldIndices.add(nextField.getIndex());
                     }
 
                     MoveMessage moveMessage = new MoveMessage(
@@ -146,7 +148,9 @@ public class WebSocketBrokerController {
             messagingTemplate.convertAndSend("/topic/game",
                     new OutputMessage(message.getPlayerName(), "❌ Ungültige Würfelzahl", LocalDateTime.now().toString()));
             return;
-        }        // Prüfe ob eine bestimmte Ausgangsposition mitgeschickt wurde
+        }
+
+        // Prüfe ob eine bestimmte Ausgangsposition mitgeschickt wurde
         int currentFieldIndex;
         if (message.getAction().contains(":")) {
             String[] parts = message.getAction().split(":");
@@ -163,20 +167,11 @@ public class WebSocketBrokerController {
             }
         }
 
-<<<<<<< HEAD
-        boardService.movePlayer(playerId, steps);                
-        Field currentField = boardService.getPlayerField(playerId);
-        List<Integer> nextPossibleFieldIndices = new ArrayList<>();
-        for (Field nextField : boardService.getValidNextFields(playerId)) {
-                    nextPossibleFieldIndices.add(Integer.valueOf(nextField.getIndex()));
-                }
-=======
         boardService.movePlayer(playerId, steps);                Field currentField = boardService.getPlayerField(playerId);
         List<Integer> nextPossibleFieldIndices = new ArrayList<>();
         for (Field nextField : boardService.getValidNextFields(playerId)) {
             nextPossibleFieldIndices.add(nextField.getIndex());
         }
->>>>>>> origin/main
 
         MoveMessage moveMessage = new MoveMessage(
                 message.getPlayerName(),
@@ -203,7 +198,9 @@ public class WebSocketBrokerController {
     public void handleLobby(@Payload StompMessage message) {
         String action = message.getAction();
         String gameId = message.getGameId();
-        String content;        if (action == null) {
+        String content;
+
+        if (action == null) {
             content = "❌ Keine Aktion angegeben.";
         } else {
             switch (action) {
@@ -271,14 +268,15 @@ public class WebSocketBrokerController {
     public void handleChat(@Payload StompMessage message) {
         messagingTemplate.convertAndSend("/topic/chat",
                 new OutputMessage(message.getPlayerName(), message.getMessageText(), LocalDateTime.now().toString()));
-    }    @MessageMapping("/game/start/{gameId}")
-    public void handleGameStart(@DestinationVariable String gameId) {
-        int gameIdInt = Integer.parseInt(gameId);
+    }
+
+    @MessageMapping("/game/start/{gameId}")
+    public void handleGameStart(@DestinationVariable int gameId) {
         // 1. Repository vorbereiten
-        jobService.getOrCreateRepository(gameIdInt);
+        jobService.getOrCreateRepository(gameId);
 
         // 2. Lobby und Spieler holen
-        Lobby lobby = LobbyService.getInstance().getLobby(gameId);
+        Lobby lobby = LobbyService.getInstance().getLobby(Integer.toString(gameId));
         if (lobby == null || lobby.isStarted()) {
             System.out.println("[WARNUNG] Lobby nicht gefunden oder bereits gestartet: " + gameId);
             return;
@@ -286,7 +284,7 @@ public class WebSocketBrokerController {
 
         // 3. GameLogic erzeugen
         GameLogic gameLogic = new GameLogic();
-        gameLogic.setGameId(gameIdInt);
+        gameLogic.setGameId(gameId);
         gameLogic.setJobService(jobService);
         gameLogic.setBoardService(boardService);
         gameLogic.setGameController(new GameController(gameLogic, messagingTemplate));
@@ -370,11 +368,9 @@ public class WebSocketBrokerController {
                         gameId
                 ))
                 .collect(Collectors.toList());
-<<<<<<< HEAD
 
-=======
->>>>>>> origin/main
-
+        String dest = String.format("/topic/%d/jobs/%s", gameId, playerName);
+        messagingTemplate.convertAndSend(dest, dtos);
     }
 
     @MessageMapping("/jobs/{gameId}/{playerName}/select")
@@ -391,10 +387,5 @@ public class WebSocketBrokerController {
 
         repo.findJobById(msg.getJobId())
                 .ifPresent(job -> repo.assignJobToPlayer(playerName, job));
-    }    @MessageMapping("/board/data")
-    @SendTo("/topic/board/data")
-    public BoardDataMessage getBoardData() {
-        // Return the complete board data with timestamp
-        return new BoardDataMessage(boardService.getBoard(), LocalDateTime.now().toString());
     }
 }

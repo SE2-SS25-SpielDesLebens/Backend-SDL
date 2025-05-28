@@ -1,48 +1,82 @@
 package at.aau.serg.websocketserver.board;
 
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+/**
+ * Service zur Verwaltung der Spiellogik und Spielerpositionen auf dem Spielbrett.
+ */
 @Service
 public class BoardService {
     private final List<Field> board;
     private final Map<String, Integer> playerPositions = new ConcurrentHashMap<>();  // playerId → fieldIndex
+    private final BoardDataProvider boardDataProvider;
 
-    public BoardService() {
-        this.board = BoardData.getBoard();
+    /**
+     * Erzeugt einen neuen BoardService mit einer Spring-Injection des BoardDataProviders.
+     *
+     * @param boardDataProvider Provider für die Spielbrettdaten
+     */
+    @Autowired
+    public BoardService(BoardDataProvider boardDataProvider) {
+        this.boardDataProvider = boardDataProvider;
+        this.board = boardDataProvider.getBoard();
     }
     
-    // Fügt einen Spieler zum Board hinzu
-    public void addPlayer(String playerId, int startFieldIndex) {
-        playerPositions.put(playerId, Integer.valueOf(startFieldIndex));
+    /**
+     * Konstruktor für Testzwecke, ermöglicht das Injizieren eines Mock-BoardDataProviders.
+     * 
+     * @param boardDataProvider Ein Mock-Provider für die Tests
+     * @param playerPositions Vorgefertigte Spielerpositionen für Tests
+     */
+    protected BoardService(BoardDataProvider boardDataProvider, Map<String, Integer> playerPositions) {
+        this.boardDataProvider = boardDataProvider;
+        this.board = boardDataProvider.getBoard();
+        if (playerPositions != null) {
+            this.playerPositions.putAll(playerPositions);
+        }
     }
-      // Bewegt einen Spieler um die angegebene Anzahl an Schritten vorwärts
-    public void movePlayer(String playerId, int steps) {
-        int currentFieldIndex = playerPositions.getOrDefault(playerId, Integer.valueOf(1));
+      // Fügt einen Spieler zum Board hinzu
+    public void addPlayer(String playerId, int startFieldIndex) {
+        playerPositions.put(playerId, startFieldIndex);
+    }
+    public void addPlayer(int playerId, int startFieldIndex) {
+        // Wandelt die Integer-ID in einen String um
+        String playerIdStr = String.valueOf(playerId);
+        // Ruft die ursprüngliche Methode mit der String-ID auf
+        addPlayer(playerIdStr, startFieldIndex);
+    }
+
+    // Bewegt einen Spieler um die angegebene Anzahl an Schritten vorwärts
+      public void movePlayer(int playerId, int steps) {
+          // Wandelt die Integer-ID in einen String um
+          String playerIdStr = String.valueOf(playerId);
+          // Ruft die ursprüngliche Methode mit der String-ID auf
+          movePlayer(playerIdStr, steps);
+      }    public void movePlayer(String playerId, int steps) {
+        int currentFieldIndex = playerPositions.getOrDefault(playerId, 1);
         
         for (int i = 0; i < steps; i++) {
             Field currentField = getFieldByIndex(currentFieldIndex);
             if (currentField != null && !currentField.getNextFields().isEmpty()) {
                 // Einfache Implementierung: Nimm immer das erste nächste Feld
-
                 currentFieldIndex = currentField.getNextFields().get(0);
             }
         }
         
-        playerPositions.put(playerId, Integer.valueOf(currentFieldIndex));
+        playerPositions.put(playerId, currentFieldIndex);
     }
-    
-    // Bewegt einen Spieler um die angegebene Anzahl an Schritten mit Entscheidungslogik für Verzweigungen
+      // Bewegt einen Spieler um die angegebene Anzahl an Schritten mit Entscheidungslogik für Verzweigungen
     public List<Integer> getMoveOptions(String playerId, int steps) {
-        int currentFieldIndex = playerPositions.getOrDefault(playerId, Integer.valueOf(1));
-        List<Integer> endOptions = new ArrayList<>();
+        int currentFieldIndex = playerPositions.getOrDefault(playerId, 1);
         
         // Startposition hinzufügen
         List<Integer> positions = new ArrayList<>();
-        positions.add(Integer.valueOf(currentFieldIndex));
+        positions.add(currentFieldIndex);
         
         // Für jeden Schritt alle möglichen Pfade verfolgen
         for (int i = 0; i < steps; i++) {
@@ -59,15 +93,14 @@ public class BoardService {
         // Duplikate entfernen
         return positions.stream().distinct().collect(Collectors.toList());
     }
-    
-    // Bewegt einen Spieler direkt zu einem bestimmten Feld
+      // Bewegt einen Spieler direkt zu einem bestimmten Feld
     public boolean movePlayerToField(String playerId, int targetFieldIndex) {
-        int currentFieldIndex = playerPositions.getOrDefault(playerId, Integer.valueOf(1));
+        int currentFieldIndex = playerPositions.getOrDefault(playerId, 1);
         Field currentField = getFieldByIndex(currentFieldIndex);
         
         // Prüfe, ob das Zielfeld ein erlaubtes nächstes Feld ist
-        if (currentField != null && currentField.getNextFields().contains(Integer.valueOf(targetFieldIndex))) {
-            playerPositions.put(playerId, Integer.valueOf(targetFieldIndex));
+        if (currentField != null && currentField.getNextFields().contains(targetFieldIndex)) {
+            playerPositions.put(playerId, targetFieldIndex);
             return true;
         }
         
@@ -75,17 +108,25 @@ public class BoardService {
     }
     
     // Gibt das Feld zurück, auf dem sich der Spieler gerade befindet
-    public Field getPlayerField(String playerId) {
-        int fieldIndex = playerPositions.getOrDefault(playerId, Integer.valueOf(1));
+    public Field getPlayerField(Object playerId) {
+        String playerIdStr;
+        if (playerId instanceof Integer) {
+            playerIdStr = String.valueOf(playerId);
+        } else if (playerId instanceof String) {
+            playerIdStr = (String) playerId;
+        } else {
+            throw new IllegalArgumentException("Player ID muss ein String oder Integer sein");
+        }
+
+        int fieldIndex = playerPositions.getOrDefault(playerIdStr, 1);
         return getFieldByIndex(fieldIndex);
     }
 
 
 
-
     // Gibt ein Feld anhand seines Indexes zurück
     public Field getFieldByIndex(int index) {
-        return BoardData.getFieldByIndex(index);
+        return boardDataProvider.getFieldByIndex(index);
     }
     
     // Gibt alle gültigen nächsten Felder für einen Spieler zurück
@@ -105,14 +146,33 @@ public class BoardService {
         
         return validFields;
     }
-    
-    // Setzt die Position eines Spielers direkt
+      // Setzt die Position eines Spielers direkt
     public void setPlayerPosition(String playerId, int fieldIndex) {
         if (fieldIndex >= 1 && fieldIndex <= board.size()) {
-            playerPositions.put(playerId, Integer.valueOf(fieldIndex));
+            playerPositions.put(playerId, fieldIndex);
         }
     }
-    
+    public List<Field> getValidNextFields(int playerId) {
+        // Wandelt die Integer-ID in einen String um
+        String playerIdStr = String.valueOf(playerId);
+        // Ruft die ursprüngliche Methode mit der String-ID auf
+        return getValidNextFields(playerIdStr);
+    }
+    public void setPlayerPosition(int playerId, int fieldIndex) {
+        // Wandelt die Integer-ID in einen String um
+        String playerIdStr = String.valueOf(playerId);
+        // Ruft die ursprüngliche Methode mit der String-ID auf
+        setPlayerPosition(playerIdStr, fieldIndex);
+    }
+
+    public boolean movePlayerToField(int playerId, int targetFieldIndex) {
+        // Wandelt die Integer-ID in einen String um
+        String playerIdStr = String.valueOf(playerId);
+        // Ruft die ursprüngliche Methode mit der String-ID auf
+        return movePlayerToField(playerIdStr, targetFieldIndex);
+    }
+
+
     // Gibt die Größe des Boards zurück
     public int getBoardSize() {
         return board.size();
@@ -127,10 +187,9 @@ public class BoardService {
     public boolean isPlayerOnField(String playerId, int fieldIndex) {
         Integer position = playerPositions.get(playerId);
         return position != null && position == fieldIndex;
-    }
-      // Gibt die Position eines Spielers zurück
+    }    // Gibt die Position eines Spielers zurück
     public int getPlayerPosition(String playerId) {
-        return playerPositions.getOrDefault(playerId, Integer.valueOf(1));
+        return playerPositions.getOrDefault(playerId, 1);
     }
     
     // Gibt alle Spieler zurück, die sich auf einem bestimmten Feld befinden
@@ -140,20 +199,24 @@ public class BoardService {
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toList());
     }
-    
     // Entfernt einen Spieler vom Board
     public void removePlayer(String playerId) {
         playerPositions.remove(playerId);
+    }
+    
+    // Entfernt einen Spieler vom Board (Integer-ID Version)
+    public void removePlayer(int playerId) {
+        String playerIdStr = String.valueOf(playerId);
+        removePlayer(playerIdStr);
     }
     
     // Gibt alle Spielerpositionen zurück
     public Map<String, Integer> getAllPlayerPositions() {
         return new HashMap<>(playerPositions);
     }
-    
-    // Prüft, ob sich irgendein Spieler auf einem Feld befindet
+      // Prüft, ob sich irgendein Spieler auf einem Feld befindet
     public boolean isAnyPlayerOnField(int fieldIndex) {
-        return playerPositions.containsValue(Optional.of(fieldIndex));
+        return playerPositions.containsValue(fieldIndex);
     }
     
     // Reset aller Spielerpositionen

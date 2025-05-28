@@ -134,10 +134,12 @@ public class GameLogic {
         // 2. Normale Spiellogik
         if (boardService == null) {
             throw new IllegalStateException("BoardService wurde nicht gesetzt.");
-        }        String playerId = player.getId();
-        int startIndex = boardService.getPlayerField(playerId).getIndex();
-        boardService.movePlayer(playerId, spinResult);
-        Field endField = boardService.getPlayerField(playerId);
+        }
+
+        int playerIdInt = Integer.parseInt(player.getId());
+        int startIndex = boardService.getPlayerField(playerIdInt).getIndex();
+        boardService.movePlayer(playerIdInt, spinResult);
+        Field endField = boardService.getPlayerField(playerIdInt);
 
         for (int i = 1; i <= spinResult; i++) {
             Field intermediate = boardService.getFieldByIndex(startIndex + i);
@@ -169,8 +171,8 @@ public class GameLogic {
 
 
     void handleField(Player player, Field field) {
-<<<<<<< HEAD
-        FieldType type = field.getType();        switch (type) {
+        FieldType type = field.getType();
+        switch (type) {
             case ZAHLTAG:
                 handleSalaryField(player, true);
                 break;
@@ -193,40 +195,10 @@ public class GameLogic {
                 handleMarriageField(player);
                 break;
             case EXAMEN:
-=======
-        String type = field.getType();
-        switch (type) {
-            case "ZAHLTAG":
-                handleSalaryField(player, true);
-                break;
-            case "AKTION":
-                handleActionField(player);
-                break;
-            case "HAUS":
-                handleHouseField(player);
-                break;
-            case "BERUF":
-                handleJobField(player);
-                break;
-            case "ANLAGE":
-                handleInvestmentField(player);
-                break;
-            case "FREUND":
-                handleFriendField(player, field);
-                break;
-            case "HEIRAT":
-                handleMarriageField(player);
-                break;
-            case "EXAMEN":
->>>>>>> origin/main
                 handleExamField(player);
                 break;
             default:
                 System.out.println("[INFO] Kein spezielles Verhalten für Feldtyp: " + type);
-<<<<<<< HEAD
-                break;
-=======
->>>>>>> origin/main
         }
     }
 
@@ -241,13 +213,9 @@ public class GameLogic {
 
     private void handleActionField(Player player) {
         SecureRandom random = new SecureRandom();
-<<<<<<< HEAD
-        int event = random.nextInt(3);        switch (event) {
-=======
         int event = random.nextInt(3);
 
         switch (event) {
->>>>>>> origin/main
             case 0:
                 player.addMoney(10000);
                 System.out.println("[AKTION] Spieler " + player.getId() + " gewinnt 10.000 € durch eine Aktionskarte.");
@@ -262,10 +230,6 @@ public class GameLogic {
                 break;
             default:
                 System.out.println("[AKTION] Keine Aktion gefunden.");
-<<<<<<< HEAD
-                break;
-=======
->>>>>>> origin/main
         }
         // Später: Aktionskarte ziehen, anzeigen, auswählen (falls Optionen), ausführen und zurück unter Stapel legen
         // Kartenmechanik fehlt noch -> Aktionskarten-Stapel hier einbinden
@@ -282,7 +246,7 @@ public class GameLogic {
             // Haus kaufen: zufällig einen Preis festlegen und Geld abziehen
             int housePrice = 200000;
             player.removeMoney(housePrice);
-            player.getHouseId().put(Integer.valueOf(random.nextInt(1000)), Integer.valueOf(housePrice)); // Dummy-ID und Wert
+            player.getHouseId().put(random.nextInt(1000), housePrice); // Dummy-ID und Wert
             System.out.println("[HAUS] Spieler " + player.getId() + " kauft ein Haus für " + housePrice + " €.");
         } else if (!player.getHouseId().isEmpty()) {
             // Haus verkaufen: zufällig ein Haus auswählen und Wert zurückgeben (50 % oder 150 %)
@@ -356,7 +320,8 @@ public class GameLogic {
                 int newSlot = 1 + random.nextInt(10);
                 player.setInvestments(newSlot);
                 player.setInvestmentPayout(0);
-                System.out.println("[ANLAGE] Spieler " + player.getId() + " steckt seine Investition kostenlos auf Zahl " + newSlot + " um (Rücksetzung auf 10.000 € Stufe).");            } else {
+                System.out.println("[ANLAGE] Spieler " + player.getId() + " steckt seine Investition kostenlos auf Zahl " + newSlot + " um (Rücksetzung auf 10.000 € Stufe).");
+            } else {
                 int payoutStage = player.getInvestmentPayout();
                 int payoutAmount;
                 switch (payoutStage) {
@@ -367,13 +332,6 @@ public class GameLogic {
                         payoutAmount = 20000;
                         break;
                     case 2:
-<<<<<<< HEAD
-                        payoutAmount = 20000;
-                        break;
-                    default:
-                        payoutAmount = 0;
-                        break;
-=======
                         payoutAmount = 30000;
                         break;
                     case 3:
@@ -384,7 +342,6 @@ public class GameLogic {
                         break;
                     default:
                         payoutAmount = 0;
->>>>>>> origin/main
                 }
                 if (payoutAmount > 0) {
                     player.addMoney(payoutAmount);
@@ -418,12 +375,8 @@ public class GameLogic {
     public void checkAndPayoutInvestment(String spinningPlayerId, int spinResult) {
         for (Player p : players.values()) {
             int slot = p.getInvestments();
-<<<<<<< HEAD
-            if (slot == spinResult) {                int payoutStage = p.getInvestmentPayout();
-=======
             if (slot == spinResult) {
                 int payoutStage = p.getInvestmentPayout();
->>>>>>> origin/main
                 int payoutAmount;
                 switch (payoutStage) {
                     case 0:
@@ -433,13 +386,6 @@ public class GameLogic {
                         payoutAmount = 20000;
                         break;
                     case 2:
-<<<<<<< HEAD
-                        payoutAmount = 20000;
-                        break;
-                    default:
-                        payoutAmount = 0;
-                        break;
-=======
                         payoutAmount = 30000;
                         break;
                     case 3:
@@ -450,7 +396,6 @@ public class GameLogic {
                         break;
                     default:
                         payoutAmount = 0;
->>>>>>> origin/main
                 }
 
                 if (payoutAmount > 0) {
@@ -468,7 +413,7 @@ public class GameLogic {
     void handleFriendField(Player player, Field field) {
         // Einheitliche Behandlung für Baby-, Freund- oder Haustierfelder als 1 Stift im Auto
         FieldType type = field.getType();
-        if (FieldType.FREUND.equals(type)) {
+        if ("FREUND".equals(type)) {
             player.addChild();
             System.out.println("[STIFT] Spieler " + player.getId() + " landet auf einem " + type + "-Feld und bekommt 1 Stift ins Auto gesetzt.");
         }
@@ -569,14 +514,10 @@ public class GameLogic {
     public void playerRetires(String playerName) {
         Player player = getPlayerByName(playerName);
         player.retire();
-<<<<<<< HEAD
-        retirementOrder.add(playerName);        switch (retirementOrder.size()) {
-=======
         retirementOrder.add(playerName);
 
         int position = retirementOrder.size();
         switch (position) {
->>>>>>> origin/main
             case 1:
                 player.addMoney(250000);
                 break;
@@ -629,8 +570,3 @@ public class GameLogic {
     }
 
 }
-
-
-
-
-
