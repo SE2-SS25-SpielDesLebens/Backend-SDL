@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -18,9 +19,12 @@
     <description>WebSocketDemo-Server</description>
 
     <properties>
+        <!-- Java-Version für Compiler und Sonar -->
         <java.version>11</java.version>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
+        <sonar.java.source>11</sonar.java.source>
+        <sonar.java.target>11</sonar.java.target>
+
+        <!-- SonarCloud-Konfiguration -->
         <sonar.organization>se2-ss25-spieldeslebens</sonar.organization>
         <sonar.projectKey>SE2-SS25-SpielDesLebens_Backend-SDL</sonar.projectKey>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
@@ -29,18 +33,12 @@
             src/main/java/at/aau/serg/websocketserver/websocket/broker/WebSocketBrokerConfig.java,
             src/main/java/at/aau/serg/websocketserver/messaging/dtos/WebSocketServerApplication.java,
             src/main/java/at/aau/serg/websocketserver/websocket/broker/WebSocketBrokerController.java,
-            src/main/java/at/aau/serg/websocketserver/messaging/dtos/JobMessage.java,
-            src/main/java/at/aau/serg/websocketserver/messaging/dtos/JobRequestMessage.java,
-            src/main/java/at/aau/serg/websocketserver/session/Job.java,
-            src/main/java/at/aau/serg/websocketserver/session/JobRepository.java,
             src/main/java/at/aau/serg/websocketserver/session/JobService.java,
             src/main/java/at/aau/serg/websocketserver/board/Board.java,
             src/main/java/at/aau/serg/websocketserver/board/BoardFactory.java,
             src/main/java/at/aau/serg/websocketserver/board/BoardService.java,
-            src/main/java/at/aau/serg/websocketserver/messaging/dtos/OutputMessage.java,
             src/main/java/at/aau/serg/websocketserver/messaging/dtos/MoveMessage.java,
             src/main/java/at/aau/serg/websocketserver/messaging/dtos/StartMessage.java,
-            src/main/java/at/aau/serg/websocketserver/websocket/broker/WebSocketBrokerController.java,
             src/main/java/at/aau/serg/websocketserver/websocket/broker/PlayerController.java,
             src/main/java/at/aau/serg/websocketserver/actioncard/ActionCard.java,
             src/main/java/at/aau/serg/websocketserver/actioncard/ActionCardController.java
@@ -63,14 +61,6 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
-
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-inline</artifactId>
-            <version>5.2.0</version>
-            <scope>test</scope>
-        </dependency>
-
 
 
         <!-- Spring Web (für @WebMvcTest etc.) -->
@@ -115,6 +105,7 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -141,7 +132,23 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
 
-            <!-- Java Compiler Plugin -->
+            <!-- Maven Compiler Plugin: nutzt jetzt ${java.version} -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>1.18.36</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
 
             <!-- JaCoCo Plugin für Coverage -->
             <plugin>
@@ -149,14 +156,12 @@
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>0.8.8</version>
                 <executions>
-                    <!-- Coverage-Agent aktivieren -->
                     <execution>
                         <id>prepare-agent</id>
                         <goals>
                             <goal>prepare-agent</goal>
                         </goals>
                     </execution>
-                    <!-- Coverage-Report erstellen -->
                     <execution>
                         <id>report</id>
                         <phase>verify</phase>
