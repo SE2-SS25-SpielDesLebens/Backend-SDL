@@ -1,17 +1,12 @@
 package at.aau.serg.websocketserver.websocket.broker;
 
-import at.aau.serg.websocketserver.game.GameController;
-import at.aau.serg.websocketserver.game.GameLogic;
-import at.aau.serg.websocketserver.game.PlayerTurnManager;
-import at.aau.serg.websocketserver.player.Player;
-import at.aau.serg.websocketserver.player.PlayerService;
+import at.aau.serg.websocketserver.board.BoardDataService;
+import at.aau.serg.websocketserver.game.GameService;
+import at.aau.serg.websocketserver.job.JobWrapperService;
+import at.aau.serg.websocketserver.lobby.LobbyManagementService;
+import at.aau.serg.websocketserver.movement.MovementService;
 import at.aau.serg.websocketserver.board.BoardService;
-import at.aau.serg.websocketserver.board.Field;
-import at.aau.serg.websocketserver.lobby.Lobby;
-import at.aau.serg.websocketserver.lobby.LobbyService;
 import at.aau.serg.websocketserver.messaging.dtos.*;
-import at.aau.serg.websocketserver.session.Job;
-import at.aau.serg.websocketserver.session.JobService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -22,53 +17,52 @@ import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 
 @Controller
 public class WebSocketBrokerController {
-
-    private final JobService jobService;
-    private final PlayerService playerService;
-    private final LobbyService lobbyService;
+    private final JobWrapperService jobWrapperService;
     private final SimpMessagingTemplate messagingTemplate;
-    private final BoardService boardService;    @Autowired
-    public WebSocketBrokerController(JobService jobService,
-                                     SimpMessagingTemplate messagingTemplate,
-                                     BoardService boardService) {
-        this.jobService = jobService;
+    private final MovementService movementService;
+    private final GameService gameService;
+    private final LobbyManagementService lobbyManagementService;
+    private final BoardDataService boardDataService;
+      @Autowired
+    public WebSocketBrokerController(SimpMessagingTemplate messagingTemplate,
+                                     BoardService boardService, // wird für Service-Klassen benötigt, aber nicht direkt verwendet
+                                     MovementService movementService,
+                                     GameService gameService,
+                                     LobbyManagementService lobbyManagementService,
+                                     BoardDataService boardDataService,
+                                     JobWrapperService jobWrapperService) {
         this.messagingTemplate = messagingTemplate;
-        this.playerService = PlayerService.getInstance();
-        this.lobbyService = LobbyService.getInstance();
-        this.boardService = boardService;
-    }
-
-    /**
+        this.movementService = movementService;
+        this.gameService = gameService;
+        this.lobbyManagementService = lobbyManagementService;
+        this.boardDataService = boardDataService;
+        this.jobWrapperService = jobWrapperService;
+    }/**
      * Liefert die aktuellen Spielbrettdaten an den Client.
      * Diese Methode kann vom Frontend aufgerufen werden, um die vollständigen Board-Daten zu erhalten.
      */
     @MessageMapping("/board/data")
     public void handleBoardDataRequest() {
-        // Erstelle eine neue BoardDataMessage mit den aktuellen Feldern
+        // Verwende den BoardDataService
         BoardDataMessage boardDataMessage = new BoardDataMessage(
-                boardService.getBoard(),
+                boardDataService.getBoardData(),
                 now()
         );
         
         // Sende die Nachricht an alle verbundenen Clients
         messagingTemplate.convertAndSend("/topic/board/data", boardDataMessage);
     }
-    
-    /**
+      /**
      * Nur das Job-Repository für das gegebene Spiel anlegen, ohne das Spiel zu starten.
      */
     @MessageMapping("/game/createJobRepo/{gameId}")
     public void handleJobRepoCreation(@DestinationVariable int gameId) {
-        // Erzeugt (oder gibt zurück) das Job-Repository für dieses Spiel
-        jobService.getOrCreateRepository(gameId);
+        // JobWrapperService verwenden, um das Repository zu erstellen
+        jobWrapperService.createJobRepository(gameId);
 
         // Optional: sende eine Statusmeldung an alle Clients
         String destination = "/topic/game/" + gameId + "/status";
@@ -80,9 +74,7 @@ public class WebSocketBrokerController {
                         now()
                 )
         );
-    }
-
-    @MessageMapping("/move")
+    }@MessageMapping("/move")
     public void handleMove(StompMessage message) {
         int playerId;
         try {
@@ -98,23 +90,10 @@ public class WebSocketBrokerController {
         if (action != null && action.startsWith("join:")) {
             try {
                 int startFieldIndex = Integer.parseInt(action.substring(5));
-                boardService.addPlayer(playerId, startFieldIndex);
-                Field currentField = boardService.getPlayerField(playerId);
-
-                // Get the possible next fields
-                List<Integer> nextPossibleFieldIndices = new ArrayList<>();
-                for (Field nextField : boardService.getValidNextFields(playerId)) {
-                    nextPossibleFieldIndices.add(nextField.getIndex());
-                }
-
-                MoveMessage moveMessage = new MoveMessage(
-                        message.getPlayerName(),
-                        currentField.getIndex(),
-                        currentField.getType(),
-                        LocalDateTime.now().toString(),
-                        nextPossibleFieldIndices
-                );
-
+                
+                // MovementService zum Hinzufügen des Spielers verwenden
+                MoveMessage moveMessage = movementService.addPlayerToBoard(playerId, startFieldIndex);
+                
                 messagingTemplate.convertAndSend("/topic/game", moveMessage);
                 return;
             } catch (Exception e) {
@@ -122,25 +101,17 @@ public class WebSocketBrokerController {
                         new OutputMessage(message.getPlayerName(), "❌ Fehler beim Betreten des Spielfelds", LocalDateTime.now().toString()));
                 return;
             }
-        }        // Prüfe, ob es eine direkte Bewegung zu einem bestimmten Feld ist
+        }
+        
+        // Prüfe, ob es eine direkte Bewegung zu einem bestimmten Feld ist
         if (action != null && action.startsWith("move:")) {
             try {
                 int targetFieldIndex = Integer.parseInt(action.substring(5));
-                boolean success = boardService.movePlayerToField(playerId, targetFieldIndex);
-                if (success) {
-                    Field currentField = boardService.getPlayerField(playerId);
-                    List<Integer> nextPossibleFieldIndices = new ArrayList<>();
-                    for (Field nextField : boardService.getValidNextFields(playerId)) {
-                        nextPossibleFieldIndices.add(nextField.getIndex());
-                    }
-
-                    MoveMessage moveMessage = new MoveMessage(
-                            message.getPlayerName(),
-                            currentField.getIndex(),
-                            currentField.getType(),
-                            LocalDateTime.now().toString(),
-                            nextPossibleFieldIndices
-                    );
+                
+                // MovementService zum Bewegen des Spielers verwenden
+                MoveMessage moveMessage = movementService.movePlayerToSpecificField(playerId, targetFieldIndex);
+                
+                if (moveMessage != null) {
                     messagingTemplate.convertAndSend("/topic/game", moveMessage);
                 } else {
                     messagingTemplate.convertAndSend("/topic/game",
@@ -165,264 +136,100 @@ public class WebSocketBrokerController {
         }
 
         // Prüfe ob eine bestimmte Ausgangsposition mitgeschickt wurde
-        int currentFieldIndex;
+        Integer currentFieldOverride = null;
         if (message.getAction().contains(":")) {
             String[] parts = message.getAction().split(":");
             if (parts.length > 1) {
                 try {
-                    currentFieldIndex = Integer.parseInt(parts[1]);
-                    // Wenn eine gültige aktuelle Position mitgeschickt wurde, setzen wir diese
-                    if (currentFieldIndex >= 0 && currentFieldIndex < boardService.getBoardSize()) {
-                        boardService.setPlayerPosition(playerId, currentFieldIndex);
-                    }
+                    currentFieldOverride = Integer.parseInt(parts[1]);
                 } catch (NumberFormatException e) {
                     // Ignoriere Fehler hier
                 }
             }
-        }        // Anstatt direkt zu bewegen, berechnen wir die möglichen Zielfelder
-        List<Integer> moveOptions = boardService.getMoveOptions(String.valueOf(playerId), steps);
-        
-        // Aktuelle Position und Feld des Spielers
-        Field currentField = boardService.getPlayerField(playerId);
-        
-        // Bestimme das Zielfeld basierend auf der gewürfelten Zahl
-        int targetIndex;
-        
-        // Prüfe, ob wir direkt auf ein Feld basierend auf der Würfelzahl (steps) setzen können
-        if (steps > 0 && steps <= moveOptions.size()) {
-            // Die gewürfelte Zahl ist im gültigen Bereich der Optionen
-            // Wir verwenden steps-1 als Index, da die Liste bei 0 beginnt, aber die Würfelzahl bei 1
-            targetIndex = moveOptions.get(steps - 1);
-            boardService.movePlayerToField(playerId, targetIndex);
-            currentField = boardService.getPlayerField(playerId); // Aktualisiere das Feld nach der Bewegung
-        } else if (steps > moveOptions.size() && !moveOptions.isEmpty()) {
-            // Die gewürfelte Zahl ist größer als die Anzahl der Optionen
-            // Wir bewegen zum letzten verfügbaren Feld (Stop-Feld)
-            targetIndex = moveOptions.get(moveOptions.size() - 1);
-            boardService.movePlayerToField(playerId, targetIndex);
-            currentField = boardService.getPlayerField(playerId); // Aktualisiere das Feld nach der Bewegung
         }
         
-        // Hole die nächsten möglichen Felder nach der Bewegung
-        List<Integer> nextPossibleFieldIndices = new ArrayList<>();
-        for (Field nextField : boardService.getValidNextFields(playerId)) {
-            nextPossibleFieldIndices.add(nextField.getIndex());
-        }
+        // MovementService zum Bewegen des Spielers mit Würfel verwenden
+        MoveMessage moveMessage = movementService.movePlayerWithDiceRoll(playerId, steps, currentFieldOverride);
         
-        // Erstelle die Nachricht für den Client
-        MoveMessage moveMessage = new MoveMessage(
-                message.getPlayerName(),
-                currentField.getIndex(),
-                currentField.getType(),
-                LocalDateTime.now().toString(),
-                nextPossibleFieldIndices
-        );
-
-        messagingTemplate.convertAndSend("/topic/game", moveMessage);
-
-        Lobby lobby = LobbyService.getInstance().getLobby(message.getGameId());
-        if (lobby != null && lobby.isStarted()) {
-            GameLogic logic = lobby.getGameLogic();
-            if (logic != null) {
-                Player player = logic.getPlayerByName(message.getPlayerName());
-                logic.performTurn(player, steps);
-            }
-        }
-
-    }
-
-    @MessageMapping("/lobby")
+        messagingTemplate.convertAndSend("/topic/game", moveMessage);        // Spiellogik mit GameService aktualisieren
+        gameService.performGameTurn(message.getGameId(), message.getPlayerName(), steps);
+    }    @MessageMapping("/lobby")
     public void handleLobby(@Payload StompMessage message) {
-        String action = message.getAction();
-        String gameId = message.getGameId();
-        String content;
-
-        if (action == null) {
-            content = "❌ Keine Aktion angegeben.";
-        } else {
-            switch (action) {
-                case "createLobby":
-                    content = "🆕 Lobby [" + gameId + "] von " + message.getPlayerName() + " erstellt.";
-                    break;
-                case "joinLobby":
-                    content = "✅ " + message.getPlayerName() + " ist Lobby [" + gameId + "] beigetreten.";
-                    break;
-                default:
-                    content = "Unbekannte Lobby-Aktion.";
-                    break;
-            }
-        }
-
-        System.out.println("[LOBBY] [" + gameId + "] " + message.getPlayerName() + ": " + content);
-
-        messagingTemplate.convertAndSend(
-                "/topic/lobby",
-                new OutputMessage(message.getPlayerName(), content, LocalDateTime.now().toString())
+        // LobbyManagementService verwenden, um die Lobby-Anfrage zu verarbeiten
+        OutputMessage outputMessage = lobbyManagementService.handleLobbyAction(
+                message.getAction(),
+                message.getGameId(),
+                message.getPlayerName()
         );
-    }
-
-    @MessageMapping("/lobby/create")
+        
+        messagingTemplate.convertAndSend("/topic/lobby", outputMessage);
+    }    @MessageMapping("/lobby/create")
     @SendTo("/queue/lobby/created")
     public void handleLobbyCreate(@Payload LobbyRequestMessage request, Principal principal){
-        //Spieler sollte schon in PlayerService enthalten sein
-        Lobby lobby = lobbyService.createLobby(playerService.getPlayerById(request.getPlayerName()));
-        System.out.println("Lobbyid: " + lobby.getId() + " " + request.getPlayerName() + " " + principal.getName());
-        LobbyResponseMessage response = new LobbyResponseMessage(lobby.getId(), request.getPlayerName(), true, null);
+        // LobbyManagementService verwenden, um eine neue Lobby zu erstellen
+        LobbyResponseMessage response = lobbyManagementService.createLobby(request, principal);
+        
         messagingTemplate.convertAndSendToUser(
                 request.getPlayerName(),   // = Principal.getName(), wenn korrekt verwendet
                 "/queue/lobby/created",    // Ziel für den Client
                 response
         );
         System.out.println("Nachricht gesendet");
-    }
-
-    @MessageMapping("/{lobbyid}/join")
+    }    @MessageMapping("/{lobbyid}/join")
     @SendTo("/topic/{lobbyid}")
     public void handlePlayerJoin(@DestinationVariable String lobbyid, @Payload LobbyRequestMessage request){
-        LobbyResponseMessage response = null;
-        try {
-            Lobby lobby = lobbyService.getLobby(lobbyid);
-            lobby.addPlayer(playerService.getPlayerById(request.getPlayerName()));
-            response = new LobbyResponseMessage(lobbyid, request.getPlayerName(), true, "Spieler " + request.getPlayerName() + " ist erfolgreich beigetreten");
-            System.out.println("Spieler" + request.getPlayerName() + " ist beigetreten");
-
-        } catch (Exception e) {
-            response = new LobbyResponseMessage(lobbyid, request.getPlayerName(), false, e.getMessage());        }finally {
-            String destination = String.format("/topic/%s", lobbyid);
-            if (response != null) {
-                messagingTemplate.convertAndSend(destination, response);
-            }
-        }
-    }
-
-    @MessageMapping("/{lobbyid}/leave")
+        // LobbyManagementService verwenden, um einen Spieler einer Lobby beitreten zu lassen
+        LobbyResponseMessage response = lobbyManagementService.joinLobby(lobbyid, request);
+        
+        String destination = String.format("/topic/%s", lobbyid);
+        messagingTemplate.convertAndSend(destination, response);
+    }    @MessageMapping("/{lobbyid}/leave")
     public void handlePlayerLeave(@DestinationVariable String lobbyid, @Payload LobbyRequestMessage request){
-        Lobby lobby = lobbyService.getLobby(lobbyid);
-        lobby.removePlayer(playerService.getPlayerById(request.getPlayerName()));
+        // LobbyManagementService verwenden, um einen Spieler aus einer Lobby zu entfernen
+        lobbyManagementService.leaveLobby(lobbyid, request);
     }
 
     @MessageMapping("/chat")
     public void handleChat(@Payload StompMessage message) {
         messagingTemplate.convertAndSend("/topic/chat",
                 new OutputMessage(message.getPlayerName(), message.getMessageText(), LocalDateTime.now().toString()));
-    }
-
-    @MessageMapping("/game/start/{gameId}")
+    }    @MessageMapping("/game/start/{gameId}")
     public void handleGameStart(@DestinationVariable int gameId) {
-        // 1. Repository vorbereiten
-        jobService.getOrCreateRepository(gameId);
-
-        // 2. Lobby und Spieler holen
-        Lobby lobby = LobbyService.getInstance().getLobby(Integer.toString(gameId));
-        if (lobby == null || lobby.isStarted()) {
-            System.out.println("[WARNUNG] Lobby nicht gefunden oder bereits gestartet: " + gameId);
-            return;
+        // GameService für die Spiellogik verwenden
+        boolean started = gameService.startGame(gameId);
+        
+        // Falls erfolgreich, sende Nachricht an alle
+        if (started) {
+            // Anzahl der Spieler über GameService ermitteln
+            int playerCount = gameService.getPlayerCount(Integer.toString(gameId));
+            messagingTemplate.convertAndSend(
+                    "/topic/game/" + gameId + "/status",
+                    "Das Spiel wurde gestartet. Spieleranzahl: " + playerCount
+            );
         }
-
-        // 3. GameLogic erzeugen
-        GameLogic gameLogic = new GameLogic();
-        gameLogic.setGameId(gameId);
-        gameLogic.setJobService(jobService);
-        gameLogic.setBoardService(boardService);
-        gameLogic.setGameController(new GameController(gameLogic, messagingTemplate));
-        gameLogic.setTurnManager(new PlayerTurnManager(gameLogic));
-
-        for (Player player : lobby.getPlayers()) {
-            gameLogic.registerPlayer(player.getId());
-        }
-
-        gameLogic.prepareGameStart();
-        lobby.setStarted(true);
-        lobby.setGameLogic(gameLogic);
-
-
-        // 4. Optional: Nachricht an alle senden
-        messagingTemplate.convertAndSend(
-                "/topic/game/" + gameId + "/status",
-                "Das Spiel wurde gestartet. Spieleranzahl: " + lobby.getPlayers().size()
-        );
-
-    }
-
-    @MessageMapping("/game/end/{gameId}")
+    }@MessageMapping("/game/end/{gameId}")
     @SendTo("/topic/game/{gameId}/status")
     public OutputMessage handleGameEnd(@DestinationVariable String gameId) {
-        Lobby lobby = LobbyService.getInstance().getLobby(gameId);
-        if (lobby == null || !lobby.isStarted()) {
-            return new OutputMessage("System", "Spiel nicht gefunden oder nicht gestartet", now());
-        }
-
-        GameLogic game = lobby.getGameLogic();
-        if (game == null) {
-            return new OutputMessage("System", "Keine Spielinstanz vorhanden", now());
-        }
-
-        game.endGame(); // ❗ Dies ruft die finale Auswertung auf
-        lobby.setStarted(false); // Spiel wird beendet
-
-        return new OutputMessage("System", "Spiel wurde manuell beendet!", now());
+        // GameService für das Beenden des Spiels verwenden
+        String message = gameService.endGame(gameId);
+        return new OutputMessage("System", message, now());
     }
 
     private String now() {
         return LocalDateTime.now().toString();
     }
 
-
-
     @MessageMapping("/jobs/{gameId}/{playerName}/request")
     public void handleJobRequest(@DestinationVariable int gameId,
                                  @DestinationVariable String playerName,
                                  @Payload JobRequestMessage msg) {
-        boolean hasDegree = msg.hasDegree();
-        var repo = jobService.getOrCreateRepository(gameId);
-        List<Job> jobsToSend = new ArrayList<>();
-
-        Optional<Job> current = repo.getCurrentJobForPlayer(playerName);
-        if (current.isPresent()) {
-            jobsToSend.add(current.get());
-            List<Job> random = repo.getRandomAvailableJobs(hasDegree, 1);
-            random.remove(current.get());
-            jobsToSend.addAll(random);
-        } else {
-            jobsToSend = repo.getRandomAvailableJobs(hasDegree, 2);
-        }
-
-        // Debug-Ausgabe: welche beiden Jobs gleich verschickt werden
-        System.out.println("[INFO] Jobs an Spieler " + playerName + " für Spiel " + gameId + ": " +
-                jobsToSend.stream()
-                        .map(j -> j.getJobId() + "=\"" + j.getTitle() + "\"")
-                        .collect(Collectors.joining(", "))
-        );
-
-        List<JobMessage> dtos = jobsToSend.stream()
-                .map(j -> new JobMessage(
-                        j.getJobId(),
-                        j.getTitle(),
-                        j.getSalary(),
-                        j.getBonusSalary(),
-                        j.isRequiresDegree(),
-                        j.isTaken(),
-                        gameId
-                ))
-                .collect(Collectors.toList());
-
-        String dest = String.format("/topic/%d/jobs/%s", gameId, playerName);
-        messagingTemplate.convertAndSend(dest, dtos);
-    }
-
-    @MessageMapping("/jobs/{gameId}/{playerName}/select")
+        // JobWrapperService verwenden, um die Job-Anfrage zu verarbeiten
+        jobWrapperService.handleJobRequest(gameId, playerName, msg.hasDegree());
+    }    @MessageMapping("/jobs/{gameId}/{playerName}/select")
     public void handleJobSelection(@DestinationVariable int gameId,
                                    @DestinationVariable String playerName,
                                    @Payload JobMessage msg) {
-
-        var repo = jobService.getOrCreateRepository(gameId);
-        Optional<Job> currentOpt = repo.getCurrentJobForPlayer(playerName);
-
-        if (currentOpt.isPresent() && currentOpt.get().getJobId() == msg.getJobId()) {
-            return;
-        }
-
-        repo.findJobById(msg.getJobId())
-                .ifPresent(job -> repo.assignJobToPlayer(playerName, job));
+        // JobWrapperService verwenden, um die Job-Auswahl zu verarbeiten
+        jobWrapperService.handleJobSelection(gameId, playerName, msg.getJobId());
     }
 }

@@ -21,15 +21,12 @@ public class BoardDataTest {
 
     @Test
     public void testGetBoard() {
-        // Action
         List<Field> board = boardData.getBoard();
-        
-        // Assertion
+
         assertNotNull(board, "Das Board sollte nicht null sein");
         assertFalse(board.isEmpty(), "Das Board sollte nicht leer sein");
-        assertEquals(20, board.size(), "Das Board sollte 20 Felder enthalten");
-        
-        // Überprüfe, ob die Liste unveränderbar ist
+        assertEquals(27, board.size(), "Das Board sollte 27 Felder enthalten");
+
         assertThrows(UnsupportedOperationException.class, () -> board.add(null),
                 "Die zurückgegebene Liste sollte unveränderbar sein");
     }
@@ -66,16 +63,17 @@ public class BoardDataTest {
         assertEquals(boardData.getFieldByIndex(1).getIndex(), staticField.getIndex(), 
                 "Statische und Instanzmethode sollten das gleiche Feld zurückgeben");
     }
-    
+
     @Test
     public void testBoardStructure() {
-        // Überprüfen, ob die Felder korrekt miteinander verbunden sind
         Field field1 = boardData.getFieldByIndex(1);
         assertNotNull(field1, "Feld 1 sollte existieren");
-        assertTrue(field1.getNextFields().contains(2), "Feld 1 sollte zu Feld 2 führen");
-        
+        assertTrue(field1.getNextFields().contains(2),
+                "Feld 1 sollte zu Feld 2 führen (bzw. enthält mehrere Pfade inkl. 2)");
+
         Field field18 = boardData.getFieldByIndex(18);
-        assertNotNull(field18, "Feld 18 (Uni-Start-Feld) sollte existieren");
-        assertTrue(field18.getNextFields().contains(19), "Feld 18 sollte zu Feld 19 führen");
+        assertNotNull(field18, "Feld 18 sollte existieren");
+        assertTrue(field18.getNextFields().contains(20),
+                "Feld 18 sollte zu Feld 20 führen");
     }
 }
