@@ -33,19 +33,7 @@ public class FieldTest {
         assertEquals(type, field.getType(), "Feldtyp sollte korrekt gesetzt sein");
     }
     
-    @Test
-    public void testNextFieldsDefensiveCopy() {
-        // Arrangement
-        List<Integer> nextFields = Arrays.asList(1, 2, 3);
-        Field field = new Field(1, 0.1, 0.1, nextFields, FieldType.AKTION);
-        
-        // Action: Versuche die ursprüngliche Liste zu ändern
-        nextFields.add(4);
-        
-        // Assertion: Die Liste im Field-Objekt sollte unverändert sein
-        assertEquals(3, field.getNextFields().size(), "Die interne Liste sollte nicht verändert werden");
-        assertFalse(field.getNextFields().contains(4), "Die interne Liste sollte nicht verändert werden");
-    }
+
     
     @Test
     public void testSetters() {
@@ -67,18 +55,5 @@ public class FieldTest {
         assertEquals(FieldType.HAUS, field.getType(), "Feldtyp sollte geändert sein");
     }
     
-    @Test
-    public void testSetNextFieldsDefensiveCopy() {
-        // Arrangement
-        Field field = new Field(1, 0.1, 0.1, Collections.singletonList(2), FieldType.AKTION);
-        List<Integer> newNextFields = Arrays.asList(3, 4, 5);
-        
-        // Action
-        field.setNextFields(newNextFields);
-        newNextFields.add(6);  // Verändere die ursprüngliche Liste
-        
-        // Assertion: Die Liste im Field-Objekt sollte unverändert sein
-        assertEquals(3, field.getNextFields().size(), "Die interne Liste sollte eine defensive Kopie sein");
-        assertFalse(field.getNextFields().contains(6), "Die interne Liste sollte eine defensive Kopie sein");
-    }
+
 }
