@@ -1,6 +1,7 @@
 package at.aau.serg.websocketserver.session.house;
 
 import at.aau.serg.websocketserver.messaging.dtos.HouseMessage;
+import at.aau.serg.websocketserver.player.Player;
 import at.aau.serg.websocketserver.player.PlayerService;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
@@ -63,20 +64,22 @@ public class HouseService {
                 messages.add(mapToDto(h, gameId));
             }
         } else {
-            repo.getCurrentHouseForPlayer(playerId)
-                    .ifPresent(h -> messages.add(mapToDto(h, gameId)));
+            List<House> owned = repo.getHousesForPlayer(playerId);
+            for (House h : owned) {
+                messages.add(mapToDto(h, gameId));
+            }
         }
 
         return messages;
     }
 
+
     /**
      * Finalisiert den Kauf oder Verkauf:
-     *   - erzeugt intern einen colorValue (1–6)
      *   - verkauft, wenn Spieler das Haus besitzt; andernfalls kauft er es
      */
     public HouseMessage finalizeHouseAction(int gameId,
-                                            String playerId,
+                                            String playerName,
                                             int houseId) {
         HouseRepository repo = getOrCreateRepository(gameId);
         House house = repo.findHouseById(houseId)
@@ -84,13 +87,11 @@ public class HouseService {
                         "Haus nicht gefunden: " + houseId));
 
         House result;
-
-        if (house.isTaken() && playerId.equals(house.getAssignedToPlayerName())) {
-            //ToDo: Methodenaufruf für Wheel of Fortune
-            //int colorValue = ???
-            result = sellHouse(gameId, playerId, /*colorValue*/ 1 );
+        if (house.isTaken() && playerName.equals(house.getAssignedToPlayerName())) {
+            // ToDo: colorValue aus Wheel of Fortune einsetzen, hier als Platzhalter 1
+            result = sellHouse(gameId, playerName, houseId, 1);
         } else {
-            result = buyHouse(gameId, playerId, houseId);
+            result = buyHouse(gameId, playerName, houseId);
         }
 
         return mapToDto(result, gameId);
@@ -105,25 +106,40 @@ public class HouseService {
         if (house.isTaken()) {
             throw new IllegalStateException("Haus bereits vergeben: " + houseId);
         }
+        // Abbuchung vom Spieler
+        // playerService.removeMoneyFromPlayer(playerId, price);
+
         repo.assignHouseToPlayer(playerId, house);
         return house;
     }
 
-    /** Domänen-Logik: Haus verkaufen */
-    public House sellHouse(int gameId, String playerId, int colorValue) {
+    public House sellHouse(int gameId, String playerId, int houseId, int colorValue) {
         HouseRepository repo = getOrCreateRepository(gameId);
-        House house = repo.getCurrentHouseForPlayer(playerId)
+
+        // Explizites Haus anhand seiner ID holen
+        House house = repo.findHouseById(houseId)
                 .orElseThrow(() -> new IllegalStateException(
-                        "Kein Haus zu verkaufen für Spieler " + playerId));
+                        "Haus nicht gefunden: " + houseId));
+
+        // Sicherstellen, dass der Spieler tatsächlich dieses Haus besitzt
+        if (!playerId.equals(house.getAssignedToPlayerName())) {
+            throw new IllegalStateException(
+                    "Spieler " + playerId + " besitzt nicht das Haus-ID " + houseId);
+        }
+
+        // Verkaufspreis berechnen
         boolean isBlack = (colorValue % 2 != 0);
         int price = isBlack
                 ? house.getVerkaufspreisSchwarz()
                 : house.getVerkaufspreisRot();
-        playerService.addMoneyToPlayer(playerId, price);
+
+        // Auszahlung an den Spieler (bezogen auf PlayerService)
+        //playerService.addMoneyToPlayer(playerId, price);
+
+        // Haus freigeben
         repo.releaseHouse(house);
         return house;
     }
-
 
     /** Helfer: konvertiert Domain → DTO */
     private HouseMessage mapToDto(House house, int gameId) {

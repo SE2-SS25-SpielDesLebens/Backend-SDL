@@ -356,14 +356,6 @@ public class WebSocketBrokerController {
         } else {
             jobsToSend = repo.getRandomAvailableJobs(hasDegree, 2);
         }
-
-        // Debug-Ausgabe: welche beiden Jobs gleich verschickt werden
-        System.out.println("[INFO] Jobs an Spieler " + playerName + " für Spiel " + gameId + ": " +
-                jobsToSend.stream()
-                        .map(j -> j.getJobId() + "=\"" + j.getTitle() + "\"")
-                        .collect(Collectors.joining(", "))
-        );
-
         List<JobMessage> dtos = jobsToSend.stream()
                 .map(j -> new JobMessage(
                         j.getJobId(),
@@ -397,45 +389,61 @@ public class WebSocketBrokerController {
     }
     /**
      * 1) Auswahl-Request:
-     *    Pfad enthält gameId und playerID, damit nur der richtige Client die Nachricht bekommt.
+     *    Pfad enthält gameId und playerName, damit nur der richtige Client die Nachricht bekommt.
      */
-    @MessageMapping("/houses/{gameId}/{playerID}/choose")
+    @MessageMapping("/houses/{gameId}/{playerName}/choose")
     public void handleHouseAction(@DestinationVariable int gameId,
-                                  @DestinationVariable String playerID,
+                                  @DestinationVariable String playerName,
                                   @Payload HouseBuyElseSellMessage msg) {
         List<HouseMessage> options = houseService.handleHouseAction(
                 gameId,
-                playerID,
+                playerName,
                 msg.isBuyElseSell()
         );
 
         String dest = String.format("/topic/%d/houses/%s/options",
                 gameId,
-                playerID
+                playerName
         );
         messagingTemplate.convertAndSend(dest, options);
     }
 
     /**
      * 2) Final-Request:
-     *    Pfad enthält gameId und playerID, colorValue wird intern gerollt.
+     *    Pfad enthält gameName und playerID, colorValue wird intern gerollt.
      */
-    @MessageMapping("/houses/{gameId}/{playerID}/finalize")
+    @MessageMapping("/houses/{gameId}/{playerName}/finalize")
     public void finalizeHouseAction(@DestinationVariable int gameId,
-                                    @DestinationVariable String playerID,
+                                    @DestinationVariable String playerName,
                                     @Payload HouseMessage houseMsg) {
         // Aufruf auf der Bean-Instanz, nicht statisch
         HouseMessage confirmation = houseService.finalizeHouseAction(
                 gameId,
-                playerID,
+                playerName,
                 houseMsg.getHouseId()
         );
 
         String dest = String.format("/topic/%d/houses/%s/confirmation",
                 gameId,
-                playerID
+                playerName
         );
         messagingTemplate.convertAndSend(dest, confirmation);
+    }
+    @MessageMapping("/game/createHouseRepo/{gameId}")
+    public void handleHouseRepoCreation(@DestinationVariable int gameId) {
+        // Erstelle (oder liefere zurück) das House-Repository
+        houseService.getOrCreateRepository(gameId);
+
+        // Optional: sende eine Statusmeldung an alle Clients
+        String destination = "/topic/game/" + gameId + "/status";
+        messagingTemplate.convertAndSend(
+                destination,
+                new OutputMessage(
+                        "System",
+                        "House-Repository für Spiel " + gameId + " wurde angelegt.",
+                        now()
+                )
+        );
     }
 
 }

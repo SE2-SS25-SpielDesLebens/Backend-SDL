@@ -42,12 +42,13 @@ public class HouseRepository {
     }
 
     /**
-     * Gibt das aktuelle Haus eines Spielers zurück (falls vorhanden).
+     * Gibt alle Häuser eines Spielers zurück (falls vorhanden).
      */
-    public Optional<House> getCurrentHouseForPlayer(String playerName) {
-        return houses.stream()
+    public List<House> getHousesForPlayer(String playerName) {
+        List<House> result = houses.stream()
                 .filter(h -> playerName.equals(h.getAssignedToPlayerName()))
-                .findFirst();
+                .collect(Collectors.toList());
+        return result;
     }
 
     /**
@@ -59,7 +60,6 @@ public class HouseRepository {
                 .collect(Collectors.toList());
 
         Collections.shuffle(available, SECURE_RANDOM);
-
         return available.stream()
                 .limit(count)
                 .collect(Collectors.toList());
@@ -75,10 +75,9 @@ public class HouseRepository {
     }
 
     /**
-     * Weist einem Spieler ein neues Haus zu und gibt ggf. das alte frei.
+     * Weist einem Spieler ein neues Haus zu und gibt ggf. alle alten frei.
      */
     public void assignHouseToPlayer(String playerName, House newHouse) {
-        getCurrentHouseForPlayer(playerName).ifPresent(House::releaseHouse);
         newHouse.assignHouseTo(playerName);
     }
 

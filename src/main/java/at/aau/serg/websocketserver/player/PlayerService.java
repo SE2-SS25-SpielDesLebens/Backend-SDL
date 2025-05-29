@@ -101,30 +101,31 @@ public class PlayerService {
         return true;
     }
 
-    public boolean addMoneyToPlayer(String playerId, int amount) {
-        Player player = getPlayerById(playerId);
+    public boolean addMoneyToPlayer(String playerName, int amount) {
+        Player player = getPlayerById(playerName);
         if (player == null) {
-            throw new IllegalArgumentException("Spieler mit ID " + playerId + " nicht gefunden.");
+            throw new IllegalArgumentException("Spieler mit Name " + playerName + " nicht gefunden.");
         }
         player.setMoney(player.getMoney() + amount);
         updatePlayer(player.getId(), player);
-        System.out.println("💰 Spieler " + player.getId() + " hat " + amount + "€ erhalten. Neuer Kontostand: " + player.getMoney() + "€.");
+        System.out.println("💰 Spieler \"" + playerName + "\" hat " + amount + "€ erhalten. Neuer Kontostand: " + player.getMoney() + "€.");
         return true;
     }
 
-    public boolean removeMoneyFromPlayer(String playerId, int amount) {
-        Player player = getPlayerById(playerId);
+    public boolean removeMoneyFromPlayer(String playerName, int amount) {
+        Player player = getPlayerById(playerName);
         if (player == null) {
-            throw new IllegalArgumentException("Spieler mit ID " + playerId + " nicht gefunden.");
+            throw new IllegalArgumentException("Spieler mit Name " + playerName + " nicht gefunden.");
         }
         if (player.getMoney() < amount) {
-            throw new IllegalArgumentException("Nicht genug Geld. Aktueller Kontostand: " + player.getMoney() + "€.");
+            throw new IllegalArgumentException("Nicht genug Geld für Spieler \"" + playerName + "\". Aktueller Kontostand: " + player.getMoney() + "€.");
         }
         player.setMoney(player.getMoney() - amount);
         updatePlayer(player.getId(), player);
-        System.out.println("💸 Spieler " + player.getId() + " hat " + amount + "€ ausgegeben. Neuer Kontostand: " + player.getMoney() + "€.");
+        System.out.println("💸 Spieler \"" + playerName + "\" hat " + amount + "€ ausgegeben. Neuer Kontostand: " + player.getMoney() + "€.");
         return true;
     }
+
 
 }
 
