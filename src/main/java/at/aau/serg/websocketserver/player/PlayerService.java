@@ -15,8 +15,8 @@ public class PlayerService {
         players = new HashMap<>();
     }
 
-    public static synchronized PlayerService getInstance(){
-        if(playerService == null){
+    public static synchronized PlayerService getInstance() {
+        if (playerService == null) {
             playerService = new PlayerService();
         }
         return playerService;
@@ -26,80 +26,66 @@ public class PlayerService {
         return players.get(id);
     }
 
-    //TODO: anpassen
-    public boolean updatePlayer(String id, Player updatedPlayer) {
-        /*for (int i = 0; i < players.size(); i++) {
-            if (players.get(i).getId().equals(id)) {
-                players.put(i, updatedPlayer);
-                return true;
-            }
-        }*/
-        return false;
-    }
-
     public Player addPlayer(String id) {
         Player newPlayer = new Player(id);
         players.put(id, newPlayer);
-        System.out.println("Neuer Spieler hinzugefügt: " + newPlayer.getId() + " mit ID " + newPlayer.getId());
+        System.out.println("Neuer Spieler hinzugefügt: " + newPlayer.getId());
         return newPlayer;
     }
 
-    public boolean addChildToPlayer(String playerId) {
+    public boolean incrementCounterForPlayer(String playerId, String eventType) {
         Player player = getPlayerById(playerId);
 
         if (player == null) {
             throw new IllegalArgumentException("Spieler mit ID " + playerId + " nicht gefunden.");
         }
 
-        if (player.getChildren() >= 4) {
-            throw new IllegalArgumentException("Ein Spieler darf maximal 4 Kinder haben.");
+        switch (eventType.toLowerCase()) {
+            case "heirat":
+                if (player.isMarried()) {
+                    throw new IllegalArgumentException("💍 Spieler ist bereits verheiratet.");
+                }
+                player.marry();
+                System.out.println("💍 Spieler " + player.getId() + " ist jetzt verheiratet.");
+                break;
+
+            case "kind":
+                if (player.canAddPassengers(1)) {
+                    throw new IllegalArgumentException("🚗 Kein Platz mehr im Auto für weitere Kinder.");
+                }
+                player.addPassenger(1);
+                System.out.println("👶 Spieler " + player.getId() + " hat ein Kind. Plätze im Auto: " + player.getAutoPassengers());
+                break;
+
+            case "zwilling":
+                if (player.canAddPassengers(2)) {
+                    throw new IllegalArgumentException("🚗 Kein Platz mehr im Auto für Zwillinge.");
+                }
+                player.addPassenger(2);
+                System.out.println("👶👶 Spieler " + player.getId() + " hat Zwillinge. Plätze im Auto: " + player.getAutoPassengers());
+                break;
+
+            case "freund":
+                if (player.canAddPassengers(1)) {
+                    throw new IllegalArgumentException("🚗 Kein Platz mehr im Auto für einen Freund.");
+                }
+                player.addPassenger(1);
+                System.out.println("🤝 Spieler " + player.getId() + " hat einen Freund. Plätze im Auto: " + player.getAutoPassengers());
+                break;
+
+            case "tier":
+                if (player.canAddPassengers(1)) {
+                    throw new IllegalArgumentException("🚗 Kein Platz mehr im Auto für ein Haustier.");
+                }
+                player.addPassenger(1);
+                System.out.println("🐶 Spieler " + player.getId() + " hat ein Haustier. Plätze im Auto: " + player.getAutoPassengers());
+                break;
+
+            default:
+                throw new IllegalArgumentException("❌ Unbekanntes Ereignis: " + eventType);
         }
 
-        player.setChildrenCount(player.getChildren()+1);
-
-        //updatePlayer(player.getId(), player);
-        System.out.println("👶 Spieler " + player.getId() + " hat nun " + player.getChildren() + " Kind(er).");
-        return true;
-    }
-
-    public boolean marryPlayer(String playerId) {
-        Player player = getPlayerById(playerId);
-
-        if (player==null) {
-            throw new IllegalArgumentException("Spieler mit ID " + playerId + " nicht gefunden.");
-        }
-
-        if (player.isMarried()) {
-            throw new IllegalArgumentException("Spieler ist bereits verheiratet.");
-        }
-
-        player.setMarried(true);
-
-        updatePlayer(player.getId(), player);
-        System.out.println("💍 Spieler " + player.getId() + " ist jetzt verheiratet.");
-        return true;
-    }
-
-    public boolean investForPlayer(String playerId) {
-        Player player = getPlayerById(playerId);
-        if (player == null) {
-            throw new IllegalArgumentException("Spieler nicht gefunden.");
-        }
-
-
-        int investAmount = 20000;
-        if (player.getMoney() < investAmount) {
-            throw new IllegalArgumentException("Nicht genug Geld für eine Investition.");
-        }
-
-
-        player.setMoney(player.getMoney() - investAmount);
-        player.setInvestments(player.getInvestments() + investAmount);
-
-        updatePlayer(player.getId(), player);
-        System.out.println("📈 Spieler " + player.getId() + " hat 20.000€ investiert.");
         return true;
     }
 
 }
-

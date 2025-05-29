@@ -8,9 +8,7 @@ import lombok.Setter;
 import java.util.HashMap;
 import java.util.Map;
 
-
 @Setter
-
 public class Player {
     private final String id;
     private int money;
@@ -19,14 +17,14 @@ public class Player {
     private int salary;
     private int investments;
     private Job job;
-    private Map<Integer,Integer> houseID;//Vorläufige houseID wird ersetzt wenn richtige houseID implementierung da ist
+    private Map<Integer, Integer> houseID;
     @Getter
     private boolean isMarried;
     private int childrenCount;
     @Getter
     private boolean isRetired;
     @Getter
-    private String carColor;//eventuell auf enum ändern
+    private String carColor;
     @Getter
     private boolean isActive;
     @Getter
@@ -37,9 +35,8 @@ public class Player {
     private int investmentPayout;
     @Setter
     private boolean mustRepeatExam = false;
-
-
-
+    @Getter
+    private int autoPassengers = 0; // Max 5 weitere erlaubt
 
 
     public Player(String id) {
@@ -55,10 +52,7 @@ public class Player {
         this.houseID = new HashMap<>();
     }
 
-
-
-
-    public void assignJob(Job newJob){
+    public void assignJob(Job newJob) {
         job = newJob;
     }
 
@@ -69,8 +63,6 @@ public class Player {
     public void removeMoney(int amount) {
         money -= amount;
     }
-
-
 
     public void addDebt() {
         debts += 1;
@@ -97,33 +89,24 @@ public class Player {
     }
 
     public void addHouse(int houseId, int houseValue) {
-        this.houseID.put(houseId, houseValue);  // Fügt das Haus zur Map hinzu
+        this.houseID.put(houseId, houseValue);
     }
-
-
 
     public void clearJob() {
         this.job = null;
     }
 
-
-
     public void removeHouse(int houseId) {
         this.houseID.remove(houseId);
     }
-
-
 
     public void marry() {
         this.isMarried = true;
     }
 
-
-
     public void addChild() {
         this.childrenCount++;
     }
-
 
 
     public void retire() {
@@ -131,6 +114,15 @@ public class Player {
         this.isActive = false;
     }
 
+    public boolean canAddPassengers(int count) {
+        return autoPassengers + count > 5;
+    }
+
+    public void addPassenger(int count) {
+        this.autoPassengers += count;
+    }
+
+    // ✅ JSON-Properties (z. B. für WebSocket oder REST-Ausgabe)
     @JsonProperty("id") public String getId() { return id; }
     @JsonProperty("money") public int getMoney() { return money; }
     @JsonProperty("investments") public int getInvestments() { return investments; }
@@ -139,8 +131,7 @@ public class Player {
     @JsonProperty("education") public boolean getEducation() { return university; }
     @JsonProperty("relationship") public boolean getRelationship() { return isMarried; }
     @JsonProperty("jobId") public Job getJobId() { return job; }
-    @JsonProperty("houseId") public Map<Integer,Integer> getHouseId() { return houseID; }
-    @JsonProperty("fieldId") public int getFieldID(){return fieldId;}
+    @JsonProperty("houseId") public Map<Integer, Integer> getHouseId() { return houseID; }
+    @JsonProperty("fieldId") public int getFieldID() { return fieldId; }
+
 }
-
-
