@@ -167,7 +167,8 @@ public class WebSocketBrokerController {
             }
         }
 
-        boardService.movePlayer(playerId, steps);                Field currentField = boardService.getPlayerField(playerId);
+        boardService.movePlayer(playerId, steps);
+        Field currentField = boardService.getPlayerField(playerId);
         List<Integer> nextPossibleFieldIndices = new ArrayList<>();
         for (Field nextField : boardService.getValidNextFields(playerId)) {
             nextPossibleFieldIndices.add(nextField.getIndex());
@@ -194,41 +195,12 @@ public class WebSocketBrokerController {
 
     }
 
-    @MessageMapping("/lobby")
-    public void handleLobby(@Payload StompMessage message) {
-        String action = message.getAction();
-        String gameId = message.getGameId();
-        String content;
-
-        if (action == null) {
-            content = "❌ Keine Aktion angegeben.";
-        } else {
-            switch (action) {
-                case "createLobby":
-                    content = "🆕 Lobby [" + gameId + "] von " + message.getPlayerName() + " erstellt.";
-                    break;
-                case "joinLobby":
-                    content = "✅ " + message.getPlayerName() + " ist Lobby [" + gameId + "] beigetreten.";
-                    break;
-                default:
-                    content = "Unbekannte Lobby-Aktion.";
-                    break;
-            }
-        }
-
-        System.out.println("[LOBBY] [" + gameId + "] " + message.getPlayerName() + ": " + content);
-
-        messagingTemplate.convertAndSend(
-                "/topic/lobby",
-                new OutputMessage(message.getPlayerName(), content, LocalDateTime.now().toString())
-        );
-    }
-
     @MessageMapping("/lobby/create")
     @SendTo("/queue/lobby/created")
-    public void handleLobbyCreate(@Payload LobbyRequestMessage request, Principal principal){
+    public void handleLobbyCreate(@Payload LobbyRequestMessage request, Principal principal) {
         //Spieler sollte schon in PlayerService enthalten sein
         Lobby lobby = lobbyService.createLobby(playerService.getPlayerById(request.getPlayerName()));
+        System.out.println("Host: " + playerService.getPlayerById(request.getPlayerName()));
         System.out.println("Lobbyid: " + lobby.getId() + " " + request.getPlayerName() + " " + principal.getName());
         LobbyResponseMessage response = new LobbyResponseMessage(lobby.getId(), request.getPlayerName(), true, null);
         messagingTemplate.convertAndSendToUser(
@@ -236,32 +208,52 @@ public class WebSocketBrokerController {
                 "/queue/lobby/created",    // Ziel für den Client
                 response
         );
+        sendLobbyUpdates(lobby.getId());
         System.out.println("Nachricht gesendet");
     }
 
     @MessageMapping("/{lobbyid}/join")
     @SendTo("/topic/{lobbyid}")
-    public void handlePlayerJoin(@DestinationVariable String lobbyid, @Payload LobbyRequestMessage request){
+    public void handlePlayerJoin(@DestinationVariable String lobbyid, @Payload LobbyRequestMessage request) {
         LobbyResponseMessage response = null;
         try {
             Lobby lobby = lobbyService.getLobby(lobbyid);
             lobby.addPlayer(playerService.getPlayerById(request.getPlayerName()));
             response = new LobbyResponseMessage(lobbyid, request.getPlayerName(), true, "Spieler " + request.getPlayerName() + " ist erfolgreich beigetreten");
-            System.out.println("Spieler" + request.getPlayerName() + " ist beigetreten");
+            System.out.println("Spieler " + request.getPlayerName() + " ist beigetreten");
+            System.out.println(lobby.getPlayers().toString());
 
         } catch (Exception e) {
             response = new LobbyResponseMessage(lobbyid, request.getPlayerName(), false, e.getMessage());
-        }finally {
+        } finally {
             String destination = String.format("/topic/%s", lobbyid);
             assert response != null;
             messagingTemplate.convertAndSend(destination, response);
+            System.out.println(response);
+            sendLobbyUpdates(lobbyid);
         }
     }
 
-    @MessageMapping("/{lobbyid}/leave")
-    public void handlePlayerLeave(@DestinationVariable String lobbyid, @Payload LobbyRequestMessage request){
+    @SendTo("/topic/{lobbyid}")
+    public void sendLobbyUpdates(String lobbyid) {
         Lobby lobby = lobbyService.getLobby(lobbyid);
+        String player1 = getPlayerIdSafe(lobby, 0);
+        String player2 = getPlayerIdSafe(lobby, 1);
+        String player3 = getPlayerIdSafe(lobby, 2);
+        String player4 = getPlayerIdSafe(lobby, 3);
+
+        LobbyUpdateMessage message = new LobbyUpdateMessage(player1, player2, player3, player4, lobby.isStarted());
+        System.out.println(message);
+        String destination = String.format("/topic/%s", lobbyid);
+        messagingTemplate.convertAndSend(destination, message);
+    }
+
+    @MessageMapping("/{lobbyid}/leave")
+    public void handlePlayerLeave(@DestinationVariable String lobbyid, @Payload LobbyRequestMessage request) {
+        Lobby lobby = lobbyService.getLobby(lobbyid);
+        System.out.printf("Spieler %s hat die Lobby verlassen", request.getPlayerName());
         lobby.removePlayer(playerService.getPlayerById(request.getPlayerName()));
+        sendLobbyUpdates(lobbyid);
     }
 
     @MessageMapping("/chat")
@@ -331,7 +323,6 @@ public class WebSocketBrokerController {
     }
 
 
-
     @MessageMapping("/jobs/{gameId}/{playerName}/request")
     public void handleJobRequest(@DestinationVariable int gameId,
                                  @DestinationVariable String playerName,
@@ -387,5 +378,23 @@ public class WebSocketBrokerController {
 
         repo.findJobById(msg.getJobId())
                 .ifPresent(job -> repo.assignJobToPlayer(playerName, job));
+    }
+
+    private String getPlayerIdSafe(Lobby lobby, int index) {
+        if (lobby == null || lobby.getPlayers() == null) {
+            return "";
+        }
+
+        List<Player> players = lobby.getPlayers();
+        if (index >= players.size()) {
+            return "";
+        }
+
+        Player player = players.get(index);
+        if (player == null || player.getId() == null) {
+            return "";
+        }
+
+        return player.getId();
     }
 }
