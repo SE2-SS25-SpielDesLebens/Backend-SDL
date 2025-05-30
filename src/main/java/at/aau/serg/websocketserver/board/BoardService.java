@@ -129,6 +129,27 @@ public class BoardService {
         return boardDataProvider.getFieldByIndex(index);
     }
     
+    /**
+     * Aktualisiert die Position eines Spielers auf dem Spielbrett
+     * 
+     * @param playerId ID des Spielers
+     * @param fieldIndex Index des neuen Feldes
+     */
+    public void updatePlayerPosition(String playerId, int fieldIndex) {
+        setPlayerPosition(playerId, fieldIndex);
+    }
+    
+    /**
+     * Aktualisiert die Position eines Spielers auf dem Spielbrett
+     * 
+     * @param playerId ID des Spielers als Int
+     * @param fieldIndex Index des neuen Feldes
+     */
+    public void updatePlayerPosition(int playerId, int fieldIndex) {
+        String playerIdStr = String.valueOf(playerId);
+        updatePlayerPosition(playerIdStr, fieldIndex);
+    }
+    
     // Gibt alle gültigen nächsten Felder für einen Spieler zurück
     public List<Field> getValidNextFields(String playerId) {
         Field currentField = getPlayerField(playerId);

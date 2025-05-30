@@ -79,11 +79,16 @@ public class WebSocketBrokerController {
                         "Job-Repository für Spiel " + gameId + " wurde angelegt.",
                         now()
                 )
-        );
-    }
+        );    }
 
-    @MessageMapping("/move")
-    public void handleMove(StompMessage message) {
+    /**
+     * Diese Methode wurde entfernt und mit der Implementation im MoveHandler ersetzt,
+     * um doppelte MessageMapping-Definitionen zu vermeiden.
+     * 
+     * @see at.aau.serg.websocketserver.websocket.broker.MoveHandler#handleMove(StompMessage)
+     */
+    // @MessageMapping("/move") - Entfernt wegen Konflikt mit MoveHandler
+    public void handleLegacyMove(StompMessage message) {
         int playerId;
         try {
             playerId = Integer.parseInt(message.getPlayerName()); // Annahme: playerName = ID
