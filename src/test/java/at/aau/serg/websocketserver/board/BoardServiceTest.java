@@ -2,230 +2,222 @@ package at.aau.serg.websocketserver.board;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-import java.util.List;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 /**
- * Testet die BoardService-Klasse, die für die Verwaltung des Spielbretts und
- * der Spielerbewegungen zuständig ist.
+ * Testklasse für den BoardService, die zeigt, wie man mit Mockito-Mocks testen kann.
  */
 public class BoardServiceTest {
-    
+
+    @Mock
+    private BoardDataProvider mockBoardDataProvider;
+
     private BoardService boardService;
-    
+    private List<Field> mockFields;
+
     @BeforeEach
-    void setUp() {
-        // Erstelle eine neue BoardService-Instanz für jeden Test
-        boardService = new BoardService();
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+
+        // Erstelle ein vereinfachtes Board für Tests
+        mockFields = Arrays.asList(
+                new Field(1, 0.1, 0.1, Collections.singletonList(2), FieldType.STARTNORMAL),
+                new Field(2, 0.2, 0.2, Collections.singletonList(3), FieldType.ZAHLTAG),
+                new Field(3, 0.3, 0.3, Collections.singletonList(1), FieldType.AKTION)
+        );
+
+        // Konfiguriere den Mock
+        when(mockBoardDataProvider.getBoard()).thenReturn(mockFields);
+        when(mockBoardDataProvider.getFieldByIndex(1)).thenReturn(mockFields.get(0));
+        when(mockBoardDataProvider.getFieldByIndex(2)).thenReturn(mockFields.get(1));
+        when(mockBoardDataProvider.getFieldByIndex(3)).thenReturn(mockFields.get(2));
+
+        // Erstelle den BoardService mit dem Mock
+        boardService = new BoardService(mockBoardDataProvider);
     }
-    
+
     @Test
-    void testBoardInitialization() {
-        // Überprüfe, dass das Brett korrekt erstellt wurde
-        assertNotNull(boardService);
-        assertEquals(20, boardService.getBoardSize()); // Wir erwarten 20 Felder
-        
-        // Überprüfe einige spezifische Felder
-        Field startField = boardService.getFieldByIndex(0);
-        assertNotNull(startField);
-        assertEquals(0, startField.getIndex());
-        assertEquals("STARTNORMAL", startField.getType());
-        
-        Field uniStartField = boardService.getFieldByIndex(17);
-        assertNotNull(uniStartField);
-        assertEquals(17, uniStartField.getIndex());
-        assertEquals("STARTUNI", uniStartField.getType());
-    }
-    
-    @Test
-    void testAddPlayer() {
-        // Spieler mit gültiger Startposition hinzufügen
-        int playerId = 1;
-        int startFieldIndex = 0;
+    public void testAddPlayer() {
+        String playerId = "player1";
+        int startFieldIndex = 1;
+
         boardService.addPlayer(playerId, startFieldIndex);
-        
-        // Überprüfen, dass die Position korrekt gesetzt wurde
-        Field playerField = boardService.getPlayerField(playerId);
-        assertEquals(startFieldIndex, playerField.getIndex());
-        
-        // Spieler mit Uni-Start hinzufügen
-        int player2Id = 2;
-        int uniStartFieldIndex = 17;
-        boardService.addPlayer(player2Id, uniStartFieldIndex);
-        
-        // Überprüfen, dass die Position korrekt gesetzt wurde
-        Field player2Field = boardService.getPlayerField(player2Id);
-        assertEquals(uniStartFieldIndex, player2Field.getIndex());
+
+        assertEquals(1, boardService.getPlayerPosition(playerId));
     }
-    
+
     @Test
-    void testAddPlayerWithInvalidIndex() {
-        // Spieler mit ungültigem Index hinzufügen (sollte auf 0 gesetzt werden)
-        int playerId = 1;
-        int invalidIndex = 999;
-        boardService.addPlayer(playerId, invalidIndex);
-        
-        // Überprüfen, dass die Position auf 0 gesetzt wurde
-        Field playerField = boardService.getPlayerField(playerId);
-        assertEquals(0, playerField.getIndex());
+    public void testMovePlayer() {
+        String playerId = "player1";
+        boardService.addPlayer(playerId, 1);
+
+        boardService.movePlayer(playerId, 2);
+
+        assertEquals(3, boardService.getPlayerPosition(playerId),
+                "Nach 2 Schritten vom Feld 1 sollte der Spieler auf Feld 3 sein");
     }
-    
+
     @Test
-    void testMovePlayer() {
-        // Spieler hinzufügen
-        int playerId = 1;
-        boardService.addPlayer(playerId, 0);
-        
-        // Spieler um 3 Felder bewegen
-        boardService.movePlayer(playerId, 3);
-        
-        // Überprüfen, dass der Spieler jetzt auf Feld 3 ist
-        Field currentField = boardService.getPlayerField(playerId);
-        assertEquals(3, currentField.getIndex());
-        
-        // Überprüfe, ob der Feldtyp stimmt
-        assertEquals("ANLAGE", currentField.getType());
+    public void testGetMoveOptions() {
+        String playerId = "player1";
+        boardService.addPlayer(playerId, 1);
+
+        List<Integer> options = boardService.getMoveOptions(playerId, 1);
+
+        assertEquals(1, options.size(), "Es sollte genau eine Option geben");
+        assertEquals(2, options.get(0).intValue(), "Die Option sollte Feld 2 sein");
     }
-    
+
     @Test
-    void testMovePlayerWithExactSteps() {
-        // Spieler auf Feld 16 (Heirat, Endfeld) setzen
-        int playerId = 1;
-        boardService.setPlayerPosition(playerId, 16);
-        
-        // Versuche, den Spieler weiterzubewegen
-        boardService.movePlayer(playerId, 3);
-        
-        // Überprüfen, dass der Spieler immer noch auf Feld 16 ist (Endfeld)
-        Field currentField = boardService.getPlayerField(playerId);
-        assertEquals(16, currentField.getIndex());
+    public void testMovePlayerToField() {
+        String playerId = "player1";
+        boardService.addPlayer(playerId, 1);
+
+        boolean result = boardService.movePlayerToField(playerId, 2);
+
+        assertTrue(result, "Die Bewegung zum nächsten Feld sollte erfolgreich sein");
+        assertEquals(2, boardService.getPlayerPosition(playerId));
     }
-    
+
     @Test
-    void testMovePlayerWithZeroSteps() {
-        // Spieler hinzufügen
-        int playerId = 1;
-        boardService.addPlayer(playerId, 5);
-        
-        // Spieler um 0 Felder bewegen (sollte keine Änderung bewirken)
-        boardService.movePlayer(playerId, 0);
-        
-        // Überprüfen, dass der Spieler immer noch auf Feld 5 ist
-        Field currentField = boardService.getPlayerField(playerId);
-        assertEquals(5, currentField.getIndex());
+    public void testMovePlayerToInvalidField() {
+        String playerId = "player1";
+        boardService.addPlayer(playerId, 1);
+
+        boolean result = boardService.movePlayerToField(playerId, 3);
+
+        assertFalse(result, "Die Bewegung zu einem nicht erreichbaren Feld sollte fehlschlagen");
+        assertEquals(1, boardService.getPlayerPosition(playerId), "Position sollte unverändert bleiben");
     }
-    
+
+
+
     @Test
-    void testMovePlayerWithNegativeSteps() {
-        // Spieler hinzufügen
-        int playerId = 1;
-        boardService.addPlayer(playerId, 5);
-        
-        // Spieler um negative Schritte bewegen (sollte keine Änderung bewirken)
-        boardService.movePlayer(playerId, -3);
-        
-        // Überprüfen, dass der Spieler immer noch auf Feld 5 ist
-        Field currentField = boardService.getPlayerField(playerId);
-        assertEquals(5, currentField.getIndex());
+    public void testGetPlayerField() {
+        boardService.addPlayer("player1", 1);
+
+        Field field = boardService.getPlayerField("player1");
+
+        assertNotNull(field);
+        assertEquals(1, field.getIndex());
     }
-    
+
     @Test
-    void testGetValidNextFields() {
-        // Spieler hinzufügen
-        int playerId = 1;
-        boardService.addPlayer(playerId, 0);
-        
-        // Gültige nächste Felder abrufen
-        List<Field> nextFields = boardService.getValidNextFields(playerId);
-        
-        // Überprüfen, dass es genau ein nächstes Feld gibt (Feld 1)
-        assertEquals(1, nextFields.size());
-        assertEquals(1, nextFields.get(0).getIndex());
+    public void testGetPlayerFieldWithUnknownPlayerDefaultsToField1() {
+        Field field = boardService.getPlayerField("unknown");
+
+        assertNotNull(field);
+        assertEquals(1, field.getIndex());
     }
-    
+
     @Test
-    void testGetValidNextFieldsForUnknownPlayer() {
-        // Gültige nächste Felder für einen nicht registrierten Spieler abrufen
-        // Sollte die nextFields für Feld 0 (Standardposition) zurückgeben
-        int unknownPlayerId = 999;
-        List<Field> nextFields = boardService.getValidNextFields(unknownPlayerId);
-        
-        // Überprüfen, dass es genau ein nächstes Feld gibt (Feld 1)
-        assertEquals(1, nextFields.size());
-        assertEquals(1, nextFields.get(0).getIndex());
+    public void testMovePlayerMultipleSteps() {
+        String playerId = "player1";
+        boardService.addPlayer(playerId, 1);
+
+        boardService.movePlayer(playerId, 3); // 1 → 2 → 3 → 1
+
+        int newPosition = boardService.getPlayerPosition(playerId);
+        assertEquals(1, newPosition);
     }
-    
+
     @Test
-    void testMovePlayerToField() {
-        // Spieler hinzufügen
-        int playerId = 1;
-        boardService.addPlayer(playerId, 0);
-        
-        // Versuche, den Spieler direkt auf Feld 1 zu bewegen (gültiger Zug)
-        boolean success = boardService.movePlayerToField(playerId, 1);
-        
-        // Überprüfen, dass der Zug erfolgreich war und der Spieler jetzt auf Feld 1 ist
-        assertTrue(success);
-        Field currentField = boardService.getPlayerField(playerId);
-        assertEquals(1, currentField.getIndex());
-        
-        // Versuche, den Spieler direkt auf Feld 5 zu bewegen (ungültiger Zug)
-        success = boardService.movePlayerToField(playerId, 5);
-        
-        // Überprüfen, dass der Zug nicht erfolgreich war und der Spieler immer noch auf Feld 1 ist
-        assertFalse(success);
-        currentField = boardService.getPlayerField(playerId);
-        assertEquals(1, currentField.getIndex());
+    public void testMovePlayerToFieldWithValidPath() {
+        String playerId = "player1";
+        boardService.addPlayer(playerId, 1);
+
+        boolean moved = boardService.movePlayerToField(playerId, 2);
+
+        assertTrue(moved);
+        assertEquals(2, boardService.getPlayerPosition(playerId));
     }
-    
+
     @Test
-    void testSetPlayerPosition() {
-        // Spieler hinzufügen
-        int playerId = 1;
-        boardService.addPlayer(playerId, 0);
-        
-        // Position des Spielers direkt setzen
-        boardService.setPlayerPosition(playerId, 5);
-        
-        // Überprüfen, dass der Spieler jetzt auf Feld 5 ist
-        Field currentField = boardService.getPlayerField(playerId);
-        assertEquals(5, currentField.getIndex());
-        
-        // Versuche, eine ungültige Position zu setzen
-        boardService.setPlayerPosition(playerId, 999);
-        
-        // Überprüfen, dass die Position nicht geändert wurde
-        currentField = boardService.getPlayerField(playerId);
-        assertEquals(5, currentField.getIndex());
+    public void testSetPlayerPosition() {
+        String playerId = "player1";
+        boardService.addPlayer(playerId, 1);
+
+        boardService.setPlayerPosition(playerId, 3);
+
+        assertEquals(3, boardService.getPlayerPosition(playerId));
     }
-    
     @Test
-    void testGetFieldByInvalidIndex() {
-        // Versuche, ein Feld mit ungültigem Index abzurufen
-        Field field = boardService.getFieldByIndex(-1);
-        assertNull(field);
-        
-        field = boardService.getFieldByIndex(999);
-        assertNull(field);
+    public void testGetValidNextFields() {
+        String playerId = "player1";
+        boardService.addPlayer(playerId, 1);
+
+        List<Field> validNextFields = boardService.getValidNextFields(playerId);
+
+        assertEquals(1, validNextFields.size());
+        assertEquals(2, validNextFields.get(0).getIndex());
     }
-    
+
     @Test
-    void testSpecialPathFromUniToWork() {
-        // Testen des speziellen Pfads vom Uni-Examen zum Freundesfeld
-        
-        // Spieler hinzufügen und auf das Examen-Feld setzen
-        int playerId = 1;
-        boardService.setPlayerPosition(playerId, 19); // Examen-Feld
-        
-        // Den Spieler einen Schritt bewegen
-        boardService.movePlayer(playerId, 1);
-        
-        // Überprüfen, dass der Spieler jetzt auf Feld 5 (Freund) ist
-        // Dies ist die spezielle Verbindung vom Examen ins Berufsleben
-        Field currentField = boardService.getPlayerField(playerId);
-        assertEquals(5, currentField.getIndex());
-        assertEquals("FREUND", currentField.getType());
+    public void testIsPlayerOnField() {
+        String playerId = "player1";
+        boardService.addPlayer(playerId, 2);
+
+        assertTrue(boardService.isPlayerOnField(playerId, 2));
+        assertFalse(boardService.isPlayerOnField(playerId, 1));
     }
+
+    @Test
+    public void testGetPlayersOnField() {
+        boardService.addPlayer("player1", 1);
+        boardService.addPlayer("player2", 1);
+        boardService.addPlayer("player3", 2);
+
+        List<String> players = boardService.getPlayersOnField(1);
+
+        assertTrue(players.contains("player1"));
+        assertTrue(players.contains("player2"));
+        assertFalse(players.contains("player3"));
+    }
+
+    @Test
+    public void testRemovePlayer() {
+        String playerId = "player1";
+        boardService.addPlayer(playerId, 1);
+        boardService.removePlayer(playerId);
+
+        assertFalse(boardService.getAllPlayerPositions().containsKey(playerId));
+    }
+
+    @Test
+    public void testIsAnyPlayerOnField() {
+        boardService.addPlayer("player1", 2);
+
+        assertTrue(boardService.isAnyPlayerOnField(2));
+        assertFalse(boardService.isAnyPlayerOnField(3));
+    }
+
+    @Test
+    public void testResetAllPlayerPositions() {
+        boardService.addPlayer("player1", 1);
+        boardService.addPlayer("player2", 2);
+
+        boardService.resetAllPlayerPositions();
+
+        assertTrue(boardService.getAllPlayerPositions().isEmpty());
+    }
+
+    @Test
+    public void testGetBoardSize() {
+        assertEquals(mockFields.size(), boardService.getBoardSize());
+    }
+
+    @Test
+    public void testGetBoard() {
+        List<Field> board = boardService.getBoard();
+
+        assertEquals(mockFields, board);
+        assertThrows(UnsupportedOperationException.class, () -> board.add(new Field(999, 0, 0, List.of(), FieldType.AKTION)));
+    }
+
 }

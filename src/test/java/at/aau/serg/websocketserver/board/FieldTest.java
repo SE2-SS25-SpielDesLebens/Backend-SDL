@@ -2,120 +2,58 @@ package at.aau.serg.websocketserver.board;
 
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Testet die Field-Klasse, die ein Feld auf dem Spielbrett repräsentiert.
+ * Testklasse für die Field-Klasse.
  */
 public class FieldTest {
 
     @Test
-    void testFieldConstructorWithoutNextFields() {
-        // Testdaten
+    public void testFieldCreation() {
+        // Arrangement
         int index = 5;
-        float x = 0.3f;
-        float y = 0.5f;
-        String type = "AKTION";
+        double x = 0.25;
+        double y = 0.55;
+        List<Integer> nextFields = Collections.singletonList(6);
+        FieldType type = FieldType.AKTION;
         
-        // Erstelle ein Field-Objekt
-        Field field = new Field(index, x, y, type);
-        
-        // Überprüfe, ob alle Attribute korrekt gesetzt wurden
-        assertEquals(index, field.getIndex());
-        assertEquals(x, field.getX(), 0.001f); // Verwende Delta für float-Vergleich
-        assertEquals(y, field.getY(), 0.001f);
-        assertEquals(type, field.getType());
-        assertEquals(0, field.getNextFields().size()); // Keine nextFields bei der Erstellung
-    }
-    
-    @Test
-    void testFieldConstructorWithNextFields() {
-        // Testdaten
-        int index = 5;
-        float x = 0.3f;
-        float y = 0.5f;
-        String type = "AKTION";
-        List<Integer> nextFields = Arrays.asList(6, 7);
-        
-        // Erstelle ein Field-Objekt
+        // Action
         Field field = new Field(index, x, y, nextFields, type);
         
-        // Überprüfe, ob alle Attribute korrekt gesetzt wurden
-        assertEquals(index, field.getIndex());
-        assertEquals(x, field.getX(), 0.001f);
-        assertEquals(y, field.getY(), 0.001f);
-        assertEquals(type, field.getType());
-        
-        // Überprüfe nextFields
-        List<Integer> retrievedNextFields = field.getNextFields();
-        assertEquals(2, retrievedNextFields.size());
-        assertTrue(retrievedNextFields.contains(6));
-        assertTrue(retrievedNextFields.contains(7));
+        // Assertion
+        assertEquals(index, field.getIndex(), "Index sollte korrekt gesetzt sein");
+        assertEquals(x, field.getX(), 0.001, "X-Koordinate sollte korrekt gesetzt sein");
+        assertEquals(y, field.getY(), 0.001, "Y-Koordinate sollte korrekt gesetzt sein");
+        assertEquals(nextFields, field.getNextFields(), "Nächste Felder sollten korrekt gesetzt sein");
+        assertEquals(type, field.getType(), "Feldtyp sollte korrekt gesetzt sein");
     }
     
-    @Test
-    void testAddNextField() {
-        // Erstelle ein Field-Objekt ohne nextFields
-        Field field = new Field(1, 0.1f, 0.1f, "AKTION");
-        
-        // Füge nextField hinzu und überprüfe
-        field.addNextField(2);
-        List<Integer> nextFields = field.getNextFields();
-        assertEquals(1, nextFields.size());
-        assertTrue(nextFields.contains(2));
-        
-        // Füge weiteres nextField hinzu und überprüfe
-        field.addNextField(3);
-        nextFields = field.getNextFields();
-        assertEquals(2, nextFields.size());
-        assertTrue(nextFields.contains(2));
-        assertTrue(nextFields.contains(3));
-        
-        // Stelle sicher, dass Duplikate nicht hinzugefügt werden
-        field.addNextField(2); // Versuche, eine bereits vorhandene ID hinzuzufügen
-        nextFields = field.getNextFields();
-        assertEquals(2, nextFields.size()); // Sollte immer noch 2 sein
-    }
+
     
     @Test
-    void testGetNextFieldsReturnsDefensiveCopy() {
-        // Erstelle ein Field-Objekt
-        Field field = new Field(1, 0.1f, 0.1f, "AKTION");
-        field.addNextField(2);
+    public void testSetters() {
+        // Arrangement
+        Field field = new Field(1, 0.1, 0.1, Collections.singletonList(2), FieldType.AKTION);
         
-        // Hole nextFields und versuche, sie zu ändern
-        List<Integer> nextFields = field.getNextFields();
-        nextFields.add(3); // Diese Änderung sollte das Original nicht beeinflussen
+        // Action
+        field.setIndex(10);
+        field.setX(0.5);
+        field.setY(0.6);
+        field.setNextFields(Arrays.asList(20, 30));
+        field.setType(FieldType.HAUS);
         
-        // Überprüfe, dass das Original nicht verändert wurde
-        List<Integer> originalNextFields = field.getNextFields();
-        assertEquals(1, originalNextFields.size());
-        assertTrue(originalNextFields.contains(2));
-        assertFalse(originalNextFields.contains(3));
+        // Assertion
+        assertEquals(10, field.getIndex(), "Index sollte geändert sein");
+        assertEquals(0.5, field.getX(), 0.001, "X-Koordinate sollte geändert sein");
+        assertEquals(0.6, field.getY(), 0.001, "Y-Koordinate sollte geändert sein");
+        assertEquals(Arrays.asList(20, 30), field.getNextFields(), "Nächste Felder sollten geändert sein");
+        assertEquals(FieldType.HAUS, field.getType(), "Feldtyp sollte geändert sein");
     }
     
-    @Test
-    void testConstructorWithNextFieldsCreatesDefensiveCopy() {
-        // Erstelle eine Liste von nextFields
-        List<Integer> nextFields = new ArrayList<>();
-        nextFields.add(2);
-        nextFields.add(3);
-        
-        // Erstelle ein Field-Objekt mit diesen nextFields
-        Field field = new Field(1, 0.1f, 0.1f, nextFields, "AKTION");
-        
-        // Ändere die ursprüngliche Liste
-        nextFields.add(4);
-        
-        // Überprüfe, dass das Field-Objekt nicht betroffen ist
-        List<Integer> fieldNextFields = field.getNextFields();
-        assertEquals(2, fieldNextFields.size());
-        assertTrue(fieldNextFields.contains(2));
-        assertTrue(fieldNextFields.contains(3));
-        assertFalse(fieldNextFields.contains(4));
-    }
+
 }
