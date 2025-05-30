@@ -343,7 +343,8 @@ public class WebSocketBrokerController {
     public void handleJobRequest(@DestinationVariable int gameId,
                                  @DestinationVariable String playerName,
                                  @Payload JobRequestMessage msg) {
-        boolean hasDegree = msg.hasDegree();
+        boolean hasDegree = false;
+        //boolean hasDegree = playerService.hasDegree(playerName);
         var repo = jobService.getOrCreateRepository(gameId);
         List<Job> jobsToSend = new ArrayList<>();
 
