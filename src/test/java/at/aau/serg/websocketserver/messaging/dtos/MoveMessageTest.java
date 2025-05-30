@@ -1,5 +1,6 @@
 package at.aau.serg.websocketserver.messaging.dtos;
 
+import at.aau.serg.websocketserver.session.board.FieldType;
 import org.junit.jupiter.api.Test;
 import java.util.Arrays;
 import java.util.List;
@@ -16,7 +17,7 @@ public class MoveMessageTest {
         // Testdaten
         String playerName = "Player1";
         int index = 5;
-        String type = "AKTION";
+        FieldType type = FieldType.AKTION;
         String timestamp = "2023-05-13T15:30:00";
         
         // Erstelle MoveMessage-Objekt
@@ -35,7 +36,7 @@ public class MoveMessageTest {
         // Testdaten
         String playerName = "Player1";
         int index = 5;
-        String type = "AKTION";
+        FieldType type = FieldType.AKTION;
         String timestamp = "2023-05-13T15:30:00";
         List<Integer> nextPossibleFields = Arrays.asList(6, 7);
         
@@ -60,7 +61,7 @@ public class MoveMessageTest {
         // Testdaten
         String playerName = "Player1";
         int index = 5;
-        String type = "AKTION";
+        FieldType type = FieldType.AKTION;
         String timestamp = "2023-05-13T15:30:00";
         List<Integer> nextPossibleFields = Arrays.asList(6, 7);
         

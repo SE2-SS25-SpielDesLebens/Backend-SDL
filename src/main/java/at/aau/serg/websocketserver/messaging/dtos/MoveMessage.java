@@ -1,5 +1,7 @@
 package at.aau.serg.websocketserver.messaging.dtos;
 
+import at.aau.serg.websocketserver.session.board.FieldType;
+
 import java.util.List;
 import java.util.ArrayList;
 
@@ -11,11 +13,11 @@ import java.util.ArrayList;
 public class MoveMessage {
     private final String playerName;
     private final int index;
-    private final String type;
+    private final FieldType type;
     private final String timestamp;
     private final List<Integer> nextPossibleFields;
 
-    public MoveMessage(String playerName, int index, String type, String timestamp) {
+    public MoveMessage(String playerName, int index, FieldType type, String timestamp) {
         this.playerName = playerName;
         this.index = index;
         this.type = type;
@@ -23,7 +25,7 @@ public class MoveMessage {
         this.nextPossibleFields = new ArrayList<>();
     }
     
-    public MoveMessage(String playerName, int index, String type, String timestamp, List<Integer> nextPossibleFields) {
+    public MoveMessage(String playerName, int index, FieldType type, String timestamp, List<Integer> nextPossibleFields) {
         this.playerName = playerName;
         this.index = index;
         this.type = type;
@@ -39,7 +41,7 @@ public class MoveMessage {
         return index;
     }
 
-    public String getType() {
+    public FieldType getType() {
         return type;
     }
 

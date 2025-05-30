@@ -1,5 +1,5 @@
-# Verwende Java 17
-FROM openjdk:17-jdk-slim
+# Verwende Java 11
+FROM openjdk:11-jdk-slim
 
 # Setze das Arbeitsverzeichnis
 WORKDIR /app

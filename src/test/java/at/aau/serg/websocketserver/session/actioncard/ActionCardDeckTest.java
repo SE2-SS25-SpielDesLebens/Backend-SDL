@@ -1,4 +1,4 @@
-package at.aau.serg.websocketserver.actioncard;
+package at.aau.serg.websocketserver.session.actioncard;
 
 import at.aau.serg.websocketserver.session.actioncard.ActionCard;
 import at.aau.serg.websocketserver.session.actioncard.ActionCardDeck;

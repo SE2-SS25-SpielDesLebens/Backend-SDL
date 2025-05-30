@@ -1,5 +1,6 @@
 package at.aau.serg.websocketserver.game;
 
+import at.aau.serg.websocketserver.session.board.FieldType;
 import at.aau.serg.websocketserver.player.Player;
 import at.aau.serg.websocketserver.session.board.BoardService;
 import at.aau.serg.websocketserver.session.board.Field;
@@ -170,30 +171,30 @@ public class GameLogic {
 
 
     void handleField(Player player, Field field) {
-        String type = field.getType();
+        FieldType type = field.getType();
         switch (type) {
-            case "ZAHLTAG":
+            case ZAHLTAG:
                 handleSalaryField(player, true);
                 break;
-            case "AKTION":
+            case AKTION:
                 handleActionField(player);
                 break;
-            case "HAUS":
+            case HAUS:
                 handleHouseField(player);
                 break;
-            case "BERUF":
+            case BERUF:
                 handleJobField(player);
                 break;
-            case "ANLAGE":
+            case ANLAGE:
                 handleInvestmentField(player);
                 break;
-            case "FREUND":
+            case FREUND:
                 handleFriendField(player, field);
                 break;
-            case "HEIRAT":
+            case HEIRAT:
                 handleMarriageField(player);
                 break;
-            case "EXAMEN":
+            case EXAMEN:
                 handleExamField(player);
                 break;
             default:
@@ -411,7 +412,7 @@ public class GameLogic {
 
     void handleFriendField(Player player, Field field) {
         // Einheitliche Behandlung für Baby-, Freund- oder Haustierfelder als 1 Stift im Auto
-        String type = field.getType();
+        FieldType type = field.getType();
         if ("FREUND".equals(type)) {
             player.addChild();
             System.out.println("[STIFT] Spieler " + player.getId() + " landet auf einem " + type + "-Feld und bekommt 1 Stift ins Auto gesetzt.");
@@ -569,8 +570,3 @@ public class GameLogic {
     }
 
 }
-
-
-
-
-
