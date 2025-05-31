@@ -12,12 +12,11 @@ import java.util.Collections;
 import java.util.List;
 
 //Klasse speichert Spieler in einer Lobby, reine Datenverwaltung
+@Getter
 public class Lobby {
-    @Getter
     @Setter
     private String id;
 
-    @Getter
     @Setter
     private GameLogic gameLogic;
 
@@ -25,7 +24,6 @@ public class Lobby {
     public static final int maxPlayers = 4;
 
     @Setter
-    @Getter
     boolean isStarted = false;
 
     public Lobby(String id, Player player){
