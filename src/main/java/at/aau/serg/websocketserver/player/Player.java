@@ -142,5 +142,3 @@ public class Player {
     @JsonProperty("houseId") public Map<Integer,Integer> getHouseId() { return houseID; }
     @JsonProperty("fieldId") public int getFieldID(){return fieldId;}
 }
-
-
