@@ -20,7 +20,6 @@ import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
-import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -232,11 +231,10 @@ public class WebSocketBrokerController {
 
     @MessageMapping("/lobby/create")
     @SendTo("/queue/lobby/created")
-    public void handleLobbyCreate(@Payload LobbyRequestMessage request, Principal principal) {
+    public void handleLobbyCreate(@Payload LobbyRequestMessage request) {
         //Spieler sollte schon in PlayerService enthalten sein
         Lobby lobby = lobbyService.createLobby(playerService.getPlayerById(request.getPlayerName()));
-        System.out.println("Host: " + playerService.getPlayerById(request.getPlayerName()));
-        System.out.println("Lobbyid: " + lobby.getId() + " " + request.getPlayerName() + " " + principal.getName());
+        System.out.println("Lobbyid: " + lobby.getId() + " " + request.getPlayerName());
         LobbyResponseMessage response = new LobbyResponseMessage(lobby.getId(), request.getPlayerName(), true, null);
         messagingTemplate.convertAndSendToUser(
                 request.getPlayerName(),   // = Principal.getName(), wenn korrekt verwendet
@@ -244,7 +242,6 @@ public class WebSocketBrokerController {
                 response
         );
         sendLobbyUpdates(lobby.getId());
-        System.out.println("Nachricht gesendet");
     }
 
     @MessageMapping("/{lobbyid}/join")
@@ -253,20 +250,25 @@ public class WebSocketBrokerController {
         LobbyResponseMessage response = null;
         try {
             Lobby lobby = lobbyService.getLobby(lobbyid);
+            if(lobby == null) throw new IllegalStateException("Lobby mit dieser ID existiert nicht.");
             lobby.addPlayer(playerService.getPlayerById(request.getPlayerName()));
             response = new LobbyResponseMessage(lobbyid, request.getPlayerName(), true, "Spieler " + request.getPlayerName() + " ist erfolgreich beigetreten");
             System.out.println("Spieler " + request.getPlayerName() + " ist beigetreten");
-            System.out.println(lobby.getPlayers().toString());
 
         } catch (Exception e) {
             response = new LobbyResponseMessage(lobbyid, request.getPlayerName(), false, e.getMessage());
-        } finally {
+        }finally{
             String destination = String.format("/topic/%s", lobbyid);
             assert response != null;
             messagingTemplate.convertAndSend(destination, response);
-            System.out.println(response);
-            sendLobbyUpdates(lobbyid);
+            try {
+                sendLobbyUpdates(lobbyid);
+            }catch(NullPointerException e){
+                System.err.println("Handled error: " + e.getMessage());
+            }
+
         }
+
     }
 
     @SendTo("/topic/{lobbyid}")
@@ -286,7 +288,7 @@ public class WebSocketBrokerController {
     @MessageMapping("/{lobbyid}/leave")
     public void handlePlayerLeave(@DestinationVariable String lobbyid, @Payload LobbyRequestMessage request) {
         Lobby lobby = lobbyService.getLobby(lobbyid);
-        System.out.printf("Spieler %s hat die Lobby verlassen", request.getPlayerName());
+        System.out.printf("Spieler %s hat die Lobby verlassen\n", request.getPlayerName());
         lobby.removePlayer(playerService.getPlayerById(request.getPlayerName()));
         sendLobbyUpdates(lobbyid);
     }
