@@ -5,13 +5,14 @@ import at.aau.serg.websocketserver.game.GameLogic;
 import at.aau.serg.websocketserver.game.PlayerTurnManager;
 import at.aau.serg.websocketserver.player.Player;
 import at.aau.serg.websocketserver.player.PlayerService;
-import at.aau.serg.websocketserver.board.BoardService;
-import at.aau.serg.websocketserver.board.Field;
+import at.aau.serg.websocketserver.session.board.BoardService;
+import at.aau.serg.websocketserver.session.board.Field;
 import at.aau.serg.websocketserver.lobby.Lobby;
 import at.aau.serg.websocketserver.lobby.LobbyService;
 import at.aau.serg.websocketserver.messaging.dtos.*;
-import at.aau.serg.websocketserver.session.Job;
-import at.aau.serg.websocketserver.session.JobService;
+import at.aau.serg.websocketserver.session.house.HouseService;
+import at.aau.serg.websocketserver.session.job.Job;
+import at.aau.serg.websocketserver.session.job.JobService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -34,15 +35,20 @@ public class WebSocketBrokerController {
     private final PlayerService playerService;
     private final LobbyService lobbyService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final HouseService houseService;
+
+    @Autowired
     private final BoardService boardService;    @Autowired
     public WebSocketBrokerController(JobService jobService,
                                      SimpMessagingTemplate messagingTemplate,
-                                     BoardService boardService) {
+                                     BoardService boardService,
+                                     HouseService houseService) {
         this.jobService = jobService;
         this.messagingTemplate = messagingTemplate;
-        this.playerService = PlayerService.getInstance();
-        this.lobbyService = LobbyService.getInstance();
         this.boardService = boardService;
+        this.houseService = houseService;
+        this.playerService = PlayerService.getInstance();
+        this.lobbyService  = LobbyService.getInstance();
     }
 
     /**
@@ -208,6 +214,7 @@ public class WebSocketBrokerController {
             nextPossibleFieldIndices.add(nextField.getIndex());
         }
 
+        // Erstelle die Nachricht für den Client
         MoveMessage moveMessage = new MoveMessage(
                 message.getPlayerName(),
                 currentField.getIndex(),
@@ -227,6 +234,36 @@ public class WebSocketBrokerController {
             }
         }
 
+    }
+
+    @MessageMapping("/lobby")
+    public void handleLobby(@Payload StompMessage message) {
+        String action = message.getAction();
+        String gameId = message.getGameId();
+        String content;
+
+        if (action == null) {
+            content = "❌ Keine Aktion angegeben.";
+        } else {
+            switch (action) {
+                case "createLobby":
+                    content = "🆕 Lobby [" + gameId + "] von " + message.getPlayerName() + " erstellt.";
+                    break;
+                case "joinLobby":
+                    content = "✅ " + message.getPlayerName() + " ist Lobby [" + gameId + "] beigetreten.";
+                    break;
+                default:
+                    content = "Unbekannte Lobby-Aktion.";
+                    break;
+            }
+        }
+
+        System.out.println("[LOBBY] [" + gameId + "] " + message.getPlayerName() + ": " + content);
+
+        messagingTemplate.convertAndSend(
+                "/topic/lobby",
+                new OutputMessage(message.getPlayerName(), content, LocalDateTime.now().toString())
+        );
     }
 
     @MessageMapping("/lobby/create")
@@ -360,11 +397,13 @@ public class WebSocketBrokerController {
     }
 
 
+
     @MessageMapping("/jobs/{gameId}/{playerName}/request")
     public void handleJobRequest(@DestinationVariable int gameId,
                                  @DestinationVariable String playerName,
                                  @Payload JobRequestMessage msg) {
-        boolean hasDegree = msg.hasDegree();
+        boolean hasDegree = false;
+        //boolean hasDegree = playerService.hasDegree(playerName);
         var repo = jobService.getOrCreateRepository(gameId);
         List<Job> jobsToSend = new ArrayList<>();
 
@@ -377,14 +416,6 @@ public class WebSocketBrokerController {
         } else {
             jobsToSend = repo.getRandomAvailableJobs(hasDegree, 2);
         }
-
-        // Debug-Ausgabe: welche beiden Jobs gleich verschickt werden
-        System.out.println("[INFO] Jobs an Spieler " + playerName + " für Spiel " + gameId + ": " +
-                jobsToSend.stream()
-                        .map(j -> j.getJobId() + "=\"" + j.getTitle() + "\"")
-                        .collect(Collectors.joining(", "))
-        );
-
         List<JobMessage> dtos = jobsToSend.stream()
                 .map(j -> new JobMessage(
                         j.getJobId(),
@@ -434,4 +465,63 @@ public class WebSocketBrokerController {
 
         return player.getId();
     }
+    /**
+     * 1) Auswahl-Request:
+     *    Pfad enthält gameId und playerName, damit nur der richtige Client die Nachricht bekommt.
+     */
+    @MessageMapping("/houses/{gameId}/{playerName}/choose")
+    public void handleHouseAction(@DestinationVariable int gameId,
+                                  @DestinationVariable String playerName,
+                                  @Payload HouseBuyElseSellMessage msg) {
+        List<HouseMessage> options = houseService.handleHouseAction(
+                gameId,
+                playerName,
+                msg.isBuyElseSell()
+        );
+
+        String dest = String.format("/topic/%d/houses/%s/options",
+                gameId,
+                playerName
+        );
+        messagingTemplate.convertAndSend(dest, options);
+    }
+
+    /**
+     * 2) Final-Request:
+     *    Pfad enthält gameName und playerID, colorValue wird intern gerollt.
+     */
+    @MessageMapping("/houses/{gameId}/{playerName}/finalize")
+    public void finalizeHouseAction(@DestinationVariable int gameId,
+                                    @DestinationVariable String playerName,
+                                    @Payload HouseMessage houseMsg) {
+        // Aufruf auf der Bean-Instanz, nicht statisch
+        HouseMessage confirmation = houseService.finalizeHouseAction(
+                gameId,
+                playerName,
+                houseMsg.getHouseId()
+        );
+
+        String dest = String.format("/topic/%d/houses/%s/confirmation",
+                gameId,
+                playerName
+        );
+        messagingTemplate.convertAndSend(dest, confirmation);
+    }
+    @MessageMapping("/game/createHouseRepo/{gameId}")
+    public void handleHouseRepoCreation(@DestinationVariable int gameId) {
+        // Erstelle (oder liefere zurück) das House-Repository
+        houseService.getOrCreateRepository(gameId);
+
+        // Optional: sende eine Statusmeldung an alle Clients
+        String destination = "/topic/game/" + gameId + "/status";
+        messagingTemplate.convertAndSend(
+                destination,
+                new OutputMessage(
+                        "System",
+                        "House-Repository für Spiel " + gameId + " wurde angelegt.",
+                        now()
+                )
+        );
+    }
+
 }

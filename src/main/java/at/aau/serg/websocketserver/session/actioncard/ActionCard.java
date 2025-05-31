@@ -1,4 +1,4 @@
-package at.aau.serg.websocketserver.actioncard;
+package at.aau.serg.websocketserver.session.actioncard;
 
 public class ActionCard {
     private int id;

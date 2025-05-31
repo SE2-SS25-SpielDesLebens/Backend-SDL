@@ -1,6 +1,6 @@
 package at.aau.serg.websocketserver.messaging.dtos;
 
-import at.aau.serg.websocketserver.board.Field;
+import at.aau.serg.websocketserver.session.board.Field;
 import java.util.List;
 
 /**
