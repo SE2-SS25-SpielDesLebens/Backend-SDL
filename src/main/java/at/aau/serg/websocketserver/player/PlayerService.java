@@ -1,91 +1,81 @@
 package at.aau.serg.websocketserver.player;
 
 import lombok.Getter;
-import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
-@Service
 @Getter
 public class PlayerService {
-    private final Map<String, Player> players;
-    private static PlayerService playerService;
 
+    private static PlayerService instance;
+
+    private final Map<String, Player> players = new HashMap<>();
+
+    // privater Konstruktor – verhindert direkte Instanziierung
     private PlayerService() {
-        players = new HashMap<>();
     }
 
+    /**
+     * Zugriff auf die Singleton-Instanz.
+     */
     public static synchronized PlayerService getInstance() {
-        if (playerService == null) {
-            playerService = new PlayerService();
+        if (instance == null) {
+            instance = new PlayerService();
         }
-        return playerService;
+        return instance;
     }
 
+    /**
+     * Fügt einen neuen Spieler hinzu, wenn er noch nicht existiert.
+     */
+    public Player addPlayer(String id) {
+        return players.computeIfAbsent(id, pid -> {
+            Player newPlayer = new Player(pid);
+            System.out.println("🧍 Neuer Spieler registriert: " + pid);
+            return newPlayer;
+        });
+    }
+
+    /**
+     * Gibt einen Spieler anhand der ID zurück.
+     */
     public Player getPlayerById(String id) {
         return players.get(id);
     }
 
-    public Player addPlayer(String id) {
-        Player newPlayer = new Player(id);
-        players.put(id, newPlayer);
-        System.out.println("Neuer Spieler hinzugefügt: " + newPlayer.getId());
-        return newPlayer;
-    }
-
+    /**
+     * Ereignis (Kind, Heirat, Haustier...) an einen Spieler weiterleiten.
+     */
     public boolean incrementCounterForPlayer(String playerId, String eventType) {
         Player player = getPlayerById(playerId);
-
         if (player == null) {
             throw new IllegalArgumentException("Spieler mit ID " + playerId + " nicht gefunden.");
         }
-
-        switch (eventType.toLowerCase()) {
-            case "heirat":
-                if (player.isMarried()) {
-                    throw new IllegalArgumentException("💍 Spieler ist bereits verheiratet.");
-                }
-                player.marry();
-                System.out.println("💍 Spieler " + player.getId() + " ist jetzt verheiratet.");
-                break;
-
-            case "kind":
-                if (player.canAddPassengers(1)) {
-                    throw new IllegalArgumentException("🚗 Kein Platz mehr im Auto für weitere Kinder.");
-                }
-                player.addPassenger(1);
-                System.out.println("👶 Spieler " + player.getId() + " hat ein Kind. Plätze im Auto: " + player.getAutoPassengers());
-                break;
-
-            case "zwilling":
-                if (player.canAddPassengers(2)) {
-                    throw new IllegalArgumentException("🚗 Kein Platz mehr im Auto für Zwillinge.");
-                }
-                player.addPassenger(2);
-                System.out.println("👶👶 Spieler " + player.getId() + " hat Zwillinge. Plätze im Auto: " + player.getAutoPassengers());
-                break;
-
-            case "freund":
-                if (player.canAddPassengers(1)) {
-                    throw new IllegalArgumentException("🚗 Kein Platz mehr im Auto für einen Freund.");
-                }
-                player.addPassenger(1);
-                System.out.println("🤝 Spieler " + player.getId() + " hat einen Freund. Plätze im Auto: " + player.getAutoPassengers());
-                break;
-
-            case "tier":
-                if (player.canAddPassengers(1)) {
-                    throw new IllegalArgumentException("🚗 Kein Platz mehr im Auto für ein Haustier.");
-                }
-                player.addPassenger(1);
-                System.out.println("🐶 Spieler " + player.getId() + " hat ein Haustier. Plätze im Auto: " + player.getAutoPassengers());
-                break;
-
-            default:
-                throw new IllegalArgumentException("❌ Unbekanntes Ereignis: " + eventType);
-        }
-
+        player.handleEvent(eventType);
         return true;
     }
 
+    /**
+     * Entfernt einen Spieler aus dem Service – zb. beim Verlassen der Lobby.
+     */
+    public void removePlayer(String playerId) {
+        players.remove(playerId);
+        System.out.println("🚪 Spieler entfernt: " + playerId);
+    }
+
+    /**
+     * Leert alle Spieler – zb. beim Neustart des Servers.
+     */
+    public void clearAll() {
+        players.clear();
+        System.out.println("🧹 Alle Spieler wurden entfernt.");
+    }
+
+    /**
+     * Prüft, ob ein Spieler bereits registriert ist.
+     */
+    public boolean isPlayerRegistered(String playerId) {
+        return players.containsKey(playerId);
+    }
 }

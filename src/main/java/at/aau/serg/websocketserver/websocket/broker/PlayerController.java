@@ -5,60 +5,51 @@ import at.aau.serg.websocketserver.player.PlayerService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/players")
 public class PlayerController {
-    private final PlayerService playerService;
 
+    private final PlayerService playerService;
 
     public PlayerController(PlayerService playerService) {
         this.playerService = playerService;
     }
 
     @GetMapping
-    public ResponseEntity<List<Player>> getAllPlayers() {
+    public ResponseEntity<Collection<Player>> getAllPlayers() {
         Collection<Player> players = playerService.getPlayers().values();
         if (players.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
-        return ResponseEntity.ok((List<Player>) players);
+        return ResponseEntity.ok(players);
     }
 
     @PostMapping
     public ResponseEntity<Player> createPlayer(@RequestBody Player player) {
         Player created = playerService.addPlayer(player.getId());
-        return ResponseEntity.ok(created); // gib den ganzen Spieler zurück
+        return ResponseEntity.ok(created);
     }
-
-
-
 
     @GetMapping("/{id}")
-    public ResponseEntity<Player> getPlayerById(@PathVariable int id) {
-        Optional<Player> player = Optional.ofNullable(playerService.getPlayerById(String.valueOf(id)));
-        return player.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
-    }
-
-
-    @PutMapping("/{id}")
-    public ResponseEntity<String> updatePlayer(@PathVariable int id, @RequestBody Player player) {
-        boolean updated = playerService.updatePlayer(String.valueOf(id), player);
-        if (updated) {
-            return ResponseEntity.ok("Player updated successfully");
-        } else {
+    public ResponseEntity<Player> getPlayerById(@PathVariable String id) {
+        Player player = playerService.getPlayerById(id);
+        if (player == null) {
             return ResponseEntity.notFound().build();
         }
+        return ResponseEntity.ok(player);
     }
 
     @PutMapping("/{id}/add-child")
-    public ResponseEntity<String> addChild(@PathVariable int id) {
+    public ResponseEntity<String> addChild(@PathVariable String id) {
+        Player player = playerService.getPlayerById(id);
+        if (player == null) {
+            return ResponseEntity.notFound().build();
+        }
         try {
-            playerService.addChildToPlayer(String.valueOf(id));
+            player.handleEvent("kind");
             return ResponseEntity.ok("Kind erfolgreich hinzugefügt.");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -66,9 +57,13 @@ public class PlayerController {
     }
 
     @PutMapping("/{id}/marry")
-    public ResponseEntity<String> marryPlayer(@PathVariable int id) {
+    public ResponseEntity<String> marryPlayer(@PathVariable String id) {
+        Player player = playerService.getPlayerById(id);
+        if (player == null) {
+            return ResponseEntity.notFound().build();
+        }
         try {
-            playerService.marryPlayer(String.valueOf(id));
+            player.handleEvent("heirat");
             return ResponseEntity.ok("Spieler erfolgreich verheiratet.");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -76,15 +71,16 @@ public class PlayerController {
     }
 
     @PutMapping("/{id}/invest")
-    public ResponseEntity<String> invest(@PathVariable int id) {
+    public ResponseEntity<String> invest(@PathVariable String id) {
+        Player player = playerService.getPlayerById(id);
+        if (player == null) {
+            return ResponseEntity.notFound().build();
+        }
         try {
-            playerService.investForPlayer(String.valueOf(id));
+            player.investMoney(20000); // zb. Methode in Player wie: investMoney(amount)
             return ResponseEntity.ok("Investition erfolgreich!");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-
-
 }
-
