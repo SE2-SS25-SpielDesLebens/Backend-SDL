@@ -1,4 +1,4 @@
-package at.aau.serg.websocketserver.board;
+package at.aau.serg.websocketserver.session.board;
 
 public enum FieldType {
     AKTION, 

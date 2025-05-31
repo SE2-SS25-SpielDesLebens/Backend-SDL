@@ -1,4 +1,4 @@
-package at.aau.serg.websocketserver.session;
+package at.aau.serg.websocketserver.session.job;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;

@@ -2,7 +2,7 @@ package at.aau.serg.websocketserver.websocket.broker;
 
 import at.aau.serg.websocketserver.player.Player;
 import at.aau.serg.websocketserver.player.PlayerService;
-import at.aau.serg.websocketserver.board.BoardService;
+import at.aau.serg.websocketserver.session.board.BoardService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

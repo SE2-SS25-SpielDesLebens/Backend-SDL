@@ -1,6 +1,6 @@
 package at.aau.serg.websocketserver.player;
 
-import at.aau.serg.websocketserver.session.Job;
+import at.aau.serg.websocketserver.session.job.Job;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
