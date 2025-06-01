@@ -75,8 +75,6 @@ public class LobbyService {
             throw new IllegalArgumentException("Lobby mit ID " + id + " existiert nicht.");
         }
 
-        // Spieler automatisch im PlayerService registrieren
-        playerService.addPlayer(player.getId());
 
         if (!lobby.addPlayer(player)) {
             throw new IllegalStateException("Player " + player + " konnte nicht hinzugefügt werden");

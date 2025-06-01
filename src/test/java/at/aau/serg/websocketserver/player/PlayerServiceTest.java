@@ -3,6 +3,8 @@ package at.aau.serg.websocketserver.player;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class PlayerServiceTest {
@@ -12,47 +14,86 @@ class PlayerServiceTest {
     @BeforeEach
     void setUp() {
         service = PlayerService.getInstance();
-        service.clearAll(); // wichtig für saubere Tests
-        service.addPlayer("Player1");
-        service.addPlayer("Player2");
+        service.clearAll(); // Saubere Ausgangslage
     }
 
     @Test
-    void shouldAddNewPlayerSuccessfully() {
-        Player player = service.addPlayer("Player3");
-        assertNotNull(player);
-        assertEquals("Player3", player.getId());
+    void createPlayerIfNotExists_shouldCreateAndReturnPlayer() {
+        Player p = service.createPlayerIfNotExists("Anna");
+        assertNotNull(p);
+        assertEquals("Anna", p.getId());
     }
 
     @Test
-    void shouldReturnExistingPlayer() {
-        Player player1 = service.addPlayer("Player1");
-        Player same = service.getPlayerById("Player1");
-        assertEquals(player1, same);
+    void createPlayerIfNotExists_shouldNotDuplicate() {
+        service.createPlayerIfNotExists("Bob");
+        Player same = service.createPlayerIfNotExists("Bob");
+        assertEquals(1, service.getAllPlayers().size());
+        assertEquals("Bob", same.getId());
     }
 
     @Test
-    void shouldRegisterOnlyOnce() {
-        service.addPlayer("Player1");
-        assertEquals(2, service.getPlayers().size());
-    }
-
-
-    @Test
-    void removePlayer_ShouldDeleteSuccessfully() {
-        service.removePlayer("Player1");
-        assertNull(service.getPlayerById("Player1"));
+    void getPlayerById_shouldReturnCorrectPlayer() {
+        service.createPlayerIfNotExists("Carl");
+        Player p = service.getPlayerById("Carl");
+        assertNotNull(p);
+        assertEquals("Carl", p.getId());
     }
 
     @Test
-    void clearAll_ShouldEmptyMap() {
+    void getAllPlayers_shouldReturnCorrectList() {
+        service.createPlayerIfNotExists("A");
+        service.createPlayerIfNotExists("B");
+        List<Player> all = service.getAllPlayers();
+        assertEquals(2, all.size());
+    }
+
+    @Test
+    void getRegisteredPlayerCount_shouldBeAccurate() {
+        service.createPlayerIfNotExists("X");
+        service.createPlayerIfNotExists("Y");
+        assertEquals(2, service.getRegisteredPlayerCount());
+    }
+
+    @Test
+    void removePlayer_shouldWork() {
+        service.createPlayerIfNotExists("Z");
+        service.removePlayer("Z");
+        assertFalse(service.isPlayerRegistered("Z"));
+    }
+
+    @Test
+    void clearAll_shouldEmptyAllPlayers() {
+        service.createPlayerIfNotExists("M");
         service.clearAll();
-        assertTrue(service.getPlayers().isEmpty());
+        assertEquals(0, service.getAllPlayers().size());
     }
 
     @Test
-    void isPlayerRegistered_ShouldReturnCorrectValue() {
-        assertTrue(service.isPlayerRegistered("Player1"));
-        assertFalse(service.isPlayerRegistered("Unknown"));
+    void updatePlayer_shouldReplaceExisting() {
+        Player original = service.createPlayerIfNotExists("U");
+        original.setDegree(true);
+
+        Player newOne = new Player("U");
+        newOne.setDegree(false);
+        boolean updated = service.updatePlayer("U", newOne);
+
+        assertTrue(updated);
+        assertFalse(service.getPlayerById("U").hasDegree());
+    }
+
+    @Test
+    void updatePlayer_shouldFailIfMissing() {
+        Player dummy = new Player("Unknown");
+        assertFalse(service.updatePlayer("Unknown", dummy));
+    }
+
+    @Test
+    void isPlayerActive_shouldReflectCorrectState() {
+        Player player = service.createPlayerIfNotExists("ActiveGuy");
+        assertFalse(service.isPlayerActive("ActiveGuy"));
+
+        player.setActive(true);
+        assertTrue(service.isPlayerActive("ActiveGuy"));
     }
 }
