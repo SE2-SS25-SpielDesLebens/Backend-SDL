@@ -2,9 +2,7 @@ package at.aau.serg.websocketserver.player;
 
 import lombok.Getter;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Getter
 public class PlayerService {
@@ -39,11 +37,17 @@ public class PlayerService {
     }
 
     /**
-     * Alternative Methode: Holt bestehenden Spieler oder erstellt ihn neu.
+     * Erstellt einen neuen Spieler, falls noch nicht vorhanden.
+     * Gibt immer die aktuelle Instanz zurück.
      */
     public Player createPlayerIfNotExists(String id) {
-        return addPlayer(id);
+        return players.computeIfAbsent(id, pid -> {
+            Player newPlayer = new Player(pid);
+            System.out.println("🧍 Neuer Spieler registriert: " + pid);
+            return newPlayer;
+        });
     }
+
 
     /**
      * Gibt einen Spieler anhand der ID zurück.
@@ -53,11 +57,19 @@ public class PlayerService {
     }
 
     /**
-     * Gibt eine Liste aller registrierten Spieler zurück.
+     * Gibt alle registrierten Spieler zurück.
      */
-    public Collection<Player> getAllPlayers() {
-        return players.values();
+    public List<Player> getAllPlayers() {
+        return new ArrayList<>(players.values());
     }
+
+    /**
+     * Zählt, wie viele Spieler aktuell registriert sind.
+     */
+    public int getRegisteredPlayerCount() {
+        return players.size();
+    }
+
 
     /**
      * Entfernt einen Spieler aus dem Service – zB. beim Verlassen der Lobby.
@@ -92,4 +104,13 @@ public class PlayerService {
         players.put(id, updatedPlayer);
         return true;
     }
+
+    /**
+     * Gibt zurück, ob ein Spieler aktiv ist (falls gesetzt).
+     */
+    public boolean isPlayerActive(String playerId) {
+        Player p = players.get(playerId);
+        return p != null && p.isActive();
+    }
+
 }
