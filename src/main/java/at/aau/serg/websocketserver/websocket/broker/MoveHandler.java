@@ -99,36 +99,41 @@ public class MoveHandler {
     }
     
     /**
-     * Führt die angegebene Anzahl von Schritten aus, indem die nextFields-Referenzen verfolgt werden
-     * Bei mehreren möglichen nächsten Feldern wird das erste gewählt (kann später erweitert werden)
+     * Bestimmt das Zielfeld basierend auf dem Würfelwert und der nextFields-Liste des Startfeldes
      * 
      * @param startField Das Startfeld
-     * @param steps Die Anzahl der Schritte
-     * @return Das Zielfeld nach den Schritten
+     * @param steps Die gewürfelte Anzahl der Schritte (Würfelwert)
+     * @return Das Zielfeld nach dem Würfeln
      */
     private Field walkSteps(Field startField, int steps) {
         Field currentField = startField;
+        List<Integer> nextFields = currentField.getNextFields();
         
-        for (int step = 0; step < steps; step++) {
-            List<Integer> nextFields = currentField.getNextFields();
-            
-            // Wenn es keine weiteren Felder gibt, bleiben wir hier stehen
-            if (nextFields == null || nextFields.isEmpty()) {
-                break;
-            }
-            
-            // Bei mehreren möglichen Feldern nehmen wir einfach das erste (kann später erweitert werden)
-            Integer nextFieldIndex = nextFields.get(0);
-            Field nextField = boardService.getFieldByIndex(nextFieldIndex);
-            
-            if (nextField == null) {
-                // Wenn das nächste Feld nicht gefunden wird, brechen wir ab
-                break;
-            }
-            
-            currentField = nextField;
+        // Wenn es keine weiteren Felder gibt, bleiben wir hier stehen
+        if (nextFields == null || nextFields.isEmpty()) {
+            return currentField;
         }
         
-        return currentField;
+        // Bestimme das Zielfeld basierend auf dem Würfelwert (steps)
+        Integer nextFieldIndex;
+        if (steps <= nextFields.size()) {
+            // Wenn der Würfelwert kleiner oder gleich der Anzahl der nextFields ist,
+            // nehmen wir den Eintrag an der Position (steps - 1)
+            // (weil Listen in Java bei 0 beginnen)
+            nextFieldIndex = nextFields.get(steps - 1);
+        } else {
+            // Wenn der Würfelwert größer ist als die Anzahl der nextFields,
+            // nehmen wir den letzten verfügbaren Eintrag
+            nextFieldIndex = nextFields.get(nextFields.size() - 1);
+        }
+        
+        Field targetField = boardService.getFieldByIndex(nextFieldIndex);
+        
+        // Wenn das Zielfeld nicht gefunden wird, bleiben wir am aktuellen Feld
+        if (targetField == null) {
+            return currentField;
+        }
+        
+        return targetField;
     }
 }

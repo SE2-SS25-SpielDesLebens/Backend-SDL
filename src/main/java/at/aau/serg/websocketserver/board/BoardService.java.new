@@ -188,21 +188,6 @@ public class BoardService {
     }
 
     /**
-     * Gibt alle Felder zurück, die von der aktuellen Position des Spielers aus erreichbar sind.
-     * Diese überladene Version nimmt einen Integer-Parameter und konvertiert ihn zu einem String
-     * für Abwärtskompatibilität mit dem Frontend.
-     *
-     * @param playerId Die ID des Spielers als Integer
-     * @return Eine Liste aller Felder, die vom Spieler erreicht werden können
-     */
-    public List<Field> getValidNextFields(int playerId) {
-        // Wandelt die Integer-ID in einen String um
-        String playerIdStr = String.valueOf(playerId);
-        // Ruft die ursprüngliche Methode mit der String-ID auf
-        return getValidNextFields(playerIdStr);
-    }
-
-    /**
      * Setzt die Position eines Spielers direkt auf ein bestimmtes Feld.
      * Diese Methode prüft NICHT, ob die Position gültig ist.
      *
@@ -214,23 +199,12 @@ public class BoardService {
     }
 
     /**
-     * Aktualisiert die Position eines Spielers direkt zu einem bestimmten Feld.
-     * Diese Methode ist ein Wrapper für einfacheren Zugriff mit String-IDs.
-     * 
-     * @param playerName Die ID/Name des Spielers als String
-     * @param fieldIndex Der Index des Zielfelds
-     */
-    public void updatePlayerPosition(String playerName, int fieldIndex) {
-        playerPositions.put(playerName, fieldIndex);
-    }
-
-    /**
      * Gibt ein Feld anhand seines Indexes zurück.
      *
      * @param index Der Index des Feldes
      * @return Das Feld mit dem angegebenen Index oder null, wenn kein Feld mit diesem Index existiert
      */
-    public Field getFieldByIndex(int index) {
+    private Field getFieldByIndex(int index) {
         return boardDataProvider.getFieldByIndex(index);
     }
 
