@@ -1,12 +1,12 @@
 package at.aau.serg.websocketserver.game;
 
+import at.aau.serg.websocketserver.session.board.FieldType;
 import at.aau.serg.websocketserver.player.Player;
-import at.aau.serg.websocketserver.board.BoardService;
-import at.aau.serg.websocketserver.board.Field;
-import at.aau.serg.websocketserver.player.PlayerService;
-import at.aau.serg.websocketserver.session.Job;
-import at.aau.serg.websocketserver.session.JobRepository;
-import at.aau.serg.websocketserver.session.JobService;
+import at.aau.serg.websocketserver.session.board.BoardService;
+import at.aau.serg.websocketserver.session.board.Field;
+import at.aau.serg.websocketserver.session.job.Job;
+import at.aau.serg.websocketserver.session.job.JobRepository;
+import at.aau.serg.websocketserver.session.job.JobService;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -30,8 +30,6 @@ public class GameLogic {
     private GameController gameController;
     private PlayerTurnManager turnManager;
     private BoardService boardService;
-    @Setter
-    private PlayerService playerService; // ✅ Injected PlayerService
 
     private static final List<String> CAR_COLORS = List.of("Rot", "Blau", "Gelb", "Grün");
     private static final int MAX_PLAYERS = 4;
@@ -127,11 +125,13 @@ public class GameLogic {
     }
 
     public void performTurn(Player player, int spinResult) {
+        // 1. Prüfen, ob Spieler das Examen wiederholen muss
         if (player.mustRepeatExam()) {
             handleExamField(player);
-            return;
+            return; // Kein normaler Spielzug erlaubt
         }
 
+        // 2. Normale Spiellogik
         if (boardService == null) {
             throw new IllegalStateException("BoardService wurde nicht gesetzt.");
         }
@@ -155,9 +155,13 @@ public class GameLogic {
         handleField(player, endField);
         checkAndPayoutInvestment(player.getId(), spinResult);
 
+        // 3. Stoppfelder prüfen (Spieler bleibt stehen, darf erneut drehen etc.)
         List<String> stopFields = List.of("EXAMEN", "HEIRAT");
-        if (stopFields.contains(endField.getType())) return;
+        if (stopFields.contains(endField.getType())) {
+            return; // Noch kein Turn-Ende (z.B. Examen wird separat behandelt)
+        }
 
+        // 4. Turn-Management
         if (turnManager != null) {
             turnManager.completeTurn(player.getId(), spinResult);
         } else {
@@ -165,31 +169,32 @@ public class GameLogic {
         }
     }
 
+
     void handleField(Player player, Field field) {
-        String type = field.getType();
+        FieldType type = field.getType();
         switch (type) {
-            case "ZAHLTAG":
-                handleSalaryField(player);
+            case ZAHLTAG:
+                handleSalaryField(player, true);
                 break;
-            case "AKTION":
+            case AKTION:
                 handleActionField(player);
                 break;
-            case "HAUS":
+            case HAUS:
                 handleHouseField(player);
                 break;
-            case "BERUF":
+            case BERUF:
                 handleJobField(player);
                 break;
-            case "ANLAGE":
+            case ANLAGE:
                 handleInvestmentField(player);
                 break;
-            case "FREUND":
+            case FREUND:
                 handleFriendField(player, field);
                 break;
-            case "HEIRAT":
+            case HEIRAT:
                 handleMarriageField(player);
                 break;
-            case "EXAMEN":
+            case EXAMEN:
                 handleExamField(player);
                 break;
             default:
@@ -197,13 +202,13 @@ public class GameLogic {
         }
     }
 
-    private void handleSalaryField(Player player) {
+    private void handleSalaryField(Player player, boolean landedDirectly) {
         Job job = player.getJobId();
         if (job == null) return;
 
-        int amount = job.getBonusSalary();
+        int amount = landedDirectly ? job.getBonusSalary() : job.getSalary();
         player.addMoney(amount);
-        System.out.println("[ZAHLTAG] Spieler " + player.getId() + (true ? " landet auf " : " überquert ") + "Zahltagfeld: +" + amount + " €");
+        System.out.println("[ZAHLTAG] Spieler " + player.getId() + (landedDirectly ? " landet auf " : " überquert ") + "Zahltagfeld: +" + amount + " €");
     }
 
     private void handleActionField(Player player) {
@@ -220,35 +225,55 @@ public class GameLogic {
                 System.out.println("[AKTION] Spieler " + player.getId() + " verliert 15.000 € durch eine Aktionskarte.");
                 break;
             case 2:
-                playerService.incrementCounterForPlayer(player.getId(), "kind"); // ✅ ersetzt player.addChild()
+                player.addChild();
+                System.out.println("[AKTION] Spieler " + player.getId() + " bekommt ein Kind durch eine Aktionskarte.");
                 break;
             default:
                 System.out.println("[AKTION] Keine Aktion gefunden.");
         }
+        // Später: Aktionskarte ziehen, anzeigen, auswählen (falls Optionen), ausführen und zurück unter Stapel legen
+        // Kartenmechanik fehlt noch -> Aktionskarten-Stapel hier einbinden
     }
+
+
+
 
     void handleHouseField(Player player) {
         SecureRandom random = new SecureRandom();
         boolean wantsToBuy = random.nextBoolean();
 
         if (wantsToBuy) {
+            // Haus kaufen: zufällig einen Preis festlegen und Geld abziehen
             int housePrice = 200000;
             player.removeMoney(housePrice);
-            player.getHouseId().put(random.nextInt(1000), housePrice);
+            player.getHouseId().put(random.nextInt(1000), housePrice); // Dummy-ID und Wert
             System.out.println("[HAUS] Spieler " + player.getId() + " kauft ein Haus für " + housePrice + " €.");
         } else if (!player.getHouseId().isEmpty()) {
-            Optional<Integer> optionalKey = player.getHouseId().keySet().stream().findFirst();
+            // Haus verkaufen: zufällig ein Haus auswählen und Wert zurückgeben (50 % oder 150 %)
+            Optional<Integer> optionalKey = player.getHouseId()
+                    .keySet()
+                    .stream()
+                    .findFirst();
 
-            optionalKey.ifPresent(houseKey -> {
+            if (optionalKey.isPresent()) {
+                Integer houseKey = optionalKey.get();
                 int originalValue = player.getHouseId().get(houseKey);
                 boolean red = random.nextBoolean();
                 int sellPrice = red ? (int) (originalValue * 1.5) : (int) (originalValue * 0.5);
                 player.addMoney(sellPrice);
                 player.removeHouse(houseKey);
-                System.out.println("[HAUS] Spieler " + player.getId() + " verkauft ein Haus für " + sellPrice + " € (" + (red ? "Rot" : "Schwarz") + ").");
-            });
+                System.out.println("[HAUS] Spieler " + player.getId()
+                        + " verkauft ein Haus für " + sellPrice + " € (" + (red ? "Rot" : "Schwarz") + ").");
+            } else {
+                System.out.println("[HAUS] Spieler " + player.getId() + " besitzt kein Haus zum Verkaufen.");
+            }
+        } else {
+            System.out.println("[HAUS] Spieler " + player.getId() + " hat keine Häuser zum Verkaufen.");
         }
+
+        // TODO: Hauskarten ziehen (2 Stück), auswählen, kaufen oder verkaufen
     }
+
 
     void handleJobField(Player player) {
         if (jobService == null) {
@@ -259,20 +284,30 @@ public class GameLogic {
         JobRepository repo = jobService.getOrCreateRepository(this.gameId);
         Optional<Job> maybeJob = repo.getRandomAvailableJobs(player.getEducation(), 1).stream().findFirst();
 
-        maybeJob.ifPresent(newJob -> {
-            if (newJob.isRequiresDegree() && !player.getEducation()) {
-                System.out.println("[BERUF] Spieler " + player.getId() + " hat kein Studium.");
-                return;
-            }
+        if (maybeJob.isEmpty()) {
+            System.out.println("[BERUF] Keine verfügbaren Jobs für Spieler " + player.getId());
+            return;
+        }
 
-            boolean willSwitch = new SecureRandom().nextBoolean();
-            if (willSwitch || player.getJobId() == null) {
-                repo.assignJobToPlayer(player.getId(), newJob);
-                player.assignJob(newJob);
-                player.setSalary(newJob.getSalary());
-                System.out.println("[BERUF] Spieler " + player.getId() + " wechselt zu Job: " + newJob.getTitle());
-            }
-        });
+        Job newJob = maybeJob.get();
+        Job currentJob = player.getJobId();
+
+        if (newJob.isRequiresDegree() && !player.getEducation()) {
+            System.out.println("[BERUF] Spieler " + player.getId() + " hat kein Studium, kann Job '" + newJob.getTitle() + "' nicht annehmen.");
+            return;
+        }
+
+        boolean willSwitch = new SecureRandom().nextBoolean();
+        if (willSwitch || currentJob == null) {
+            repo.assignJobToPlayer(player.getId(), newJob);
+            player.assignJob(newJob);
+            player.setSalary(newJob.getSalary());
+            System.out.println("[BERUF] Spieler " + player.getId() + " wechselt zu Job: " + newJob.getTitle());
+        } else {
+            System.out.println("[BERUF] Spieler " + player.getId() + " behält seinen aktuellen Job: " + currentJob.getTitle());
+        }
+
+        // Später: Spielerentscheidung durch UI/Frontend
     }
 
     void handleInvestmentField(Player player) {
@@ -285,71 +320,151 @@ public class GameLogic {
                 int newSlot = 1 + random.nextInt(10);
                 player.setInvestments(newSlot);
                 player.setInvestmentPayout(0);
-                System.out.println("[ANLAGE] Spieler " + player.getId() + " steckt um auf Zahl " + newSlot + ".");
+                System.out.println("[ANLAGE] Spieler " + player.getId() + " steckt seine Investition kostenlos auf Zahl " + newSlot + " um (Rücksetzung auf 10.000 € Stufe).");
             } else {
                 int payoutStage = player.getInvestmentPayout();
-                int payoutAmount = (payoutStage + 1) * 10000;
-                player.addMoney(payoutAmount);
-                player.setInvestmentPayout(payoutStage + 1);
-                System.out.println("[ANLAGE] Spieler " + player.getId() + " erhält " + payoutAmount + " €.");
+                int payoutAmount;
+                switch (payoutStage) {
+                    case 0:
+                        payoutAmount = 10000;
+                        break;
+                    case 1:
+                        payoutAmount = 20000;
+                        break;
+                    case 2:
+                        payoutAmount = 30000;
+                        break;
+                    case 3:
+                        payoutAmount = 40000;
+                        break;
+                    case 4:
+                        payoutAmount = 50000;
+                        break;
+                    default:
+                        payoutAmount = 0;
+                }
+                if (payoutAmount > 0) {
+                    player.addMoney(payoutAmount);
+                    player.setInvestmentPayout(payoutStage + 1);
+                    System.out.println("[ANLAGE] Spieler " + player.getId() + " bleibt bei Zahl " + currentSlot + ", schiebt vor und erhält " + payoutAmount + " €.");
+                }
             }
             return;
         }
 
-        if (random.nextBoolean() && player.getMoney() >= 50000) {
-            int chosenNumber = 1 + random.nextInt(10);
-            player.removeMoney(50000);
-            player.setInvestments(chosenNumber);
-            player.setInvestmentPayout(0);
-            System.out.println("[ANLAGE] Spieler " + player.getId() + " investiert in Zahl " + chosenNumber + ".");
+        boolean wantsToInvest = random.nextBoolean();
+
+        if (!wantsToInvest) {
+            System.out.println("[ANLAGE] Spieler " + player.getId() + " entscheidet sich gegen eine Investition.");
+            return;
         }
+
+        if (player.getMoney() < 50000) {
+            System.out.println("[ANLAGE] Spieler " + player.getId() + " hat nicht genug Geld für eine Investition.");
+            return;
+        }
+
+        int chosenNumber = 1 + random.nextInt(10);
+        player.removeMoney(50000);
+        player.setInvestments(chosenNumber);
+        player.setInvestmentPayout(0);
+
+        System.out.println("[ANLAGE] Spieler " + player.getId() + " investiert 50.000 € auf Zahl " + chosenNumber + ".");
     }
 
     public void checkAndPayoutInvestment(String spinningPlayerId, int spinResult) {
         for (Player p : players.values()) {
-            if (p.getInvestments() == spinResult) {
+            int slot = p.getInvestments();
+            if (slot == spinResult) {
                 int payoutStage = p.getInvestmentPayout();
-                int payoutAmount = (payoutStage + 1) * 10000;
-                p.addMoney(payoutAmount);
-                p.setInvestmentPayout(payoutStage + 1);
-                System.out.println("[ANLAGE] Spieler " + p.getId() + " erhält " + payoutAmount + " €.");
+                int payoutAmount;
+                switch (payoutStage) {
+                    case 0:
+                        payoutAmount = 10000;
+                        break;
+                    case 1:
+                        payoutAmount = 20000;
+                        break;
+                    case 2:
+                        payoutAmount = 30000;
+                        break;
+                    case 3:
+                        payoutAmount = 40000;
+                        break;
+                    case 4:
+                        payoutAmount = 50000;
+                        break;
+                    default:
+                        payoutAmount = 0;
+                }
+
+                if (payoutAmount > 0) {
+                    p.addMoney(payoutAmount);
+                    p.setInvestmentPayout(payoutStage + 1);
+                    System.out.println("[ANLAGE] Spieler " + p.getId()
+                            + " erhält " + payoutAmount + " �, weil "
+                            + spinningPlayerId + " seine Anlagezahl " + spinResult + " gedreht hat.");
+                }
             }
         }
     }
 
+
     void handleFriendField(Player player, Field field) {
-        playerService.incrementCounterForPlayer(player.getId(), "freund"); // ✅ zentral über PlayerService
+        // Einheitliche Behandlung für Baby-, Freund- oder Haustierfelder als 1 Stift im Auto
+        FieldType type = field.getType();
+        if ("FREUND".equals(type)) {
+            player.addChild();
+            System.out.println("[STIFT] Spieler " + player.getId() + " landet auf einem " + type + "-Feld und bekommt 1 Stift ins Auto gesetzt.");
+        }
     }
 
+
     void handleMarriageField(Player player) {
-        if (new SecureRandom().nextBoolean()) {
+        SecureRandom random = new SecureRandom();
+        boolean wantsToMarry = random.nextBoolean(); // Optional: später durch UI ersetzt
+
+        if (wantsToMarry) {
             player.removeMoney(50000);
-            playerService.incrementCounterForPlayer(player.getId(), "heirat"); // ✅
-            playerService.incrementCounterForPlayer(player.getId(), "kind");   // 🎁 Kind zur Hochzeit
+            player.addChild(); // Kind als Hochzeitsgeschenk
+            System.out.println("[HEIRAT] Spieler " + player.getId() + " heiratet, zahlt 50.000 € und bekommt ein Kind.");
+        } else {
+            System.out.println("[HEIRAT] Spieler " + player.getId() + " heiratet nicht.");
         }
+
+        // Spieler soll selbst erneut drehen → Nachricht ans Frontend
         if (gameController != null) {
             gameController.requestAdditionalSpin(player.getId());
         }
     }
 
+
     void handleExamField(Player player) {
         if (player.mustRepeatExam()) {
-            System.out.println("[EXAMEN] Wiederholung für " + player.getId());
-            player.setMustRepeatExam(false);
+            System.out.println("[EXAMEN] Spieler " + player.getId() + " wiederholt die Prüfung.");
+            player.setMustRepeatExam(false); // Flag zurücksetzen
         }
 
         int result = 1 + new SecureRandom().nextInt(10);
         if (result <= 2) {
+            System.out.println("[EXAMEN] Spieler " + player.getId() + " ist durchgefallen und muss im nächsten Zug wiederholen.");
             player.setMustRepeatExam(true);
+
+            // Nachricht an Frontend senden
             if (gameController != null) {
                 gameController.startRepeatExamTurn(player.getId());
             }
-            return;
+
+            return; // Zug sofort beendet
         }
 
+        // Prüfung bestanden → Job mit Studium zuweisen
         JobRepository repo = jobService.getOrCreateRepository(this.gameId);
         List<Job> jobs = repo.getRandomAvailableJobs(true, 4);
-        if (jobs.isEmpty()) return;
+        if (jobs.isEmpty()) {
+            System.out.println("[EXAMEN] Keine verfügbaren Jobs mit Abschluss gefunden.");
+            return;
+        }
 
         Job chosenJob = jobs.get(new SecureRandom().nextInt(jobs.size()));
         repo.assignJobToPlayer(player.getId(), chosenJob);
@@ -363,7 +478,10 @@ public class GameLogic {
         } catch (Exception e) {
             throw new RuntimeException("Fehler beim Setzen des Bildungsstatus", e);
         }
+
+        System.out.println("[EXAMEN] Spieler " + player.getId() + " hat bestanden und erhält Job: " + chosenJob.getTitle());
     }
+
 
     public void nextTurn() {
         if (allPlayersRetired()) {
@@ -400,10 +518,18 @@ public class GameLogic {
 
         int position = retirementOrder.size();
         switch (position) {
-            case 1: player.addMoney(250000); break;
-            case 2: player.addMoney(100000); break;
-            case 3: player.addMoney(50000); break;
-            case 4: player.addMoney(10000); break;
+            case 1:
+                player.addMoney(250000);
+                break;
+            case 2:
+                player.addMoney(100000);
+                break;
+            case 3:
+                player.addMoney(50000);
+                break;
+            case 4:
+                player.addMoney(10000);
+                break;
         }
 
         player.clearJob();
@@ -442,4 +568,5 @@ public class GameLogic {
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Spieler nicht gefunden: " + name));
     }
+
 }
