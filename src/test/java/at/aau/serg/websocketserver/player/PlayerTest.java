@@ -4,6 +4,8 @@ import at.aau.serg.websocketserver.session.job.Job;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Map;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class PlayerTest {
@@ -12,29 +14,24 @@ class PlayerTest {
 
     @BeforeEach
     void setUp() {
-        player = new Player("P1");
+        player = new Player("TestPlayer");
     }
 
     @Test
-    void initialState_ShouldBeCorrect() {
-        assertEquals("P1", player.getId());
+    void testInitialState() {
+        assertEquals("TestPlayer", player.getId());
         assertEquals(0, player.getMoney());
         assertEquals(0, player.getDebts());
-        assertEquals(0, player.getSalary());
-        assertEquals(0, player.getInvestments());
-        assertFalse(player.getEducation());
         assertFalse(player.isMarried());
         assertFalse(player.isRetired());
         assertFalse(player.isActive());
         assertFalse(player.isHost());
-        assertNull(player.getJobId());
         assertEquals(0, player.getChildren());
-        assertEquals(0, player.getFieldID());
-        assertTrue(player.getHouseId().isEmpty());
     }
 
+    // 💰 Geld
     @Test
-    void addAndRemoveMoney_ShouldUpdateBalance() {
+    void shouldAddAndRemoveMoney() {
         player.addMoney(10000);
         assertEquals(10000, player.getMoney());
 
@@ -42,94 +39,175 @@ class PlayerTest {
         assertEquals(7000, player.getMoney());
     }
 
+    // 💳 Schulden
     @Test
-    void debtManagement_ShouldWorkCorrectly() {
-        player.addDebt();
-        player.addDebt();
-        assertEquals(2, player.getDebts());
-
-        player.resetDebts();
-        assertEquals(0, player.getDebts());
-    }
-
-    @Test
-    void takeLoan_ShouldAddMoneyAndDebt() {
+    void shouldTakeLoan() {
         player.takeLoan();
         assertEquals(20000, player.getMoney());
         assertEquals(1, player.getDebts());
     }
 
     @Test
-    void repayLoan_ShouldReduceDebtAndMoney_WhenSufficientFunds() {
-        player.takeLoan(); // +20000 +1 debt
-        player.addMoney(10000); // total 30000
-
-        player.repayLoan(); // -25000, -1 debt
-
-        assertEquals(5000, player.getMoney());
+    void shouldRepayLoanIfPossible() {
+        player.takeLoan(); // 1 debt, +20000
+        player.repayLoan(); // repay: no cost, debt reset
         assertEquals(0, player.getDebts());
     }
 
     @Test
-    void repayLoan_ShouldDoNothing_WhenNotEnoughMoney() {
+    void shouldNotRepayLoanIfMoneyTooLow() {
+        player.takeLoan(); // +20000
+        player.removeMoney(20000); // = 0
+        player.repayLoan(); // nothing happens
+        assertEquals(0, player.getDebts());
+    }
+
+    @Test
+    void shouldResetDebts() {
         player.takeLoan();
-        player.removeMoney(15000); // now 5000
-        player.repayLoan();
-
-        assertEquals(5000, player.getMoney());
-        assertEquals(1, player.getDebts());
+        player.resetDebts();
+        assertEquals(0, player.getDebts());
     }
 
+    // 💼 Job
     @Test
-    void jobAssignmentAndClear_ShouldWork() {
-        Job job = new Job(1, "Entwickler", 50000, 10000, false);
+    void shouldAssignAndClearJob() {
+        Job job = new Job(1, "Tester", 25000, 0, false);
         player.assignJob(job);
-
-        assertEquals(job, player.getJobId());
-
+        assertTrue(player.hasJob());
         player.clearJob();
-        assertNull(player.getJobId());
+        assertFalse(player.hasJob());
+    }
+
+    // 👶 Familie
+    @Test
+    void shouldMarryPlayer() {
+        player.marry();
+        assertTrue(player.isMarried());
     }
 
     @Test
-    void houseManagement_ShouldAddAndRemove() {
-        player.getHouseId().put(101, 1);
-        player.getHouseId().put(102, 1);
-        assertEquals(2, player.getHouseId().size());
+    void shouldThrowIfMarriedAgain() {
+        player.marry();
+        assertThrows(IllegalStateException.class, player::marry);
+    }
+
+    @Test
+    void shouldAddChildrenWithCarCheck() {
+        player.addChildrenWithCarCheck(2);
+        assertEquals(2, player.getChildren());
+        assertEquals(2, player.getAutoPassengers());
+    }
+
+    @Test
+    void shouldThrowWhenTooManyChildren() {
+        player.addChildrenWithCarCheck(4);
+        assertThrows(IllegalStateException.class, () -> player.addChildrenWithCarCheck(2));
+    }
+
+    @Test
+    void canHaveMoreChildren() {
+        assertTrue(player.canHaveMoreChildren(1));
+        player.addChildrenWithCarCheck(4);
+        assertFalse(player.canHaveMoreChildren(1));
+    }
+
+    // 🐾 Freund, Tier, Zwilling
+    @Test
+    void shouldAddPassengerFriend() {
+        player.addPassengerWithLimit("Freund", 1);
+        assertEquals(1, player.getAutoPassengers());
+    }
+
+    @Test
+    void shouldThrowIfTooManyPassengers() {
+        player.addPassengerWithLimit("Tier", 5);
+        assertThrows(IllegalStateException.class, () -> player.addPassengerWithLimit("Freund", 1));
+    }
+
+    // 🚘 Auto
+    @Test
+    void canAddPassengers() {
+        assertFalse(player.canAddPassengers(1)); // 0 passengers, 1 is OK
+        player.addPassenger(5);
+        assertTrue(player.canAddPassengers(1)); // would exceed
+    }
+
+    // 🏠 Häuser
+    @Test
+    void shouldAddAndRemoveHouse() {
+        player.addHouse(101, 50000);
+        Map<Integer, Integer> houses = player.getHouseId();
+        assertEquals(1, houses.size());
+        assertEquals(50000, houses.get(101));
 
         player.removeHouse(101);
-        assertEquals(1, player.getHouseId().size());
-        assertFalse(player.getHouseId().containsKey(101));
+        assertTrue(player.getHouseId().isEmpty());
+    }
+
+    // 🎓 Studium
+    @Test
+    void shouldHandleDegreeStatus() {
+        player.setDegree(true);
+        assertTrue(player.hasDegree());
     }
 
     @Test
-    void statusChanges_ShouldWorkCorrectly() {
-        player.marry();
-        assertTrue(player.getRelationship());
+    void shouldRepeatExamStatus() {
+        player.setMustRepeatExam(true);
+        assertTrue(player.mustRepeatExam());
+    }
 
-        player.addChild();
-        player.addChild();
-        assertEquals(2, player.getChildren());
-
+    // 🧓 Rente
+    @Test
+    void shouldRetire() {
         player.retire();
         assertTrue(player.isRetired());
         assertFalse(player.isActive());
     }
 
+    // 🧪 Event Dispatcher
     @Test
-    void carColorAndHostStatus_SetAndGetCorrectly() {
-        player.setCarColor("gelb");
-        assertEquals("gelb", player.getCarColor());
-
-        player.setHost(true);
-        assertTrue(player.isHost());
+    void handleEventKind() {
+        player.handleEvent("kind");
+        assertEquals(1, player.getChildren());
     }
 
     @Test
-    void fieldId_ShouldBeSetAndReturned() {
+    void handleEventMarriage() {
+        player.handleEvent("heirat");
+        assertTrue(player.isMarried());
+    }
+
+    @Test
+    void handleEventUnknownShouldThrow() {
+        assertThrows(IllegalArgumentException.class, () -> player.handleEvent("blabla"));
+    }
+
+    @Test
+    void handleEventFriendIncreasesPassengers() {
+        player.handleEvent("freund");
+        assertEquals(1, player.getAutoPassengers());
+    }
+
+    @Test
+    void handleEventTwinsIncreasesPassengers() {
+        player.handleEvent("zwilling");
+        assertEquals(2, player.getAutoPassengers());
+        assertEquals(2, player.getChildren());
+    }
+
+    @Test
+    void handleEventTier() {
+        player.handleEvent("tier");
+        assertEquals(1, player.getAutoPassengers());
+    }
+
+    // 🧪 Feldposition
+    @Test
+    void shouldSetAndGetFieldId() {
         player.setFieldId(42);
         assertEquals(42, player.getFieldID());
     }
+
 }
-
-

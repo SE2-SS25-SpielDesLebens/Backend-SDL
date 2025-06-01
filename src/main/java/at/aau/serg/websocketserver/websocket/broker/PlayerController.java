@@ -2,81 +2,122 @@ package at.aau.serg.websocketserver.websocket.broker;
 
 import at.aau.serg.websocketserver.player.Player;
 import at.aau.serg.websocketserver.player.PlayerService;
-import at.aau.serg.websocketserver.session.board.BoardService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/players")
 public class PlayerController {
+
     private final PlayerService playerService;
 
-
-    public PlayerController(PlayerService playerService, BoardService boardService) {
-        this.playerService = playerService;
+    public PlayerController() {
+        this.playerService = PlayerService.getInstance(); // Singleton verwenden
     }
 
+    /**
+     * Gibt alle registrierten Spieler zurück.
+     */
     @GetMapping
     public ResponseEntity<List<Player>> getAllPlayers() {
-        Collection<Player> players = playerService.getPlayers().values();
+        List<Player> players = playerService.getAllPlayers();
         if (players.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
-        return ResponseEntity.ok((List<Player>) players);
+        return ResponseEntity.ok(players);
     }
 
+    /**
+     * Erstellt einen neuen Spieler oder gibt bestehenden zurück.
+     */
     @PostMapping
-    public ResponseEntity<Player> createPlayer(@RequestBody Player player) {
-        Player created = playerService.addPlayer(player.getId());
-        return ResponseEntity.ok(created); // gib den ganzen Spieler zurück
+    public ResponseEntity<Player> createPlayer(@RequestBody Player request) {
+        Player player = playerService.createPlayerIfNotExists(request.getId());
+        return ResponseEntity.status(201).body(player);
     }
 
-
+    /**
+     * Gibt einen Spieler anhand der ID zurück.
+     */
     @GetMapping("/{id}")
     public ResponseEntity<Player> getPlayerById(@PathVariable String id) {
-        Optional<Player> player = Optional.ofNullable(playerService.getPlayerById(id));
-        return player.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+        Player player = playerService.getPlayerById(id);
+        if (player == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(player);
     }
-    @PutMapping("/{id}")
-    public ResponseEntity<String> updatePlayer(@PathVariable String id, @RequestBody Player player) {
-        boolean updated = playerService.updatePlayer(id, player);
-        if (updated) {
-            return ResponseEntity.ok("Player updated successfully");
-        } else {
+
+    /**
+     * Entfernt einen Spieler anhand der ID.
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletePlayer(@PathVariable String id) {
+        if (!playerService.isPlayerRegistered(id)) {
             return ResponseEntity.notFound().build();
         }
-    }    @PutMapping("/{id}/add-child")
+        playerService.removePlayer(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Fügt ein Kind hinzu, falls Platz vorhanden.
+     */
+    @PutMapping("/{id}/add-child")
     public ResponseEntity<String> addChild(@PathVariable String id) {
+        Player player = playerService.getPlayerById(id);
+        if (player == null) return ResponseEntity.notFound().build();
         try {
-            playerService.addChildToPlayer(id);
-            return ResponseEntity.ok("Kind erfolgreich hinzugefügt.");
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }    @PutMapping("/{id}/marry")
-    public ResponseEntity<String> marryPlayer(@PathVariable String id) {
-        try {
-            playerService.marryPlayer(id);
-            return ResponseEntity.ok("Spieler erfolgreich verheiratet.");
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }    @PutMapping("/{id}/invest")
-    public ResponseEntity<String> invest(@PathVariable String id) {
-        try {
-            playerService.investForPlayer(id);
-            return ResponseEntity.ok("Investition erfolgreich!");
-        } catch (IllegalArgumentException e) {
+            player.addChildrenWithCarCheck(1);
+            return ResponseEntity.ok("👶 Kind erfolgreich hinzugefügt.");
+        } catch (IllegalStateException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
+    /**
+     * Verheiratet den Spieler, wenn er noch nicht verheiratet ist.
+     */
+    @PutMapping("/{id}/marry")
+    public ResponseEntity<String> marryPlayer(@PathVariable String id) {
+        Player player = playerService.getPlayerById(id);
+        if (player == null) return ResponseEntity.notFound().build();
+        try {
+            player.marry();
+            return ResponseEntity.ok("💍 Spieler erfolgreich verheiratet.");
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 
+    /**
+     * Führt eine Investition durch, falls noch nicht investiert.
+     */
+    @PutMapping("/{id}/invest")
+    public ResponseEntity<String> invest(@PathVariable String id) {
+        Player player = playerService.getPlayerById(id);
+        if (player == null) return ResponseEntity.notFound().build();
+        try {
+            player.investMoney(50000);
+            return ResponseEntity.ok("📈 Investition erfolgreich durchgeführt.");
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 
+    /**
+     * Simuliert ein Ereignis über handleEvent.
+     */
+    @PutMapping("/{id}/event/{eventType}")
+    public ResponseEntity<String> triggerEvent(@PathVariable String id, @PathVariable String eventType) {
+        Player player = playerService.getPlayerById(id);
+        if (player == null) return ResponseEntity.notFound().build();
+        try {
+            player.handleEvent(eventType);
+            return ResponseEntity.ok("✅ Ereignis erfolgreich verarbeitet: " + eventType);
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }
-

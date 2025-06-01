@@ -5,14 +5,16 @@ import lombok.Getter;
 import java.security.SecureRandom;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
 import at.aau.serg.websocketserver.player.*;
 
-//speichert die Lobbys, verwaltet ID Generierung
 @Getter
 public class LobbyService {
     private final Map<String, Lobby> lobbies;
     private static LobbyService lobbyService;
 
+    // Zugriff auf PlayerService (Singleton verwenden)
+    private final PlayerService playerService = PlayerService.getInstance();
 
     //private weil als Singleton implementiert, es gibt nur einen LobbyService
     private LobbyService() {
@@ -32,7 +34,6 @@ public class LobbyService {
         String id = generateUniqueID();
         Lobby lobby = new Lobby(id, player);
         lobbies.put(id, lobby);
-        //später noch Player auf Host setzen, wenn mit PlayerService verknüpft
         return lobby;
     }
 
@@ -70,21 +71,23 @@ public class LobbyService {
 
     public void joinLobby(String id, Player player) {
         Lobby lobby = getLobby(id);
-        if(lobby == null){
-            throw new IllegalArgumentException("Lobby mit ID" + id + " existiert nicht.");
+        if (lobby == null) {
+            throw new IllegalArgumentException("Lobby mit ID " + id + " existiert nicht.");
         }
-        if(!lobby.addPlayer(player)){
-            throw new IllegalStateException("Player " + player.toString() + " konnte nicht hinzugefügt werden");
+
+
+        if (!lobby.addPlayer(player)) {
+            throw new IllegalStateException("Player " + player + " konnte nicht hinzugefügt werden");
         }
     }
 
     public void leaveLobby(String id, Player player) {
         Lobby lobby = getLobby(id);
-        if(lobby == null){
-            throw new IllegalArgumentException("Lobby mit ID" + id + " existiert nicht.");
+        if (lobby == null) {
+            throw new IllegalArgumentException("Lobby mit ID " + id + " existiert nicht.");
         }
-        if(!lobby.removePlayer(player)){
-            throw new IllegalStateException("Player " + player.toString() + " ist nicht in der Lobby.");
+        if (!lobby.removePlayer(player)) {
+            throw new IllegalStateException("Player " + player + " ist nicht in der Lobby.");
         }
     }
 
@@ -98,10 +101,9 @@ public class LobbyService {
         if (lobby != null) {
             lobbies.remove(id);
         }
-
     }
 
-    public Lobby getLobby(String id){
+    public Lobby getLobby(String id) {
         return lobbies.get(id);
     }
 }

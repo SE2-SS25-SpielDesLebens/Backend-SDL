@@ -3,6 +3,8 @@ package at.aau.serg.websocketserver.player;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class PlayerServiceTest {
@@ -12,120 +14,86 @@ class PlayerServiceTest {
     @BeforeEach
     void setUp() {
         service = PlayerService.getInstance();
-        service.addPlayer("Player1");
-        service.addPlayer("Player2");
-        service.addPlayer("Player3");
+        service.clearAll(); // Saubere Ausgangslage
     }
 
     @Test
-    void shouldAddNewPlayerSuccessfully() {
-        service.addPlayer("Player3");
-
-        Player player = service.getPlayerById("Player3");
-        assertNotNull(player);
-        assertEquals("Player3", player.getId());
+    void createPlayerIfNotExists_shouldCreateAndReturnPlayer() {
+        Player p = service.createPlayerIfNotExists("Anna");
+        assertNotNull(p);
+        assertEquals("Anna", p.getId());
     }
 
     @Test
-    void shouldUpdatePlayerSuccessfully() {
-        Player original = service.getPlayerById("Player1");
-        original.setMoney(50000);
-
-        Player updatedPlayer = service.getPlayerById("Player1");
-        assertEquals(50000, updatedPlayer.getMoney());
+    void createPlayerIfNotExists_shouldNotDuplicate() {
+        service.createPlayerIfNotExists("Bob");
+        Player same = service.createPlayerIfNotExists("Bob");
+        assertEquals(1, service.getAllPlayers().size());
+        assertEquals("Bob", same.getId());
     }
 
     @Test
-    void updatePlayer_ShouldReturnFalseIfIdNotFound() {
-        Player p = new Player("NonExisting");
-        assertFalse(service.updatePlayer("WrongId", p));
+    void getPlayerById_shouldReturnCorrectPlayer() {
+        service.createPlayerIfNotExists("Carl");
+        Player p = service.getPlayerById("Carl");
+        assertNotNull(p);
+        assertEquals("Carl", p.getId());
     }
 
     @Test
-    void addChildToPlayer_ShouldIncreaseChildrenCount() {
-        Player p = service.getPlayerById("Player1");
-        p.setChildrenCount(2);
-        service.updatePlayer("Player1", p);
-
-        boolean success = service.addChildToPlayer("Player1");
-        assertTrue(success);
-        assertEquals(3, service.getPlayerById("Player1").getChildren());
+    void getAllPlayers_shouldReturnCorrectList() {
+        service.createPlayerIfNotExists("A");
+        service.createPlayerIfNotExists("B");
+        List<Player> all = service.getAllPlayers();
+        assertEquals(2, all.size());
     }
 
     @Test
-    void addChildToPlayer_ShouldThrowIfPlayerNotFound() {
-        Exception ex = assertThrows(IllegalArgumentException.class, () ->
-                service.addChildToPlayer("UnknownPlayer"));
-        assertTrue(ex.getMessage().contains("nicht gefunden"));
+    void getRegisteredPlayerCount_shouldBeAccurate() {
+        service.createPlayerIfNotExists("X");
+        service.createPlayerIfNotExists("Y");
+        assertEquals(2, service.getRegisteredPlayerCount());
     }
 
     @Test
-    void addChildToPlayer_ShouldThrowIfTooManyChildren() {
-        Player p = service.getPlayerById("Player1");
-        p.setChildrenCount(4);
-        service.updatePlayer("Player1", p);
-
-        Exception ex = assertThrows(IllegalArgumentException.class, () ->
-                service.addChildToPlayer("Player1"));
-        assertTrue(ex.getMessage().contains("maximal 4 Kinder"));
+    void removePlayer_shouldWork() {
+        service.createPlayerIfNotExists("Z");
+        service.removePlayer("Z");
+        assertFalse(service.isPlayerRegistered("Z"));
     }
 
     @Test
-    void marryPlayer_ShouldSetMarriedFlag() {
-        boolean married = service.marryPlayer("Player1");
-        assertTrue(married);
-
-        Player p = service.getPlayerById("Player1");
-        assertTrue(p.isMarried());
+    void clearAll_shouldEmptyAllPlayers() {
+        service.createPlayerIfNotExists("M");
+        service.clearAll();
+        assertEquals(0, service.getAllPlayers().size());
     }
 
     @Test
-    void marryPlayer_ShouldThrowIfAlreadyMarried() {
-        Player p = service.getPlayerById("Player1");
-        p.setMarried(true);
-        service.updatePlayer("Player1", p);
+    void updatePlayer_shouldReplaceExisting() {
+        Player original = service.createPlayerIfNotExists("U");
+        original.setDegree(true);
 
-        Exception ex = assertThrows(IllegalArgumentException.class, () ->
-                service.marryPlayer("Player1"));
-        assertTrue(ex.getMessage().contains("bereits verheiratet"));
+        Player newOne = new Player("U");
+        newOne.setDegree(false);
+        boolean updated = service.updatePlayer("U", newOne);
+
+        assertTrue(updated);
+        assertFalse(service.getPlayerById("U").hasDegree());
     }
 
     @Test
-    void marryPlayer_ShouldThrowIfPlayerNotFound() {
-        Exception ex = assertThrows(IllegalArgumentException.class, () ->
-                service.marryPlayer("Unknown"));
-        assertTrue(ex.getMessage().contains("nicht gefunden"));
+    void updatePlayer_shouldFailIfMissing() {
+        Player dummy = new Player("Unknown");
+        assertFalse(service.updatePlayer("Unknown", dummy));
     }
 
     @Test
-    void investForPlayer_ShouldSubtractMoneyAndAddInvestment() {
-        Player p = service.getPlayerById("Player1");
-        p.setMoney(25000);
-        service.updatePlayer("Player1", p);
+    void isPlayerActive_shouldReflectCorrectState() {
+        Player player = service.createPlayerIfNotExists("ActiveGuy");
+        assertFalse(service.isPlayerActive("ActiveGuy"));
 
-        boolean success = service.investForPlayer("Player1");
-        assertTrue(success);
-
-        Player updated = service.getPlayerById("Player1");
-        assertEquals(5000, updated.getMoney());
-        assertEquals(20000, updated.getInvestments());
-    }
-
-    @Test
-    void investForPlayer_ShouldThrowIfInsufficientFunds() {
-        Player p = service.getPlayerById("Player1");
-        p.setMoney(10000);
-        service.updatePlayer("Player1", p);
-
-        Exception ex = assertThrows(IllegalArgumentException.class, () ->
-                service.investForPlayer("Player1"));
-        assertTrue(ex.getMessage().contains("Nicht genug Geld"));
-    }
-
-    @Test
-    void investForPlayer_ShouldThrowIfPlayerMissing() {
-        Exception ex = assertThrows(IllegalArgumentException.class, () ->
-                service.investForPlayer("NichtDa"));
-        assertTrue(ex.getMessage().contains("Spieler nicht gefunden"));
+        player.setActive(true);
+        assertTrue(service.isPlayerActive("ActiveGuy"));
     }
 }
