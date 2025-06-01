@@ -269,44 +269,53 @@ public class WebSocketBrokerController {
     @MessageMapping("/lobby/create")
     @SendTo("/queue/lobby/created")
     public void handleLobbyCreate(@Payload LobbyRequestMessage request) {
-        //Spieler sollte schon in PlayerService enthalten sein
-        Lobby lobby = lobbyService.createLobby(playerService.getPlayerById(request.getPlayerName()));
-        System.out.println("Lobbyid: " + lobby.getId() + " " + request.getPlayerName());
-        LobbyResponseMessage response = new LobbyResponseMessage(lobby.getId(), request.getPlayerName(), true, null);
+        String playerId = request.getPlayerName();
+
+        // Falls Spieler nicht registriert ist, neu registrieren
+        if (!playerService.isPlayerRegistered(playerId)) {
+            playerService.addPlayer(playerId);
+        }
+
+        Lobby lobby = lobbyService.createLobby(playerService.getPlayerById(playerId));
+        System.out.println("Lobbyid: " + lobby.getId() + " " + playerId);
+
+        LobbyResponseMessage response = new LobbyResponseMessage(lobby.getId(), playerId, true, null);
         messagingTemplate.convertAndSendToUser(
-                request.getPlayerName(),   // = Principal.getName(), wenn korrekt verwendet
-                "/queue/lobby/created",    // Ziel für den Client
+                playerId,
+                "/queue/lobby/created",
                 response
         );
+
         sendLobbyUpdates(lobby.getId());
     }
 
     @MessageMapping("/{lobbyid}/join")
     @SendTo("/topic/{lobbyid}")
     public void handlePlayerJoin(@DestinationVariable String lobbyid, @Payload LobbyRequestMessage request) {
-        LobbyResponseMessage response = null;
-        try {
-            Lobby lobby = lobbyService.getLobby(lobbyid);
-            if(lobby == null) throw new IllegalStateException("Lobby mit dieser ID existiert nicht.");
-            lobby.addPlayer(playerService.getPlayerById(request.getPlayerName()));
-            response = new LobbyResponseMessage(lobbyid, request.getPlayerName(), true, "Spieler " + request.getPlayerName() + " ist erfolgreich beigetreten");
-            System.out.println("Spieler " + request.getPlayerName() + " ist beigetreten");
+        LobbyResponseMessage response;
+        String playerId = request.getPlayerName();
 
-        } catch (Exception e) {
-            response = new LobbyResponseMessage(lobbyid, request.getPlayerName(), false, e.getMessage());
-        }finally{
-            String destination = String.format("/topic/%s", lobbyid);
-            assert response != null;
-            messagingTemplate.convertAndSend(destination, response);
-            try {
-                sendLobbyUpdates(lobbyid);
-            }catch(NullPointerException e){
-                System.err.println("Handled error: " + e.getMessage());
+        try {
+            if (!playerService.isPlayerRegistered(playerId)) {
+                playerService.addPlayer(playerId);
             }
 
+            Lobby lobby = lobbyService.getLobby(lobbyid);
+            if (lobby == null) {
+                throw new IllegalStateException("Lobby mit dieser ID existiert nicht.");
+            }
+
+            lobby.addPlayer(playerService.getPlayerById(playerId));
+            response = new LobbyResponseMessage(lobbyid, playerId, true, "✅ Spieler beigetreten");
+
+        } catch (Exception e) {
+            response = new LobbyResponseMessage(lobbyid, playerId, false, e.getMessage());
         }
 
+        messagingTemplate.convertAndSend("/topic/" + lobbyid, response);
+        sendLobbyUpdates(lobbyid);
     }
+
 
     @SendTo("/topic/{lobbyid}")
     public void sendLobbyUpdates(String lobbyid) {
