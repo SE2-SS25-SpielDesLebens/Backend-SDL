@@ -316,6 +316,25 @@ public class WebSocketBrokerController {
         sendLobbyUpdates(lobbyid);
     }
 
+    @MessageMapping("/players/check")
+    public void handlePlayerExistenceCheck(@Payload StompMessage message) {
+        String playerId = message.getPlayerName();
+        boolean exists = playerService.isPlayerRegistered(playerId);
+
+        messagingTemplate.convertAndSendToUser(
+                playerId,
+                "/queue/players/check",
+                new OutputMessage(
+                        "System",
+                        exists
+                                ? "✅ Spieler '" + playerId + "' ist registriert."
+                                : "❌ Spieler '" + playerId + "' ist noch nicht registriert.",
+                        LocalDateTime.now().toString()
+                )
+        );
+    }
+
+
 
     @SendTo("/topic/{lobbyid}")
     public void sendLobbyUpdates(String lobbyid) {
