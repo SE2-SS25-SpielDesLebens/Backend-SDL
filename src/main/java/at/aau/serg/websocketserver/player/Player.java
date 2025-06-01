@@ -135,14 +135,14 @@ public class Player {
         this.investments = chosenNumber;
         this.investmentPayout = 0;
 
-        System.out.println("💸 Spieler " + id + " investiert " + amount + " € auf Zahl " + chosenNumber);
+        System.out.println("💸 Spieler " + id + " investiert " + amount + "auf Zahl" + chosenNumber);
     }
 
 
     //🐾Freund,Haustier,Zwilling
     public void addPassengerWithLimit(String type, int count) {
         if (canAddPassengers(count)) {
-            throw new IllegalStateException("🚗 Kein Platz mehr im Auto für: " + type);
+            throw new IllegalStateException("🚗Kein Platz mehr im Auto für: " + type);
         }
         addPassenger(count);
     }
