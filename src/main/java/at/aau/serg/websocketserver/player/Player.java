@@ -51,7 +51,7 @@ public class Player {
         this.houseID = new HashMap<>();
     }
 
-    // 💼 Job & Einkommen
+    //💼Job&Einkommen
     public void assignJob(Job newJob) {
         job = newJob;
     }
@@ -64,7 +64,7 @@ public class Player {
         return this.job != null;
     }
 
-    // 💰 Geld
+    //💰Geld
     public void addMoney(int amount) {
         money += amount;
     }
@@ -73,7 +73,7 @@ public class Player {
         money -= amount;
     }
 
-    // 💳 Schulden
+    //💳Schulden
     public void addDebt() {
         debts += 1;
     }
@@ -94,7 +94,7 @@ public class Player {
         debts--;
     }
 
-    // 👶 Familie
+    //👶Familie
     public void marry() {
         if (isMarried) throw new IllegalStateException("Spieler ist bereits verheiratet.");
         this.isMarried = true;
@@ -117,8 +117,8 @@ public class Player {
     }
 
     /**
-     * Führt eine Investition durch – Spieler zahlt einen Betrag und erhält ein Investment-Slot.
-     * Beispiel: investMoney(50000);
+     *Führt eine Investition durch – Spieler zahlt einen Betrag und erhält ein Investment-Slot.
+     *Beispiel: investMoney(50000);
      */
     public void investMoney(int amount) {
         if (investments > 0) {
@@ -131,7 +131,7 @@ public class Player {
         removeMoney(amount);
 
         int chosenNumber = 1 + java.util.concurrent.ThreadLocalRandom.current().nextInt(10);
-        // zufällige Zahl zwischen 1–10
+        //zufällige Zahl zwischen 1–10
         this.investments = chosenNumber;
         this.investmentPayout = 0;
 
@@ -139,7 +139,7 @@ public class Player {
     }
 
 
-    // 🐾 Freund, Haustier, Zwilling
+    //🐾Freund,Haustier,Zwilling
     public void addPassengerWithLimit(String type, int count) {
         if (canAddPassengers(count)) {
             throw new IllegalStateException("🚗 Kein Platz mehr im Auto für: " + type);
@@ -147,7 +147,7 @@ public class Player {
         addPassenger(count);
     }
 
-    // 🚘 Auto
+    //🚘Auto
     public boolean canAddPassengers(int count) {
         return autoPassengers + count > 5;
     }
@@ -156,7 +156,7 @@ public class Player {
         this.autoPassengers += count;
     }
 
-    // 🏠 Häuser
+    //🏠Häuser
     public void addHouse(int houseId, int houseValue) {
         this.houseID.put(houseId, houseValue);
     }
@@ -165,7 +165,7 @@ public class Player {
         this.houseID.remove(houseId);
     }
 
-    // 🎓 Studium
+    //🎓Studium
     public boolean hasDegree() {
         return this.university;
     }
@@ -178,13 +178,13 @@ public class Player {
         return mustRepeatExam;
     }
 
-    // 🧓 Rente
+    //🧓Rente
     public void retire() {
         this.isRetired = true;
         this.isActive = false;
     }
 
-    // 🎯 Ereignisse
+    //Ereignisse
     public void handleEvent(String eventType) {
         switch (eventType.toLowerCase()) {
             case "heirat":
@@ -217,7 +217,7 @@ public class Player {
         }
     }
 
-    // ✅ JSON-Properties zb. für WebSocket oder REST-Ausgabe)
+    //✅JSON-Properties zb. für WebSocket oder REST-Ausgabe)
     @JsonProperty("id") public String getId() { return id; }
     @JsonProperty("money") public int getMoney() { return money; }
     @JsonProperty("investments") public int getInvestments() { return investments; }
