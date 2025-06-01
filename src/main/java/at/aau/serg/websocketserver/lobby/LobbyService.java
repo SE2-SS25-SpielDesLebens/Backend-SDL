@@ -31,9 +31,6 @@ public class LobbyService {
 
     //erstellt neue Lobby, erstellender Spieler als Parameter wird automatisch hinzugefügt (und ist Host)
     public Lobby createLobby(Player player) {
-        // Spieler automatisch im PlayerService registrieren (wenn nicht bereits vorhanden)
-        playerService.addPlayer(player.getId());
-
         String id = generateUniqueID();
         Lobby lobby = new Lobby(id, player);
         lobbies.put(id, lobby);
