@@ -1,7 +1,6 @@
 package at.aau.serg.websocketserver.player;
 
 import lombok.Getter;
-import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -42,18 +41,6 @@ public class PlayerService {
      */
     public Player getPlayerById(String id) {
         return players.get(id);
-    }
-
-    /**
-     * Ereignis (Kind, Heirat, Haustier...) an einen Spieler weiterleiten.
-     */
-    public boolean incrementCounterForPlayer(String playerId, String eventType) {
-        Player player = getPlayerById(playerId);
-        if (player == null) {
-            throw new IllegalArgumentException("Spieler mit ID " + playerId + " nicht gefunden.");
-        }
-        player.handleEvent(eventType);
-        return true;
     }
 
     /**
