@@ -2,8 +2,10 @@ package at.aau.serg.websocketserver.player;
 
 import lombok.Getter;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+
 @Getter
 public class PlayerService {
 
@@ -11,7 +13,7 @@ public class PlayerService {
 
     private final Map<String, Player> players = new HashMap<>();
 
-    // privater Konstruktor – verhindert direkte Instanziierung
+    // 🧍 privater Konstruktor – verhindert direkte Instanziierung
     private PlayerService() {
     }
 
@@ -37,6 +39,13 @@ public class PlayerService {
     }
 
     /**
+     * Alternative Methode: Holt bestehenden Spieler oder erstellt ihn neu.
+     */
+    public Player createPlayerIfNotExists(String id) {
+        return addPlayer(id);
+    }
+
+    /**
      * Gibt einen Spieler anhand der ID zurück.
      */
     public Player getPlayerById(String id) {
@@ -44,7 +53,14 @@ public class PlayerService {
     }
 
     /**
-     * Entfernt einen Spieler aus dem Service – zb. beim Verlassen der Lobby.
+     * Gibt eine Liste aller registrierten Spieler zurück.
+     */
+    public Collection<Player> getAllPlayers() {
+        return players.values();
+    }
+
+    /**
+     * Entfernt einen Spieler aus dem Service – zB. beim Verlassen der Lobby.
      */
     public void removePlayer(String playerId) {
         players.remove(playerId);
@@ -52,7 +68,7 @@ public class PlayerService {
     }
 
     /**
-     * Leert alle Spieler – zb. beim Neustart des Servers.
+     * Leert alle Spieler – zB. beim Neustart des Servers.
      */
     public void clearAll() {
         players.clear();
@@ -64,5 +80,16 @@ public class PlayerService {
      */
     public boolean isPlayerRegistered(String playerId) {
         return players.containsKey(playerId);
+    }
+
+    /**
+     * Aktualisiert einen existierenden Spieler vollständig.
+     */
+    public boolean updatePlayer(String id, Player updatedPlayer) {
+        if (!players.containsKey(id)) {
+            return false;
+        }
+        players.put(id, updatedPlayer);
+        return true;
     }
 }
