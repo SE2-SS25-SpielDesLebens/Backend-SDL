@@ -130,6 +130,9 @@ public class Player {
 
         removeMoney(amount);
 
+        /**
+         * Diese Zufallszahl ist rein für Spielzwecke, daher ist ThreadLocalRandom hier ausreichend.
+         */
         int chosenNumber = 1 + java.util.concurrent.ThreadLocalRandom.current().nextInt(10);
         //zufällige Zahl zwischen 1–10
         this.investments = chosenNumber;
