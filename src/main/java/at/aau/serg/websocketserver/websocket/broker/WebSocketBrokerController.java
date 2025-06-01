@@ -271,12 +271,11 @@ public class WebSocketBrokerController {
     public void handleLobbyCreate(@Payload LobbyRequestMessage request) {
         String playerId = request.getPlayerName();
 
-        // Falls Spieler nicht registriert ist, neu registrieren
-        if (!playerService.isPlayerRegistered(playerId)) {
-            playerService.addPlayer(playerId);
-        }
+        // Spieler wird erstellt oder zurückgegeben (zentral!)
+        Player player = playerService.createPlayerIfNotExists(playerId);
 
-        Lobby lobby = lobbyService.createLobby(playerService.getPlayerById(playerId));
+        // Lobby erstellen
+        Lobby lobby = lobbyService.createLobby(player);
         System.out.println("Lobbyid: " + lobby.getId() + " " + playerId);
 
         LobbyResponseMessage response = new LobbyResponseMessage(lobby.getId(), playerId, true, null);
@@ -296,16 +295,14 @@ public class WebSocketBrokerController {
         String playerId = request.getPlayerName();
 
         try {
-            if (!playerService.isPlayerRegistered(playerId)) {
-                playerService.addPlayer(playerId);
-            }
+            Player player = playerService.createPlayerIfNotExists(playerId);
 
             Lobby lobby = lobbyService.getLobby(lobbyid);
             if (lobby == null) {
                 throw new IllegalStateException("Lobby mit dieser ID existiert nicht.");
             }
 
-            lobby.addPlayer(playerService.getPlayerById(playerId));
+            lobby.addPlayer(player);
             response = new LobbyResponseMessage(lobbyid, playerId, true, "✅ Spieler beigetreten");
 
         } catch (Exception e) {
@@ -315,6 +312,7 @@ public class WebSocketBrokerController {
         messagingTemplate.convertAndSend("/topic/" + lobbyid, response);
         sendLobbyUpdates(lobbyid);
     }
+
 
     @MessageMapping("/players/check")
     public void handlePlayerExistenceCheck(@Payload StompMessage message) {
