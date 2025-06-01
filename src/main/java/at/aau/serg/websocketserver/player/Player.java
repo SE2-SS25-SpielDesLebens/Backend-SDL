@@ -130,7 +130,8 @@ public class Player {
 
         removeMoney(amount);
 
-        int chosenNumber = 1 + new java.util.Random().nextInt(10); // zufällige Zahl zwischen 1–10
+        int chosenNumber = 1 + java.util.concurrent.ThreadLocalRandom.current().nextInt(10);
+        // zufällige Zahl zwischen 1–10
         this.investments = chosenNumber;
         this.investmentPayout = 0;
 
