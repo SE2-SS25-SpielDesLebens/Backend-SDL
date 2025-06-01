@@ -1,10 +1,10 @@
 package at.aau.serg.websocketserver.player;
 
 import lombok.Getter;
+import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;
-
 @Getter
 public class PlayerService {
 
