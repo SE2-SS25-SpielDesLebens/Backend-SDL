@@ -1,104 +1,114 @@
 package at.aau.serg.websocketserver.player;
 
 import lombok.Getter;
-import org.springframework.stereotype.Service;
 
 import java.util.*;
 
-@Service
+/**
+ * 💼 Zentrale Spielerverwaltung als Singleton.
+ * Hält alle registrierten Spieler im Speicher.
+ */
 @Getter
 public class PlayerService {
-    private final Map<String, Player> players;
-    private static PlayerService playerService;
 
-    private PlayerService() {
-        players = new HashMap<>();
-    }
+    // 🔒 Singleton-Instanz
+    private static PlayerService instance;
 
-    public static synchronized PlayerService getInstance(){
-        if(playerService == null){
-            playerService = new PlayerService();
+    // 🗃️ Spieler-Map (Key = Spieler-ID)
+    private final Map<String, Player> players = new HashMap<>();
+
+    // ⛔ Privater Konstruktor
+    private PlayerService() {}
+
+    /**
+     * 🧍 Zugriff auf die Singleton-Instanz
+     */
+    public static synchronized PlayerService getInstance() {
+        if (instance == null) {
+            instance = new PlayerService();
         }
-        return playerService;
+        return instance;
     }
 
+    // ───────────────────────────────────────────────
+    // 🎮 SPIELER-MANAGEMENT
+    // ───────────────────────────────────────────────
+
+    /**
+     * 🔁 Erstellt und registriert einen Spieler, falls noch nicht vorhanden.
+     * Sollte **immer** zur Erstellung genutzt werden.
+     */
+    public Player createPlayerIfNotExists(String id) {
+        return players.computeIfAbsent(id, pid -> {
+            Player newPlayer = new Player(pid);
+            System.out.println("🧍 Neuer Spieler registriert: " + pid);
+            return newPlayer;
+        });
+    }
+
+    /**
+     * ❌ Entfernt einen Spieler anhand der ID.
+     */
+    public void removePlayer(String playerId) {
+        players.remove(playerId);
+        System.out.println("🚪 Spieler entfernt: " + playerId);
+    }
+
+    /**
+     * 🧹 Entfernt **alle** registrierten Spieler.
+     */
+    public void clearAll() {
+        players.clear();
+        System.out.println("🧹 Alle Spieler wurden entfernt.");
+    }
+
+    /**
+     * 🔎 Prüft, ob ein Spieler registriert ist.
+     */
+    public boolean isPlayerRegistered(String playerId) {
+        return players.containsKey(playerId);
+    }
+
+    /**
+     * 🔄 Aktualisiert einen existierenden Spieler vollständig.
+     * Gibt true zurück, wenn erfolgreich.
+     */
+    public boolean updatePlayer(String id, Player updatedPlayer) {
+        if (!players.containsKey(id)) return false;
+        players.put(id, updatedPlayer);
+        return true;
+    }
+
+    // ───────────────────────────────────────────────
+    // 📊 ABFRAGEN / LISTEN
+    // ───────────────────────────────────────────────
+
+    /**
+     * 📦 Gibt einen Spieler anhand der ID zurück.
+     */
     public Player getPlayerById(String id) {
         return players.get(id);
     }
 
-    //TODO: anpassen
-    public boolean updatePlayer(String id, Player updatedPlayer) {
-        /*for (int i = 0; i < players.size(); i++) {
-            if (players.get(i).getId().equals(id)) {
-                players.put(i, updatedPlayer);
-                return true;
-            }
-        }*/
-        return false;
+    /**
+     * 📋 Gibt eine Liste aller registrierten Spieler zurück.
+     */
+    public List<Player> getAllPlayers() {
+        return new ArrayList<>(players.values());
     }
 
-    public Player addPlayer(String id) {
-        Player newPlayer = new Player(id);
-        players.put(id, newPlayer);
-        System.out.println("Neuer Spieler hinzugefügt: " + newPlayer.getId() + " mit ID " + newPlayer.getId());
-        return newPlayer;
+    /**
+     * 🧮 Gibt die Anzahl registrierter Spieler zurück.
+     */
+    public int getRegisteredPlayerCount() {
+        return players.size();
     }
 
-    public boolean addChildToPlayer(String playerId) {
-        Player player = getPlayerById(playerId);
-
-        if (player == null) {
-            throw new IllegalArgumentException("Spieler mit ID " + playerId + " nicht gefunden.");
-        }
-
-        if (player.getChildren() >= 4) {
-            throw new IllegalArgumentException("Ein Spieler darf maximal 4 Kinder haben.");
-        }
-
-        player.setChildrenCount(player.getChildren()+1);
-
-        //updatePlayer(player.getId(), player);
-        System.out.println("👶 Spieler " + player.getId() + " hat nun " + player.getChildren() + " Kind(er).");
-        return true;
+    /**
+     * ✅ Prüft, ob ein Spieler aktiv ist.
+     */
+    public boolean isPlayerActive(String playerId) {
+        Player player = players.get(playerId);
+        return player != null && player.isActive();
     }
-
-    public boolean marryPlayer(String playerId) {
-        Player player = getPlayerById(playerId);
-
-        if (player==null) {
-            throw new IllegalArgumentException("Spieler mit ID " + playerId + " nicht gefunden.");
-        }
-
-        if (player.isMarried()) {
-            throw new IllegalArgumentException("Spieler ist bereits verheiratet.");
-        }
-
-        player.setMarried(true);
-
-        updatePlayer(player.getId(), player);
-        System.out.println("💍 Spieler " + player.getId() + " ist jetzt verheiratet.");
-        return true;
-    }
-
-    public boolean investForPlayer(String playerId) {
-        Player player = getPlayerById(playerId);
-        if (player == null) {
-            throw new IllegalArgumentException("Spieler nicht gefunden.");
-        }
-
-
-        int investAmount = 20000;
-        if (player.getMoney() < investAmount) {
-            throw new IllegalArgumentException("Nicht genug Geld für eine Investition.");
-        }
-
-
-        player.setMoney(player.getMoney() - investAmount);
-        player.setInvestments(player.getInvestments() + investAmount);
-
-        updatePlayer(player.getId(), player);
-        System.out.println("📈 Spieler " + player.getId() + " hat 20.000€ investiert.");
-        return true;
-    }
-
 }

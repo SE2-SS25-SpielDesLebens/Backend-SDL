@@ -1,4 +1,4 @@
-package at.aau.serg.websocketserver.board;
+package at.aau.serg.websocketserver.session.board;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

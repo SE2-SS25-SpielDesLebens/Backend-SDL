@@ -1,4 +1,4 @@
-package at.aau.serg.websocketserver.actioncard;
+package at.aau.serg.websocketserver.session.actioncard;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
