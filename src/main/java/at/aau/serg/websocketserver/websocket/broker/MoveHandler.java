@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
 @Controller
 public class MoveHandler {
     private final BoardService boardService;
-    private static final Pattern DICE_ROLL_PATTERN = Pattern.compile("(\\d+) gewürfelt(?::(\\d+))?");
+    private static final Pattern DICE_ROLL_PATTERN = Pattern.compile("^(10|[1-9]) gewürfelt(?::(1[0-4][0-9]|[1-9]?[0-9]))?$");
     
     @Autowired
     public MoveHandler(BoardService boardService) {
