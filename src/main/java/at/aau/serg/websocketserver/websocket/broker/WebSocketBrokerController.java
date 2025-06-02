@@ -84,11 +84,16 @@ public class WebSocketBrokerController {
                         "Job-Repository für Spiel " + gameId + " wurde angelegt.",
                         now()
                 )
-        );
-    }
+        );    }
 
-    @MessageMapping("/move")
-    public void handleMove(StompMessage message) {
+    /**
+     * Diese Methode wurde entfernt und mit der Implementation im MoveHandler ersetzt,
+     * um doppelte MessageMapping-Definitionen zu vermeiden.
+     * 
+     * @see at.aau.serg.websocketserver.websocket.broker.MoveHandler#handleMove(StompMessage)
+     */
+    // @MessageMapping("/move") - Entfernt wegen Konflikt mit MoveHandler
+    public void handleLegacyMove(StompMessage message) {
         int playerId;
         try {
             playerId = Integer.parseInt(message.getPlayerName()); // Annahme: playerName = ID
@@ -131,7 +136,7 @@ public class WebSocketBrokerController {
         if (action != null && action.startsWith("move:")) {
             try {
                 int targetFieldIndex = Integer.parseInt(action.substring(5));
-                boolean success = boardService.movePlayerToField(playerId, targetFieldIndex);
+                boolean success = boardService.movePlayerToField(String.valueOf(playerId), targetFieldIndex);
                 if (success) {
                     Field currentField = boardService.getPlayerField(playerId);
                     List<Integer> nextPossibleFieldIndices = new ArrayList<>();
@@ -198,13 +203,13 @@ public class WebSocketBrokerController {
             // Die gewürfelte Zahl ist im gültigen Bereich der Optionen
             // Wir verwenden steps-1 als Index, da die Liste bei 0 beginnt, aber die Würfelzahl bei 1
             targetIndex = moveOptions.get(steps - 1);
-            boardService.movePlayerToField(playerId, targetIndex);
+            boardService.movePlayerToField(String.valueOf(playerId), targetIndex);
             currentField = boardService.getPlayerField(playerId); // Aktualisiere das Feld nach der Bewegung
         } else if (steps > moveOptions.size() && !moveOptions.isEmpty()) {
             // Die gewürfelte Zahl ist größer als die Anzahl der Optionen
             // Wir bewegen zum letzten verfügbaren Feld (Stop-Feld)
             targetIndex = moveOptions.get(moveOptions.size() - 1);
-            boardService.movePlayerToField(playerId, targetIndex);
+            boardService.movePlayerToField(String.valueOf(playerId), targetIndex);
             currentField = boardService.getPlayerField(playerId); // Aktualisiere das Feld nach der Bewegung
         }
 

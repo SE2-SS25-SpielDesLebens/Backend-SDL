@@ -81,13 +81,24 @@
             <artifactId>junit-jupiter</artifactId>
             <version>5.10.0</version>
             <scope>test</scope>
-        </dependency>
-
-        <!-- Mockito -->
+        </dependency>        <!-- Mockito -->
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>5.10.0</version>
+            <version>5.11.0</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- ByteBuddy für Java 21-Unterstützung -->
+        <dependency>
+            <groupId>net.bytebuddy</groupId>
+            <artifactId>byte-buddy</artifactId>
+            <version>1.14.13</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>net.bytebuddy</groupId>
+            <artifactId>byte-buddy-agent</artifactId>
+            <version>1.14.13</version>
             <scope>test</scope>
         </dependency>
 
@@ -256,3 +267,15 @@
         </plugins>
     </build>
 </project>
+
+
+
+
+
+
+
+
+
+
+
+

@@ -70,9 +70,7 @@ public class BoardServiceComplexTest {
         assertEquals(2, options.size(), "Nach zwei Schritten sollten zwei Optionen verfügbar sein");
         assertTrue(options.contains(3), "Eine Option sollte Feld 3 sein");
         assertTrue(options.contains(11), "Eine Option sollte Feld 11 sein");
-    }
-
-    @Test
+    }    @Test
     public void testIsPlayerOnField() {
         assertTrue(boardService.isPlayerOnField("player1", 1), "Spieler 1 sollte auf Feld 1 sein");
         assertTrue(boardService.isPlayerOnField("player2", 3), "Spieler 2 sollte auf Feld 3 sein");
