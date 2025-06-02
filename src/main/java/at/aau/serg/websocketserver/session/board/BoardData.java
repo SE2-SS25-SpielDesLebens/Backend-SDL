@@ -33,17 +33,17 @@ public class BoardData implements BoardDataProvider {    private static final Li
         new Field(16, 0.308, 0.712, Arrays.asList(17,18,19,20,21,22,23,24,25,26), FieldType.AKTION),
         new Field(17, 0.339, 0.738, Arrays.asList(18,19,20,21,22,23,24,25,26,27), FieldType.FREUND),
         new Field(18, 0.372, 0.71, Arrays.asList(19,20,21,22,23,24,25,26,27,28), FieldType.AKTION),
-        new Field(19, 0.405, 0.68, Arrays.asList(20,21,22,23,24,25,26,27,28,29), FieldType.EXAMEN),
+        new Field(19, 0.405, 0.68, Arrays.asList(20,21,22,23,24,25,26,27,28), FieldType.EXAMEN),
         
         //Gemeinsamer Weg zur Heirat
-        new Field(20, 0.405, 0.62, Arrays.asList(21,22,23,24,25,26,27,28,29), FieldType.ZAHLTAG),
-        new Field(21, 0.435, 0.595, Arrays.asList(22,23,24,25,26,27,28,29), FieldType.AKTION),
-        new Field(22, 0.47, 0.62, Arrays.asList(23,24,25,26,27,28,29), FieldType.HAUS),
-        new Field(23, 0.5, 0.595, Arrays.asList(24,25,26,27,28,29), FieldType.AKTION),
-        new Field(24, 0.5, 0.548, Arrays.asList(25,26,27,28,29), FieldType.ZAHLTAG),
-        new Field(25, 0.47, 0.523, Arrays.asList(26,27,28,29), FieldType.AKTION),
-        new Field(26, 0.435, 0.498, Arrays.asList(27,28,29), FieldType.FREUND),
-        new Field(27, 0.405, 0.473, Arrays.asList(28,29), FieldType.AKTION),
+        new Field(20, 0.405, 0.62, Arrays.asList(21,22,23,24,25,26,27,28), FieldType.ZAHLTAG),
+        new Field(21, 0.435, 0.595, Arrays.asList(22,23,24,25,26,27,28), FieldType.AKTION),
+        new Field(22, 0.47, 0.62, Arrays.asList(23,24,25,26,27,28), FieldType.HAUS),
+        new Field(23, 0.5, 0.595, Arrays.asList(24,25,26,27,28), FieldType.AKTION),
+        new Field(24, 0.5, 0.548, Arrays.asList(25,26,27,28), FieldType.ZAHLTAG),
+        new Field(25, 0.47, 0.523, Arrays.asList(26,27,28), FieldType.AKTION),
+        new Field(26, 0.435, 0.498, Arrays.asList(27,28), FieldType.FREUND),
+        new Field(27, 0.405, 0.473, Arrays.asList(28), FieldType.AKTION),
         new Field(28, 0.37, 0.44, Arrays.asList(29), FieldType.HEIRAT),
         
         // Heirat Ja
