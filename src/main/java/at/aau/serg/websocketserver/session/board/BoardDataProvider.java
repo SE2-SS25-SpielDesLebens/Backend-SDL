@@ -1,7 +1,7 @@
 package at.aau.serg.websocketserver.session.board;
 
 import java.util.List;
-import at.aau.serg.websocketserver.board.Field;
+import at.aau.serg.websocketserver.session.board.Field;
 
 
 /**

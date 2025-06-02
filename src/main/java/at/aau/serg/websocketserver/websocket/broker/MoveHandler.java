@@ -1,8 +1,8 @@
 package at.aau.serg.websocketserver.websocket.broker;
 
-import at.aau.serg.websocketserver.board.BoardService;
-import at.aau.serg.websocketserver.board.Field;
-import at.aau.serg.websocketserver.board.FieldType;
+import at.aau.serg.websocketserver.session.board.BoardService;
+import at.aau.serg.websocketserver.session.board.Field;
+import at.aau.serg.websocketserver.session.board.FieldType;
 import at.aau.serg.websocketserver.messaging.dtos.MoveMessage;
 import at.aau.serg.websocketserver.messaging.dtos.StompMessage;
 import org.springframework.beans.factory.annotation.Autowired;
