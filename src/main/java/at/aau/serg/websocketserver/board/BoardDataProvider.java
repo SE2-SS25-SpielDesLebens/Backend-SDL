@@ -1,6 +1,8 @@
 package at.aau.serg.websocketserver.board;
 
 import java.util.List;
+import at.aau.serg.websocketserver.board.Field;
+
 
 /**
  * Schnittstelle für den Zugriff auf die Spielbrettdaten.

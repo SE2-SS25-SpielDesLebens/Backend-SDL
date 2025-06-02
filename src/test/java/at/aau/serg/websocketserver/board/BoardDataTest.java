@@ -17,15 +17,13 @@ public class BoardDataTest {
     @BeforeEach
     public void setUp() {
         boardData = new BoardData();
-    }
-
-    @Test
+    }    @Test
     public void testGetBoard() {
         List<Field> board = boardData.getBoard();
 
         assertNotNull(board, "Das Board sollte nicht null sein");
         assertFalse(board.isEmpty(), "Das Board sollte nicht leer sein");
-        assertEquals(27, board.size(), "Das Board sollte 27 Felder enthalten");
+        assertEquals(134, board.size(), "Das Board sollte 134 Felder enthalten");
 
         assertThrows(UnsupportedOperationException.class, () -> board.add(null),
                 "Die zurückgegebene Liste sollte unveränderbar sein");
