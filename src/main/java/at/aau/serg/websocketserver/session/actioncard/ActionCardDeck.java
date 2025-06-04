@@ -45,20 +45,20 @@ public class ActionCardDeck {
     }
 
     /**
-     * Loads the list of ActionCards from the cards.json resource file.
+     * Loads the list of ActionCards from the actionCards.json resource file.
      * @return list of all ActionCards
      */
     private List<ActionCard> loadCardsFromJson() {
         Gson gson = new Gson();
         Type listType = new TypeToken<List<ActionCard>>() {}.getType();
-        InputStream is = getClass().getResourceAsStream("/actionCard/cards.json");
+        InputStream is = getClass().getResourceAsStream("/actionCard/actionCards.json");
         if (is == null) {
-            throw new IllegalStateException("cards.json resource not found in /actioncard/");
+            throw new IllegalStateException("actionCards.json resource not found in /actioncard/");
         }
         try (InputStreamReader reader = new InputStreamReader(is)) {
             return gson.fromJson(reader, listType);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to load or parse cards.json", e);
+            throw new RuntimeException("Failed to load or parse actionCards.json", e);
         }
     }
 
