@@ -1,7 +1,7 @@
 package at.aau.serg.websocketserver.websocket.broker;
 
-import at.aau.serg.websocketserver.actioncard.ActionCard;
-import at.aau.serg.websocketserver.actioncard.ActionCardDeck;
+import at.aau.serg.websocketserver.session.actioncard.ActionCard;
+import at.aau.serg.websocketserver.session.actioncard.ActionCardDeck;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
