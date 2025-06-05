@@ -51,7 +51,7 @@ public class ActionCardDeck {
     private List<ActionCard> loadCardsFromJson() {
         Gson gson = new Gson();
         Type listType = new TypeToken<List<ActionCard>>() {}.getType();
-        InputStream is = getClass().getResourceAsStream("/actionCard/actionCards.json");
+        InputStream is = getClass().getResourceAsStream("/actionCards.json");
         if (is == null) {
             throw new IllegalStateException("actionCards.json resource not found in /actioncard/");
         }
