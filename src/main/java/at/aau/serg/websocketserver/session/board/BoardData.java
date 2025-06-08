@@ -194,10 +194,10 @@ public class BoardData implements BoardDataProvider {    private static final Li
      * Statische Methode für Abwärtskompatibilität, sollte in neuen Code nicht verwendet werden.
      * Verwenden Sie stattdessen die Instanzmethode.
      *
-     * @return Eine unveränderbare Liste aller Felder
-     * @deprecated Verwende die Instanz über Dependency Injection
+     * @return Eine unveränderbare Liste aller Felder     * @deprecated Verwende die Instanz über Dependency Injection
+     * @since 1.0
      */
-    @Deprecated
+    @Deprecated(since = "1.0", forRemoval = false)
     public static List<Field> getBoardStatic() {
         return Collections.unmodifiableList(BOARD);
     }
