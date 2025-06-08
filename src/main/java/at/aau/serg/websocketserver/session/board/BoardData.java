@@ -205,12 +205,12 @@ public class BoardData implements BoardDataProvider {    private static final Li
     /**
      * Statische Methode für Abwärtskompatibilität, sollte in neuen Code nicht verwendet werden.
      * Verwenden Sie stattdessen die Instanzmethode.
-     *
-     * @param index Der Index des gesuchten Felds
+     *     * @param index Der Index des gesuchten Felds
      * @return Das gefundene Feld oder null, wenn kein Feld mit diesem Index existiert
      * @deprecated Verwende die Instanz über Dependency Injection
+     * @since 1.0
      */
-    @Deprecated
+    @Deprecated(since = "1.0", forRemoval = false)
     public static Field getFieldByIndexStatic(int index) {
         for (Field field : BOARD) {
             if (field.getIndex() == index) {
