@@ -93,10 +93,11 @@ class HouseServiceTest {
         House houseToBuy = houseService.getOrCreateRepository(GAME_ID).getRandomAvailableHouses(1).get(0);
         houseService.buyHouse(GAME_ID, PLAYER_NAME, houseToBuy.getHouseId());
 
-        assertThrows(IllegalStateException.class, () -> {
-            houseService.buyHouse(GAME_ID, "AnotherPlayer", houseToBuy.getHouseId());
-        });
+        int houseId = houseToBuy.getHouseId(); // Vorher berechnen!
+
+        assertThrows(IllegalStateException.class, () -> houseService.buyHouse(GAME_ID, "AnotherPlayer", houseId));
     }
+
 
     @Test
     void testSellHouse_success() {
@@ -117,10 +118,12 @@ class HouseServiceTest {
         House houseToBuy = houseService.getOrCreateRepository(GAME_ID).getRandomAvailableHouses(1).get(0);
         House boughtHouse = houseService.buyHouse(GAME_ID, PLAYER_NAME, houseToBuy.getHouseId());
 
-        assertThrows(IllegalStateException.class, () -> {
-            houseService.sellHouse(GAME_ID, "AnotherPlayer", boughtHouse.getHouseId(), boughtHouse.getVerkaufspreisRot());
-        });
+        int houseId = boughtHouse.getHouseId();
+        int verkaufspreisRot = boughtHouse.getVerkaufspreisRot();
+
+        assertThrows(IllegalStateException.class, () -> houseService.sellHouse(GAME_ID, "AnotherPlayer", houseId, verkaufspreisRot));
     }
+
 
     @Test
     void testFinalizeHouseAction_buyFlow() {
