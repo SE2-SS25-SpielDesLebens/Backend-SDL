@@ -215,9 +215,10 @@ public class BoardServiceTest {
     @Test
     public void testGetBoard() {
         List<Field> board = boardService.getBoard();
+        Field field1 = new Field(999, 0, 0, List.of(), FieldType.AKTION);
 
         assertEquals(mockFields, board);
-        assertThrows(UnsupportedOperationException.class, () -> board.add(new Field(999, 0, 0, List.of(), FieldType.AKTION)));
+        assertThrows(UnsupportedOperationException.class, () -> board.add(field1));
     }
 
 }

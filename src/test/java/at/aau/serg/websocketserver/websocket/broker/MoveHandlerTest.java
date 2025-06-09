@@ -68,7 +68,7 @@ public class MoveHandlerTest {
         assertEquals(Arrays.asList(9, 10), result.getNextPossibleFields());
 
         // Überprüfen, ob die Spielerposition aktualisiert wurde
-        verify(boardService).updatePlayerPosition(eq(playerName), eq(targetFieldIndex));
+        verify(boardService).updatePlayerPosition(playerName, targetFieldIndex);
     }
 
     @Test
