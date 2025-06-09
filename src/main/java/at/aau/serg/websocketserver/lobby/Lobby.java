@@ -21,7 +21,7 @@ public class Lobby {
     private GameLogic gameLogic;
 
     private final ArrayList<Player> players = new ArrayList<>();
-    public static final int maxPlayers = 4;
+    public static final int MAX_PLAYERS = 4;
 
     @Setter
     boolean isStarted = false;
@@ -32,7 +32,7 @@ public class Lobby {
     }
 
     public synchronized boolean addPlayer(Player player){
-        if(players.size() >= maxPlayers){
+        if(players.size() >= MAX_PLAYERS){
             return false;
         }
         return players.add(player);
@@ -48,7 +48,7 @@ public class Lobby {
     }
 
     public boolean isFull(){
-        return players.size()>=maxPlayers;
+        return players.size()>= MAX_PLAYERS;
     }
 
     public boolean isEmpty(){

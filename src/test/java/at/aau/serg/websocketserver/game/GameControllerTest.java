@@ -75,7 +75,20 @@ public class GameControllerTest {
     public void testStartPlayerTurn_correctPlayerLogsAction() {
         Player p = new Player("abc");
         logic.setCurrentPlayer(p);
-        controller.startPlayerTurn("abc", true);
+        java.io.ByteArrayOutputStream outContent = new java.io.ByteArrayOutputStream();
+        java.io.PrintStream originalOut = System.out;
+        System.setOut(new java.io.PrintStream(outContent));
+        try {
+            controller.startPlayerTurn("abc", true);
+            String output = outContent.toString();
+            assertTrue(output.contains("abc"), "Die Konsolenausgabe sollte die Spieler-ID enthalten.");
+            assertTrue(output.contains("[INFO]") && output.contains("startet seinen Zug"), 
+                "Die Konsolenausgabe sollte die korrekte Info-Nachricht enthalten.");
+            assertTrue(output.contains("[AKTION]") && output.contains("kauft eine Kapitalanlage"), 
+                "Die Konsolenausgabe sollte die Kaufaktion enthalten.");
+        } finally {
+            System.setOut(originalOut);
+        }
     }
 
     @Test
@@ -223,19 +236,19 @@ public class GameControllerTest {
         public DummyMessagingTemplate() {
             super(new MessageChannel() {
                 @Override
-                public boolean send(Message<?> message) {
+                public boolean send(@org.springframework.lang.NonNull Message<?> message) {
                     return true;
                 }
 
                 @Override
-                public boolean send(Message<?> message, long timeout) {
+                public boolean send(@org.springframework.lang.NonNull Message<?> message, long timeout) {
                     return true;
                 }
             });
         }
 
         @Override
-        public void convertAndSend(String destination, Object payload) {
+        public void convertAndSend(@org.springframework.lang.NonNull String destination, @org.springframework.lang.NonNull Object payload) {
             this.lastTopic = destination;
             this.lastMessage = payload;
         }

@@ -17,6 +17,8 @@ public class HouseService {
     private final ObjectProvider<HouseRepository> houseRepoProvider;
     private final PlayerService playerService;
 
+    public static final String HAUS_NICHT_GEFUNDEN = "Haus nicht gefunden: ";
+
     public HouseService(ObjectProvider<HouseRepository> houseRepoProvider,
                         PlayerService playerService) {
         this.houseRepoProvider = houseRepoProvider;
@@ -84,7 +86,7 @@ public class HouseService {
         HouseRepository repo = getOrCreateRepository(gameId);
         House house = repo.findHouseById(houseId)
                 .orElseThrow(() -> new NoSuchElementException(
-                        "Haus nicht gefunden: " + houseId));
+                        HAUS_NICHT_GEFUNDEN + houseId));
 
         House result;
         if (house.isTaken() && playerName.equals(house.getAssignedToPlayerName())) {
@@ -102,7 +104,7 @@ public class HouseService {
         HouseRepository repo = getOrCreateRepository(gameId);
         House house = repo.findHouseById(houseId)
                 .orElseThrow(() -> new NoSuchElementException(
-                        "Haus nicht gefunden: " + houseId));
+                        HAUS_NICHT_GEFUNDEN + houseId));
         if (house.isTaken()) {
             throw new IllegalStateException("Haus bereits vergeben: " + houseId);
         }
@@ -119,7 +121,7 @@ public class HouseService {
         // Explizites Haus anhand seiner ID holen
         House house = repo.findHouseById(houseId)
                 .orElseThrow(() -> new IllegalStateException(
-                        "Haus nicht gefunden: " + houseId));
+                        HAUS_NICHT_GEFUNDEN + houseId));
 
         // Sicherstellen, dass der Spieler tatsächlich dieses Haus besitzt
         if (!playerId.equals(house.getAssignedToPlayerName())) {
