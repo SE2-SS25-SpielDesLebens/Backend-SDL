@@ -105,7 +105,7 @@ public class GameController {
                 topic,
                 new OutputMessage(
                         "System",
-                        "Du darfst erneut drehen (z. B. nach einer Heirat).",
+                        "Du darfst erneut drehen (z.B. nach einer Heirat).",
                         LocalDateTime.now().toString()
                 )
         );
