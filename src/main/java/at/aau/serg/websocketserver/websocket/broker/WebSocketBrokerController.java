@@ -525,11 +525,11 @@ public class WebSocketBrokerController {
     public void finalizeHouseAction(@DestinationVariable int gameId,
                                     @DestinationVariable String playerName,
                                     @Payload HouseMessage houseMsg) {
-        // Aufruf auf der Bean-Instanz, nicht statisch
+        // übergebe das ganze Objekt, nicht nur die ID
         HouseMessage confirmation = houseService.finalizeHouseAction(
                 gameId,
                 playerName,
-                houseMsg.getHouseId()
+                houseMsg
         );
 
         String dest = String.format("/topic/%d/houses/%s/confirmation",
@@ -538,6 +538,7 @@ public class WebSocketBrokerController {
         );
         messagingTemplate.convertAndSend(dest, confirmation);
     }
+
     @MessageMapping("/game/createHouseRepo/{gameId}")
     public void handleHouseRepoCreation(@DestinationVariable int gameId) {
         // Erstelle (oder liefere zurück) das House-Repository
