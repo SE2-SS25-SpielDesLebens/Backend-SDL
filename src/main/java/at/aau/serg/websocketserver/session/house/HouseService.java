@@ -87,7 +87,7 @@ public class HouseService {
         HouseRepository repo = getOrCreateRepository(gameId);
         House house = repo.findHouseById(houseMessage.getHouseId())
                 .orElseThrow(() -> new NoSuchElementException(
-                        HAUS_NICHT_GEFUNDEN + houseId));
+                        HAUS_NICHT_GEFUNDEN + houseMessage.getHouseId()));
 
         House result;
         if (house.isTaken() && playerName.equals(house.getAssignedToPlayerName())) {
