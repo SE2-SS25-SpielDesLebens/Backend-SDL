@@ -389,18 +389,19 @@ public class WebSocketBrokerController {
 
         for (Player player : lobby.getPlayers()) {
             gameLogic.registerPlayer(player.getId());
-        }
-
-        gameLogic.prepareGameStart();
+        }        gameLogic.prepareGameStart();
         lobby.setStarted(true);
         lobby.setGameLogic(gameLogic);
 
 
-        // 4. Optional: Nachricht an alle senden
+        // 4. Nachricht an alle senden
+        String lobbyId = Integer.toString(gameId);
         messagingTemplate.convertAndSend(
-                "/topic/game/" + gameId + "/status",
-                "Das Spiel wurde gestartet. Spieleranzahl: " + lobby.getPlayers().size()
+                "/topic/game/" + gameId + "/status",                "Das Spiel wurde gestartet. Spieleranzahl: " + lobby.getPlayers().size()
         );
+        
+        // Wichtig: Sende auch ein Update an das Lobby-Topic, damit Clients über den Spielstart informiert werden
+        sendLobbyUpdates(Integer.toString(gameId));
 
     }
 
@@ -555,4 +556,118 @@ public class WebSocketBrokerController {
         );
     }
 
+    @MessageMapping("/game/{gameId}/start-career")
+    public void handleStartCareer(@DestinationVariable int gameId, @Payload String playerName) {
+        Lobby lobby = LobbyService.getInstance().getLobby(Integer.toString(gameId));
+        if (lobby == null || !lobby.isStarted() || lobby.getGameLogic() == null) {
+            System.out.println("[FEHLER] Keine aktive Spiellogik für Career-Start Anfrage von " + playerName);
+            return;
+        }
+
+        GameLogic gameLogic = lobby.getGameLogic();
+        PlayerTurnManager turnManager = gameLogic.getTurnManager();
+        turnManager.startWithCareer(playerName, gameId);
+        
+        messagingTemplate.convertAndSend(
+                "/topic/game/" + gameId + "/status",
+                playerName + " beginnt mit einer Karriere."
+        );
+    }    @MessageMapping("/game/{gameId}/start-university")
+    public void handleStartUniversity(@DestinationVariable int gameId, @Payload String playerName) {
+        Lobby lobby = LobbyService.getInstance().getLobby(Integer.toString(gameId));
+        if (lobby == null || !lobby.isStarted() || lobby.getGameLogic() == null) {
+            System.out.println("[FEHLER] Keine aktive Spiellogik für University-Start Anfrage von " + playerName);
+            return;
+        }
+
+        GameLogic gameLogic = lobby.getGameLogic();
+        PlayerTurnManager turnManager = gameLogic.getTurnManager();
+        turnManager.startWithUniversity(playerName, gameId);
+        
+        messagingTemplate.convertAndSend(
+                "/topic/game/" + gameId + "/status",
+                playerName + " beginnt mit einem Studium."
+        );
+    }
+    
+    /**
+     * Handler für den Beitritt eines Spielers zu einem bereits laufenden Spiel.
+     * Diese Methode synchronisiert den Spieler mit dem aktuellen Spielzustand.
+     */
+    @MessageMapping("/game/{gameId}/join")
+    public void handleGameJoin(@DestinationVariable String gameId, @Payload StompMessage message) {
+        String playerName = message.getPlayerName();
+        System.out.println("👤 Spieler " + playerName + " tritt Spiel in Lobby " + gameId + " bei");
+        
+        // 1. Lobby abrufen
+        Lobby lobby = LobbyService.getInstance().getLobby(gameId);
+        if (lobby == null) {
+            System.out.println("❌ Lobby " + gameId + " existiert nicht");
+            messagingTemplate.convertAndSendToUser(
+                    playerName,
+                    "/queue/errors",
+                    new OutputMessage("System", "Lobby existiert nicht", now())
+            );
+            return;
+        }
+        
+        try {
+            // 2. Spieler erstellen, wenn nicht vorhanden, und zur Lobby hinzufügen
+            Player player = playerService.createPlayerIfNotExists(playerName);
+            if (!lobby.getPlayers().contains(player) && !lobby.isFull()) {
+                lobby.addPlayer(player);
+                System.out.println("✅ Spieler " + playerName + " zur Lobby hinzugefügt");
+            }
+            
+            // 3. Wenn das Spiel läuft, Spieler auch zur GameLogic hinzufügen
+            if (lobby.isStarted() && lobby.getGameLogic() != null) {
+                GameLogic gameLogic = lobby.getGameLogic();
+                if (!gameLogic.registerPlayer(playerName)) {
+                    gameLogic.registerPlayer(playerName);
+                    System.out.println("✅ Spieler " + playerName + " zur GameLogic hinzugefügt");
+                }
+            }
+            
+            // 4. Bestätigung an den Client senden
+            messagingTemplate.convertAndSendToUser(
+                    playerName,
+                    "/queue/join/confirm",
+                    new OutputMessage("System", "Erfolgreich dem Spiel beigetreten", now())
+            );
+            
+            // 5. Alle Spieler über den Beitritt informieren
+            messagingTemplate.convertAndSend(
+                    "/topic/game/" + gameId + "/status",
+                    playerName + " ist dem Spiel beigetreten."
+            );
+            
+            // 6. Lobby-Updates senden
+            sendLobbyUpdates(gameId);
+            
+        } catch (Exception e) {
+            System.out.println("❌ Fehler beim Beitritt zum Spiel: " + e.getMessage());
+            messagingTemplate.convertAndSendToUser(
+                    playerName,
+                    "/queue/errors",
+                    new OutputMessage("System", "Fehler beim Beitritt: " + e.getMessage(), now())
+            );
+        }
+    }
+
+    /**
+     * Liefert die aktuellen Positionen aller Spieler an den Client.
+     * Diese Methode kann vom Frontend aufgerufen werden, um die Spielerpositionen zu synchronisieren.
+     */
+    @MessageMapping("/players/positions/request")
+    public void handlePlayerPositionsRequest() {
+        // Erstelle eine neue PlayerPositionsMessage mit den aktuellen Positionen
+        PlayerPositionsMessage positionsMessage = new PlayerPositionsMessage(
+                boardService.getAllPlayerPositions(),
+                now()
+        );
+
+        // Sende die Nachricht an alle verbundenen Clients
+        messagingTemplate.convertAndSend("/topic/players/positions", positionsMessage);
+        System.out.println("👥 Sende Spielerpositionen auf Anfrage: " + positionsMessage.getPlayerPositions().size() + " Spieler");
+    }
 }

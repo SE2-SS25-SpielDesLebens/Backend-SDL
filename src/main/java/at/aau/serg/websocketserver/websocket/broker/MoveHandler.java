@@ -4,15 +4,18 @@ import at.aau.serg.websocketserver.session.board.BoardService;
 import at.aau.serg.websocketserver.session.board.Field;
 import at.aau.serg.websocketserver.session.board.FieldType;
 import at.aau.serg.websocketserver.messaging.dtos.MoveMessage;
+import at.aau.serg.websocketserver.messaging.dtos.PlayerPositionsMessage;
 import at.aau.serg.websocketserver.messaging.dtos.StompMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -22,11 +25,13 @@ import java.util.regex.Pattern;
 @Controller
 public class MoveHandler {
     private final BoardService boardService;
+    private final SimpMessagingTemplate messagingTemplate;
     private static final Pattern DICE_ROLL_PATTERN = Pattern.compile("^(10|[1-9]) gewürfelt(?::(1[0-4][0-9]|[1-9]?[0-9]))?$");
     
     @Autowired
-    public MoveHandler(BoardService boardService) {
+    public MoveHandler(BoardService boardService, SimpMessagingTemplate messagingTemplate) {
         this.boardService = boardService;
+        this.messagingTemplate = messagingTemplate;
     }
 
     /**
@@ -57,11 +62,43 @@ public class MoveHandler {
             // Spielerbewegung berechnen
             MoveMessage response = processPlayerMove(playerName, diceRoll, currentFieldIndex, timestamp);
             System.out.println("🎲 MoveHandler: Sende Antwort - Zielfeld: " + response.getIndex() + ", Typ: " + response.getType() + ", Nächste Felder: " + response.getNextPossibleFields());
+            
+            // Aktualisierte Positionen aller Spieler an alle Clients senden
+            sendAllPlayerPositions(timestamp);
+            
             return response;
+        }
+        
+        // Wenn die Nachricht "join:X" ist, dann füge den Spieler zum Spielbrett hinzu
+        if (action != null && action.startsWith("join:")) {
+            try {
+                int startFieldIndex = Integer.parseInt(action.substring(5));
+                boardService.addPlayer(playerName, startFieldIndex);
+                
+                // Aktualisierte Positionen aller Spieler an alle Clients senden
+                sendAllPlayerPositions(timestamp);
+            } catch (Exception e) {
+                System.out.println("⚠️ MoveHandler: Fehler beim Verarbeiten von 'join': " + e.getMessage());
+            }
         }
         
         // Fallback für ungültiges Format
         return new MoveMessage(playerName, 0, FieldType.AKTION, timestamp);
+    }
+    
+    /**
+     * Sendet die Positionen aller Spieler an alle Clients.
+     * 
+     * @param timestamp Der aktuelle Zeitstempel
+     */
+    private void sendAllPlayerPositions(String timestamp) {
+        Map<String, Integer> allPositions = boardService.getAllPlayerPositions();
+        
+        if (!allPositions.isEmpty()) {
+            PlayerPositionsMessage positionsMessage = new PlayerPositionsMessage(allPositions, timestamp);
+            messagingTemplate.convertAndSend("/topic/players/positions", positionsMessage);
+            System.out.println("👥 MoveHandler: Sende Positionen aller " + allPositions.size() + " Spieler");
+        }
     }
     
     /**
