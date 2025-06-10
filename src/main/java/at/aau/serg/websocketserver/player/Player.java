@@ -69,14 +69,15 @@ public class Player {
 
     // 💰 Geld
     public void addMoney(int amount) {
+        if (amount < 0) throw new IllegalArgumentException("Betrag darf nicht negativ sein.");
         this.money += amount;
-        System.out.println("💰 Spieler " + id + " erhält " + amount + "€. Neuer Kontostand: " + this.money);
     }
 
     public void removeMoney(int amount) {
+        if (amount < 0) throw new IllegalArgumentException("Betrag darf nicht negativ sein.");
         this.money -= amount;
-        System.out.println("💸 Spieler " + id + " verliert " + amount + "€. Neuer Kontostand: " + this.money);
     }
+
 
 
     // 💳 Schulden
