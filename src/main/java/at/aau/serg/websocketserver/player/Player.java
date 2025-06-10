@@ -69,12 +69,15 @@ public class Player {
 
     // 💰 Geld
     public void addMoney(int amount) {
-        money += amount;
+        this.money += amount;
+        System.out.println("💰 Spieler " + id + " erhält " + amount + "€. Neuer Kontostand: " + this.money);
     }
 
     public void removeMoney(int amount) {
-        money -= amount;
+        this.money -= amount;
+        System.out.println("💸 Spieler " + id + " verliert " + amount + "€. Neuer Kontostand: " + this.money);
     }
+
 
     // 💳 Schulden
     public void addDebt() {
@@ -224,4 +227,5 @@ public class Player {
     @JsonProperty("jobId") public Job getJobId() { return job; }
     @JsonProperty("houseId") public Map<Integer, Integer> getHouseId() { return houseID; }
     @JsonProperty("fieldId") public int getFieldID() { return fieldId; }
+
 }
