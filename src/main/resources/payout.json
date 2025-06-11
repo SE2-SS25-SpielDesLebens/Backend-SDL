@@ -1,0 +1,20 @@
+{
+  "payouts": [
+    { "payoutId": 2, "allowPayout": false },
+    { "payoutId": 20, "allowPayout": true },
+    { "payoutId": 24, "allowPayout": false },
+    { "payoutId": 33, "allowPayout": false },
+    { "payoutId": 41, "allowPayout": false },
+    { "payoutId": 52, "allowPayout": false },
+    { "payoutId": 66, "allowPayout": false },
+    { "payoutId": 71, "allowPayout": true },
+    { "payoutId": 76, "allowPayout": true },
+    { "payoutId": 91, "allowPayout": false },
+    { "payoutId": 98, "allowPayout": false },
+    { "payoutId": 102, "allowPayout": true },
+    { "payoutId": 110, "allowPayout": true },
+    { "payoutId": 118, "allowPayout": false },
+    { "payoutId": 126, "allowPayout": false },
+    { "payoutId": 132, "allowPayout": false }
+  ]
+}
