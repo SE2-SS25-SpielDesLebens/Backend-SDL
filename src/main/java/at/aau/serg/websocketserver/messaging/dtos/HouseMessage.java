@@ -16,4 +16,5 @@ public class HouseMessage {
     private boolean isTaken;
     private String assignedToPlayerName;
     private int gameId;
+    private boolean sellPrice;
 }
