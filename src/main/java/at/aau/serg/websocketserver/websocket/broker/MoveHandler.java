@@ -48,6 +48,12 @@ public class MoveHandler {
         
         System.out.println("🎲 MoveHandler: Empfange Nachricht von " + playerName + ", Aktion: " + action);
         
+        if (action != null && action.equals("get-all-players")) {
+            System.out.println("👥 DEBUG: Spieleranfrage erkannt für Spieler " + playerName);
+            int currentPosition = getPlayerPosition(playerName);
+            System.out.println("👥 DEBUG: Aktuelle Position von " + playerName + " ist " + currentPosition);
+        }
+        
         // Aktuelle Zeit für Timestamp
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
         
@@ -68,8 +74,7 @@ public class MoveHandler {
             
             return response;
         }
-        
-        // Wenn die Nachricht "join:X" ist, dann füge den Spieler zum Spielbrett hinzu
+          // Wenn die Nachricht "join:X" ist, dann füge den Spieler zum Spielbrett hinzu
         if (action != null && action.startsWith("join:")) {
             try {
                 int startFieldIndex = Integer.parseInt(action.substring(5));
@@ -82,11 +87,32 @@ public class MoveHandler {
             }
         }
         
+        // Spezielle Behandlung für "get-all-players" Aktion
+        if (action != null && action.equals("get-all-players")) {
+            System.out.println("👥 MoveHandler: Anfrage für Spielerliste von " + playerName);
+            
+            // Sende alle Spielerpositionen, aber gebe KEINE Default-MoveMessage zurück
+            sendAllPlayerPositions(timestamp);
+            
+            // Hole die aktuelle Position des Spielers anstatt auf 0 zurückzusetzen
+            int currentPosition = boardService.getPlayerPosition(playerName);
+            Field currentField = boardService.getFieldByIndex(currentPosition);
+            
+            if (currentField != null) {
+                return new MoveMessage(
+                    playerName,
+                    currentField.getIndex(),
+                    currentField.getType(),
+                    timestamp,
+                    currentField.getNextFields()
+                );
+            }
+        }
+        
         // Fallback für ungültiges Format
         return new MoveMessage(playerName, 0, FieldType.AKTION, timestamp);
     }
-    
-    /**
+      /**
      * Sendet die Positionen aller Spieler an alle Clients.
      * 
      * @param timestamp Der aktuelle Zeitstempel
@@ -99,6 +125,16 @@ public class MoveHandler {
             messagingTemplate.convertAndSend("/topic/players/positions", positionsMessage);
             System.out.println("👥 MoveHandler: Sende Positionen aller " + allPositions.size() + " Spieler");
         }
+    }
+    
+    /**
+     * Hilfsmethode zur Ermittlung der aktuellen Position eines Spielers
+     * 
+     * @param playerName Die ID des Spielers
+     * @return Die aktuelle Position des Spielers
+     */
+    private int getPlayerPosition(String playerName) {
+        return boardService.getPlayerPosition(playerName);
     }
     
     /**
