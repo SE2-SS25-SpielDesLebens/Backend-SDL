@@ -60,9 +60,7 @@ public class BoardDataTest {
         assertNotNull(staticField, "Die statische getFieldByIndex-Methode sollte funktionieren");
         assertEquals(boardData.getFieldByIndex(1).getIndex(), staticField.getIndex(), 
                 "Statische und Instanzmethode sollten das gleiche Feld zurückgeben");
-    }
-
-    @Test
+    }    @Test
     public void testBoardStructure() {
         Field field1 = boardData.getFieldByIndex(1);
         assertNotNull(field1, "Feld 1 sollte existieren");
@@ -70,6 +68,7 @@ public class BoardDataTest {
 
         Field field18 = boardData.getFieldByIndex(18);
         assertNotNull(field18, "Feld 18 sollte existieren");
-        assertTrue(field18.getNextFields().contains(20), "Feld 18 sollte zu Feld 20 führen");
+        assertTrue(field18.getNextFields().contains(19), "Feld 18 sollte zu Feld 19 führen");
+        assertFalse(field18.getNextFields().contains(20), "Feld 18 sollte nicht zu Feld 20 führen");
     }
 }
