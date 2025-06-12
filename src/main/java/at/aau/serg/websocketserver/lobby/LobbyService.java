@@ -106,4 +106,6 @@ public class LobbyService {
     public Lobby getLobby(String id) {
         return lobbies.get(id);
     }
+
+    public boolean isLobbyRegistered(String id) { return lobbies.containsKey(id); }
 }
