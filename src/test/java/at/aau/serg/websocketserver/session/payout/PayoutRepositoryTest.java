@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.*;
  class PayoutRepositoryTest {
 
     @Test
-    public void testPayoutEntryFieldsAndSetters() {
+     void testPayoutEntryFieldsAndSetters() {
         PayoutRepository.PayoutEntry entry = new PayoutRepository.PayoutEntry(42, false);
 
         assertEquals(42, entry.getPayoutId());
