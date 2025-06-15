@@ -2,7 +2,7 @@
   "payouts": [
     { "payoutId": 2, "allowPayout": false },
     { "payoutId": 20, "allowPayout": true },
-    { "payoutId": 24, "allowPayout": false },
+    { "payoutId": 24, "allowPayout": true },
     { "payoutId": 33, "allowPayout": false },
     { "payoutId": 41, "allowPayout": false },
     { "payoutId": 52, "allowPayout": false },

@@ -1,5 +1,6 @@
 package at.aau.serg.websocketserver.session.payout;
 
+import at.aau.serg.websocketserver.player.PlayerService;
 import at.aau.serg.websocketserver.session.board.BoardService;
 import at.aau.serg.websocketserver.session.job.JobRepository;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -17,12 +19,14 @@ public class PayoutService {
 
     private final BoardService boardService;
     private final JobRepository jobRepository;
+    private final PlayerService playerService;
+
 
     // Nur eine globale Liste von PayoutEntries → KEINE MAP → einfach eine ArrayList
     private final List<PayoutRepository.PayoutEntry> payoutEntries = new ArrayList<>();
 
     /**
-     * Lädt die Payout-Liste aus payouts.json für einen bestimmten Spieler (überschreibt die globale Liste).
+     * Lädt die Payout-Liste aus payouts.json für einen bestimmten Spieler. Am Start des Spiels auszuführen
      */
     public void loadPayoutForPlayer(String playerName) throws Exception {
         InputStream inputStream = getClass().getClassLoader().getResourceAsStream("payouts.json");
@@ -47,45 +51,78 @@ public class PayoutService {
         }
     }
 
-    /**
-     * Prüft ob der Spieler (playerName) auf einem Payout-Feld steht und gibt BonusSalary zurück.
-     * In deinem JSON gibt es kein BonusSalary → also in dieser Methode einfach 0 oder 1 zurückgeben als Beispiel.
-     * Hier nehmen wir einfach 1 als Dummy-Bonus.
-     */
+
     public int checkAndApplyPayoutIfOnPayoutField(String playerName) {
         int playerFieldIndex = boardService.getPlayerPosition(playerName);
 
         for (PayoutRepository.PayoutEntry entry : payoutEntries) {
-            if (entry.getPayoutId() == playerFieldIndex) {
-                System.out.println("Payout erlaubt auf Feld " + playerFieldIndex);
-                return 1; // Dummy-Betrag → du kannst hier später echten Betrag definieren
+            if (entry.getPayoutId() == playerFieldIndex && entry.isAllowPayout()) {
+                int bonus = jobRepository.payoutBonusSalary(playerName);
+                entry.setAllowPayout(false); // Deaktivieren, damit es nur einmal auszahlt
+                return bonus;
             }
         }
         return 0; // Kein Payout
     }
 
-    /**
-     * Prüft ob der Spieler auf einem der speziellen Felder steht.
-     * Felder: 1, 10, 29, 38, 48, 62, 84, 96, 116, 120
-     * Liest allowPayout aus der jeweiligen PayoutEntry aus dem JSON.
-     * Gibt true zurück, wenn das Feld ein Spezialfeld ist und allowPayout == true.
-     */
-    public boolean checkIfPlayerOnSpecialField(String playerName) {
+    public int applyPaydayIfPassedPayoutField(String playerName) {
+        int currentPosition = boardService.getPlayerPosition(playerName);
+
+        for (PayoutRepository.PayoutEntry entry : payoutEntries) {
+            if (entry.isAllowPayout() && currentPosition > entry.getPayoutId()) {
+                entry.setAllowPayout(false); // Auszahlung erfolgt → zurücksetzen
+                return jobRepository.payoutSalary(playerName); // normales Gehalt
+            }
+        }
+        return 0; // Kein Zahltag ausgelöst
+    }
+
+    public void checkIfPlayerOnSpecialField(String playerName) {
         int index = boardService.getPlayerPosition(playerName);
 
-        // Prüfen ob der Spieler auf einem der Spezialfelder steht
-        if (index == 1 || index == 10 || index == 29 || index == 38 || index == 48 ||
-                index == 62 || index == 84 || index == 96 || index == 116 || index == 120) {
+        // Spezialregeln: Spielerposition → Liste der payoutIds, die aktiviert werden sollen
+        Map<Integer, List<Integer>> bonusRules = Map.of(
+                1, List.of(2),
+                29, List.of(33),
+                38, List.of(41),
+                48, List.of(52),
+                62, List.of(66),
+                84, List.of(91),
+                96, List.of(98),
+                116, List.of(118),
+                120, List.of(126, 132)
+        );
 
-            // in der Entry-Liste prüfen ob für das Feld allowPayout true gesetzt ist:
+        // Falls für das aktuelle Feld Bonusregel definiert ist:
+        if (bonusRules.containsKey(index)) {
+            List<Integer> targets = bonusRules.get(index);
             for (PayoutRepository.PayoutEntry entry : payoutEntries) {
-                if (entry.getPayoutId() == index && entry.isAllowPayout()) {
-                    // Spezialfeld mit allowPayout == true
-                    return true;
+                if (targets.contains(entry.getPayoutId())) {
+                    entry.setAllowPayout(true);
                 }
             }
         }
-
-        return false; // kein Spezialfeld oder allowPayout == false
     }
+    /**
+     * Diese Methode muss nach jeder Spielerbewegung aufgerufen werden.
+     * Sie prüft:
+     * 1. Ob durch das aktuelle Spielfeld Spezial-Payouts aktiviert werden sollen.
+     * 2. Ob der Spieler direkt auf einem aktiven Payout-Feld steht und zahlt ggf. Bonusgehalt aus.
+     * 3. Ob der Spieler ein aktives Zahltag-Feld (Payday) überquert hat und zahlt ggf. normales Gehalt aus.
+     */
+
+    public void handlePayoutAfterMovement(String playerName) {
+        int totalPayout = 0;
+
+        // 1. Spezialfelder aktivieren (z. B. Feld 1 aktiviert 2 usw.)
+        checkIfPlayerOnSpecialField(playerName);
+
+        // 3. Bonusgehalt wenn Spieler direkt auf aktivem Payout-Feld steht
+        totalPayout += checkAndApplyPayoutIfOnPayoutField(playerName);
+
+        // 2. Normales Gehalt (Zahltag) wenn Spieler über ein aktives Feld hinweg ist
+        totalPayout += applyPaydayIfPassedPayoutField(playerName);
+        //playerService.addMoneyToPlayer(playerName, amount);
+    }
+
 }
