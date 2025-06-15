@@ -114,13 +114,10 @@ class PayoutServiceTest {
 
         List<PayoutRepository.PayoutEntry> entries = getEntries();
 
-        // Erwartung: Bonusfeld und Payday wurden deaktiviert
         assertFalse(entries.get(0).isAllowPayout()); // 29
         assertFalse(entries.get(1).isAllowPayout()); // 15
         assertTrue(entries.get(2).isAllowPayout());  // 33 aktiviert durch Spezialregel
-
-        // Auszahlung wurde nicht durchgeführt (weil im Produktivcode auskommentiert)
-        verify(playerService, never()).addMoneyToPlayer(anyString(), anyInt());
+        verify(playerService).addMoneyToPlayer("Dave", 1300);
     }
 
     @Test
