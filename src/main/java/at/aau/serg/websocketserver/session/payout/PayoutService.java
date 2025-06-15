@@ -122,7 +122,7 @@ public class PayoutService {
 
         // 2. Normales Gehalt (Zahltag) wenn Spieler über ein aktives Feld hinweg ist
         totalPayout += applyPaydayIfPassedPayoutField(playerName);
-        //playerService.addMoneyToPlayer(playerName, amount);
+        playerService.addMoneyToPlayer(playerName, totalPayout);
     }
 
 }
