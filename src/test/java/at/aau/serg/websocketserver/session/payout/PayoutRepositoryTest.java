@@ -6,7 +6,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class PayoutRepositoryTest {
+ class PayoutRepositoryTest {
 
     @Test
     public void testPayoutEntryFieldsAndSetters() {
@@ -20,7 +20,7 @@ public class PayoutRepositoryTest {
     }
 
     @Test
-    public void testCreatePayoutListFromJson_validJson() {
+     void testCreatePayoutListFromJson_validJson() {
         String json = "{ \"payouts\": [ " +
                 "{ \"payoutId\": 5, \"allowPayout\": true }, " +
                 "{ \"payoutId\": 10, \"allowPayout\": false } " +
@@ -42,7 +42,7 @@ public class PayoutRepositoryTest {
     }
 
     @Test
-    public void testCreatePayoutListFromJson_emptyList() {
+     void testCreatePayoutListFromJson_emptyList() {
         String json = "{ \"payouts\": [] }";
         List<PayoutRepository.PayoutEntry> entries = PayoutRepository.createPayoutListFromJson(json);
 
@@ -51,7 +51,7 @@ public class PayoutRepositoryTest {
     }
 
     @Test
-    public void testCreatePayoutListFromJson_nullJsonField() {
+     void testCreatePayoutListFromJson_nullJsonField() {
         String json = "{}";
         List<PayoutRepository.PayoutEntry> entries = PayoutRepository.createPayoutListFromJson(json);
 

@@ -9,6 +9,10 @@ import java.util.List;
 
 public class PayoutRepository {
 
+    private PayoutRepository() {
+        // verhindert Instanziierung dieser Utility-Klasse
+    }
+
     @Getter
     public static class PayoutEntry {
         private final int payoutId;
@@ -16,14 +20,12 @@ public class PayoutRepository {
         @Setter
         private boolean allowPayout;
 
-        // WICHTIG: hier jetzt korrekt → übernimmt Wert aus JSON
         public PayoutEntry(int payoutId, boolean allowPayout) {
             this.payoutId = payoutId;
             this.allowPayout = allowPayout;
         }
     }
 
-    // Hilfsklasse für JSON Mapping
     @Getter
     private static class PayoutExport {
         @SerializedName("payouts")

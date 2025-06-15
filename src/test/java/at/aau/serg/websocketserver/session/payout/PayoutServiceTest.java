@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 
 import java.io.InputStream;
 import java.lang.reflect.Field;
@@ -121,7 +120,7 @@ class PayoutServiceTest {
         assertTrue(entries.get(2).isAllowPayout());  // 33 aktiviert durch Spezialregel
 
         // Auszahlung wurde nicht durchgeführt (weil im Produktivcode auskommentiert)
-        //verify(playerService, never()).addMoneyToPlayer(anyString(), anyInt());
+        verify(playerService, never()).addMoneyToPlayer(anyString(), anyInt());
     }
 
     @Test
@@ -132,7 +131,7 @@ class PayoutServiceTest {
 
         payoutService.handlePayoutAfterMovement("Henry");
 
-        //(playerService, never()).addMoneyToPlayer(anyString(), anyInt());
+        verify(playerService, never()).addMoneyToPlayer(anyString(), anyInt());
         assertFalse(getEntries().get(0).isAllowPayout());
     }
 
@@ -152,8 +151,6 @@ class PayoutServiceTest {
         // simulate JSON loading
         Field streamField = PayoutService.class.getDeclaredField("payoutEntries");
         streamField.setAccessible(true);
-        List<PayoutRepository.PayoutEntry> originalList = (List<PayoutRepository.PayoutEntry>) streamField.get(payoutService);
-
         ObjectMapper mapper = new ObjectMapper();
         JsonNode root = mapper.readTree(mockStream);
         JsonNode payoutsNode = root.get("payouts");
