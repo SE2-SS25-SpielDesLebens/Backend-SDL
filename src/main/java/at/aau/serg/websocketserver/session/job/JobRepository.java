@@ -98,4 +98,23 @@ public class JobRepository {
     public void releaseJob(Job job) {
         job.releaseJob();
     }
+
+    /**
+     * Gibt das reguläre Gehalt für den Spieler zurück (Salary Payout).
+     */
+    public int payoutSalary(String playerName) {
+        return getCurrentJobForPlayer(playerName)
+                .map(Job::getSalary)
+                .orElse(0);
+    }
+
+    /**
+     * Gibt das Bonus-Gehalt für den Spieler zurück (BonusSalary Payout).
+     */
+    public int payoutBonusSalary(String playerName) {
+        return getCurrentJobForPlayer(playerName)
+                .map(Job::getBonusSalary)
+                .orElse(0);
+    }
+
 }

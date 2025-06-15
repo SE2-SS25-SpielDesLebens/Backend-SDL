@@ -147,4 +147,34 @@ class JobRepositoryTest {
         assertThrows(IllegalStateException.class, emptyRepo::loadJobs,
                 "Wenn jobs.json nicht gefunden wird, muss eine IllegalStateException geworfen werden");
     }
+    @Test
+    void testPayoutSalary_withAndWithoutJob() throws Exception {
+        // Ohne Job
+        int noSalary = repo.payoutSalary("Unassigned");
+        assertEquals(0, noSalary, "Ohne Job sollte payoutSalary 0 zurückgeben");
+
+        // Mit Job
+        Job job = new Job(5, "Lehrer", 3000, 200, false);
+        job.assignJobTo("Alice");
+        getJobsList(repo).add(job);
+
+        int salary = repo.payoutSalary("Alice");
+        assertEquals(3000, salary, "Sollte reguläres Gehalt zurückgeben");
+    }
+
+    @Test
+    void testPayoutBonusSalary_withAndWithoutJob() throws Exception {
+        // Ohne Job
+        int noBonus = repo.payoutBonusSalary("Unassigned");
+        assertEquals(0, noBonus, "Ohne Job sollte payoutBonusSalary 0 zurückgeben");
+
+        // Mit Job
+        Job job = new Job(6, "Pilot", 7000, 500, false);
+        job.assignJobTo("Bob");
+        getJobsList(repo).add(job);
+
+        int bonus = repo.payoutBonusSalary("Bob");
+        assertEquals(500, bonus, "Sollte Bonus-Gehalt zurückgeben");
+    }
+
 }
