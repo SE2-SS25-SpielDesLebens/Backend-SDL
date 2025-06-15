@@ -96,4 +96,47 @@ class PlayerServiceTest {
         player.setActive(true);
         assertTrue(service.isPlayerActive("ActiveGuy"));
     }
+
+    @Test
+    void addMoneyToPlayer_shouldWorkCorrectly() {
+        Player p = service.createPlayerIfNotExists("Cashy");
+        service.addMoneyToPlayer("Cashy", 1000);
+        assertEquals(1000, p.getMoney());
+    }
+
+    @Test
+    void addMoneyToPlayer_shouldThrowIfPlayerMissing() {
+        Exception ex = assertThrows(IllegalArgumentException.class, () ->
+                service.addMoneyToPlayer("Nobody", 500));
+        assertTrue(ex.getMessage().contains("Spieler nicht gefunden"));
+    }
+
+    @Test
+    void addMoneyToPlayer_shouldThrowIfNegativeAmount() {
+        service.createPlayerIfNotExists("NegGuy");
+        assertThrows(IllegalArgumentException.class, () ->
+                service.addMoneyToPlayer("NegGuy", -100));
+    }
+
+    @Test
+    void removeMoneyFromPlayer_shouldWorkCorrectly() {
+        Player p = service.createPlayerIfNotExists("PayGuy");
+        p.addMoney(1000); // Startguthaben
+        service.removeMoneyFromPlayer("PayGuy", 500);
+        assertEquals(500, p.getMoney());
+    }
+
+    @Test
+    void removeMoneyFromPlayer_shouldThrowIfPlayerMissing() {
+        Exception ex = assertThrows(IllegalArgumentException.class, () ->
+                service.removeMoneyFromPlayer("Ghost", 200));
+        assertTrue(ex.getMessage().contains("Spieler nicht gefunden"));
+    }
+
+    @Test
+    void removeMoneyFromPlayer_shouldThrowIfNegativeAmount() {
+        service.createPlayerIfNotExists("MinusGuy");
+        assertThrows(IllegalArgumentException.class, () ->
+                service.removeMoneyFromPlayer("MinusGuy", -50));
+    }
 }
