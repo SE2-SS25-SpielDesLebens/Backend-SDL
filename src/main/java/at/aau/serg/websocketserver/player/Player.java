@@ -69,12 +69,16 @@ public class Player {
 
     // 💰 Geld
     public void addMoney(int amount) {
-        money += amount;
+        if (amount < 0) throw new IllegalArgumentException("Betrag darf nicht negativ sein.");
+        this.money += amount;
     }
 
     public void removeMoney(int amount) {
-        money -= amount;
+        if (amount < 0) throw new IllegalArgumentException("Betrag darf nicht negativ sein.");
+        this.money -= amount;
     }
+
+
 
     // 💳 Schulden
     public void addDebt() {
@@ -224,4 +228,5 @@ public class Player {
     @JsonProperty("jobId") public Job getJobId() { return job; }
     @JsonProperty("houseId") public Map<Integer, Integer> getHouseId() { return houseID; }
     @JsonProperty("fieldId") public int getFieldID() { return fieldId; }
+
 }

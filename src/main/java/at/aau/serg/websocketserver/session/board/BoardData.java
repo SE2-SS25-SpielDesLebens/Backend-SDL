@@ -24,15 +24,15 @@ public class BoardData implements BoardDataProvider {    private static final Li
         new Field(9, 0.3715, 0.599, Arrays.asList(20,21,22,23,24,25,26,27,28), FieldType.AKTION),
 
         //StartUni
-        new Field(10, 0.09, 0.795, Arrays.asList(11,12,13,14,15,16,17,18,19,20), FieldType.STARTUNI),
-        new Field(11, 0.145, 0.785, Arrays.asList(12,13,14,15,16,17,18,19,20,21), FieldType.AKTION),
-        new Field(12, 0.178, 0.806, Arrays.asList(13,14,15,16,17,18,19,20,21,22), FieldType.FREUND),
-        new Field(13, 0.2102, 0.788, Arrays.asList(14,15,16,17,18,19,20,21,22,23), FieldType.AKTION),
-        new Field(14, 0.243, 0.7605, Arrays.asList(15,16,17,18,19,20,21,22,23,24), FieldType.FREUND),
-        new Field(15, 0.275, 0.735, Arrays.asList(16,17,18,19,20,21,22,23,24,25), FieldType.AKTION),
-        new Field(16, 0.308, 0.712, Arrays.asList(17,18,19,20,21,22,23,24,25,26), FieldType.AKTION),
-        new Field(17, 0.339, 0.738, Arrays.asList(18,19,20,21,22,23,24,25,26,27), FieldType.FREUND),
-        new Field(18, 0.372, 0.71, Arrays.asList(19,20,21,22,23,24,25,26,27,28), FieldType.AKTION),
+        new Field(10, 0.09, 0.795, Arrays.asList(11,12,13,14,15,16,17,18,19), FieldType.STARTUNI),
+        new Field(11, 0.145, 0.785, Arrays.asList(12,13,14,15,16,17,18,19), FieldType.AKTION),
+        new Field(12, 0.178, 0.806, Arrays.asList(13,14,15,16,17,18,19), FieldType.FREUND),
+        new Field(13, 0.2102, 0.788, Arrays.asList(14,15,16,17,18,19), FieldType.AKTION),
+        new Field(14, 0.243, 0.7605, Arrays.asList(15,16,17,18,19), FieldType.FREUND),
+        new Field(15, 0.275, 0.735, Arrays.asList(16,17,18,19), FieldType.AKTION),
+        new Field(16, 0.308, 0.712, Arrays.asList(17,18,19), FieldType.AKTION),
+        new Field(17, 0.339, 0.738, Arrays.asList(18,19), FieldType.FREUND),
+        new Field(18, 0.372, 0.71, Arrays.asList(19), FieldType.AKTION),
         new Field(19, 0.405, 0.68, Arrays.asList(20,21,22,23,24,25,26,27,28), FieldType.EXAMEN),
         
         //Gemeinsamer Weg zur Heirat
