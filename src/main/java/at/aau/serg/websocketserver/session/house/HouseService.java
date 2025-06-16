@@ -136,7 +136,7 @@ public class HouseService {
         }
 
         // Auszahlung an den Spieler (bezogen auf PlayerService)
-        //playerService.addMoneyToPlayer(playerName, sellPrice);
+        playerService.addMoneyToPlayer(playerName, sellPrice);
 
         // Haus freigeben
         repo.releaseHouse(house);
