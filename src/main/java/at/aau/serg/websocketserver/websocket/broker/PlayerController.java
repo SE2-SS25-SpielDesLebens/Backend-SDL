@@ -31,15 +31,6 @@ public class PlayerController {
     }
 
     /**
-     * Erstellt einen neuen Spieler oder gibt bestehenden zurück.
-     */
-    @PostMapping
-    public ResponseEntity<Player> createPlayer(@RequestBody Player request) {
-        Player player = playerService.createPlayerIfNotExists(request.getId());
-        return ResponseEntity.status(201).body(player);
-    }
-
-    /**
      * Gibt einen Spieler anhand der ID zurück.
      */
     @GetMapping("/{id}")

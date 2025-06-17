@@ -38,12 +38,20 @@ public class PlayerService {
      * 🔁 Erstellt und registriert einen Spieler, falls noch nicht vorhanden.
      * Sollte **immer** zur Erstellung genutzt werden.
      */
-    public Player createPlayerIfNotExists(String id) {
-        return players.computeIfAbsent(id, pid -> {
-            Player newPlayer = new Player(pid);
-            System.out.println("🧍 Neuer Spieler registriert: " + pid);
-            return newPlayer;
-        });
+    public boolean createPlayerIfNotExists(String id) {
+        try {
+            boolean isRegistered = isPlayerRegistered(id);
+            if(isRegistered){
+                return false;
+            }else{
+                Player newPlayer = new Player(id);
+                addPlayer(newPlayer);
+                System.out.println("🧍 Neuer Spieler registriert: " + id);
+                return true;
+            }
+        }catch (Exception e){
+            return false;
+        }
     }
 
     /**
@@ -110,5 +118,9 @@ public class PlayerService {
     public boolean isPlayerActive(String playerId) {
         Player player = players.get(playerId);
         return player != null && player.isActive();
+    }
+
+    private void addPlayer(Player player){
+        players.put(player.getId(), player);
     }
 }

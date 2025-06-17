@@ -241,43 +241,12 @@ public class WebSocketBrokerController {
 
     }
 
-    @MessageMapping("/lobby")
-    public void handleLobby(@Payload StompMessage message) {
-        String action = message.getAction();
-        String gameId = message.getGameId();
-        String content;
-
-        if (action == null) {
-            content = "❌ Keine Aktion angegeben.";
-        } else {
-            switch (action) {
-                case "createLobby":
-                    content = "🆕 Lobby [" + gameId + "] von " + message.getPlayerName() + " erstellt.";
-                    break;
-                case "joinLobby":
-                    content = "✅ " + message.getPlayerName() + " ist Lobby [" + gameId + "] beigetreten.";
-                    break;
-                default:
-                    content = "Unbekannte Lobby-Aktion.";
-                    break;
-            }
-        }
-
-        System.out.println("[LOBBY] [" + gameId + "] " + message.getPlayerName() + ": " + content);
-
-        messagingTemplate.convertAndSend(
-                "/topic/lobby",
-                new OutputMessage(message.getPlayerName(), content, LocalDateTime.now().toString())
-        );
-    }
-
     @MessageMapping("/lobby/create")
     @SendTo("/queue/lobby/created")
     public void handleLobbyCreate(@Payload LobbyRequestMessage request) {
         String playerId = request.getPlayerName();
 
-        // Spieler wird erstellt oder zurückgegeben (zentral!)
-        Player player = playerService.createPlayerIfNotExists(playerId);
+        Player player = playerService.getPlayerById(playerId);
 
         // Lobby erstellen
         Lobby lobby = lobbyService.createLobby(player);
@@ -300,7 +269,7 @@ public class WebSocketBrokerController {
         String playerId = request.getPlayerName();
 
         try {
-            Player player = playerService.createPlayerIfNotExists(playerId);
+            Player player = playerService.getPlayerById(playerId);
 
             Lobby lobby = lobbyService.getLobby(lobbyid);
             if (lobby == null) {
@@ -320,21 +289,15 @@ public class WebSocketBrokerController {
 
 
     @MessageMapping("/players/check")
-    public void handlePlayerExistenceCheck(@Payload StompMessage message) {
+    @SendTo("/queue/player/{playerid}/check")
+    public void handlePlayerExistenceCheckAndRegisterPlayer(@Payload LobbyRequestMessage message) {
         String playerId = message.getPlayerName();
-        boolean exists = playerService.isPlayerRegistered(playerId);
+        System.out.println("Player " + playerId + " hat sich angemeldet.");
+        boolean success = playerService.createPlayerIfNotExists(playerId);
+        PlayerCheckMessage return_message = new PlayerCheckMessage(playerId, success);
+        String destination = String.format("/queue/player/%s/check", playerId);
 
-        messagingTemplate.convertAndSendToUser(
-                playerId,
-                "/queue/players/check",
-                new OutputMessage(
-                        "System",
-                        exists
-                                ? "✅ Spieler '" + playerId + "' ist registriert."
-                                : "❌ Spieler '" + playerId + "' ist noch nicht registriert.",
-                        LocalDateTime.now().toString()
-                )
-        );
+        messagingTemplate.convertAndSendToUser(playerId, destination, return_message);
     }
 
 
@@ -358,7 +321,11 @@ public class WebSocketBrokerController {
         Lobby lobby = lobbyService.getLobby(lobbyid);
         System.out.printf("Spieler %s hat die Lobby verlassen\n", request.getPlayerName());
         lobby.removePlayer(playerService.getPlayerById(request.getPlayerName()));
+        if(lobby.getPlayers().isEmpty()) {
+            lobbyService.deleteLobby(lobbyid);
+        }else{
         sendLobbyUpdates(lobbyid);
+        }
     }
 
     @MessageMapping("/chat")

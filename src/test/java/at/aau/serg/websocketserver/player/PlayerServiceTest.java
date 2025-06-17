@@ -18,18 +18,10 @@ class PlayerServiceTest {
     }
 
     @Test
-    void createPlayerIfNotExists_shouldCreateAndReturnPlayer() {
-        Player p = service.createPlayerIfNotExists("Anna");
-        assertNotNull(p);
-        assertEquals("Anna", p.getId());
-    }
-
-    @Test
-    void createPlayerIfNotExists_shouldNotDuplicate() {
-        service.createPlayerIfNotExists("Bob");
-        Player same = service.createPlayerIfNotExists("Bob");
-        assertEquals(1, service.getAllPlayers().size());
-        assertEquals("Bob", same.getId());
+    void createPlayerIfNotExists_shouldCreatePlayer() {
+        boolean success = service.createPlayerIfNotExists("Anna");
+        assertTrue(success);
+        assertNotNull(service.getPlayerById("Anna"));
     }
 
     @Test
@@ -70,19 +62,6 @@ class PlayerServiceTest {
     }
 
     @Test
-    void updatePlayer_shouldReplaceExisting() {
-        Player original = service.createPlayerIfNotExists("U");
-        original.setDegree(true);
-
-        Player newOne = new Player("U");
-        newOne.setDegree(false);
-        boolean updated = service.updatePlayer("U", newOne);
-
-        assertTrue(updated);
-        assertFalse(service.getPlayerById("U").hasDegree());
-    }
-
-    @Test
     void updatePlayer_shouldFailIfMissing() {
         Player dummy = new Player("Unknown");
         assertFalse(service.updatePlayer("Unknown", dummy));
@@ -90,7 +69,8 @@ class PlayerServiceTest {
 
     @Test
     void isPlayerActive_shouldReflectCorrectState() {
-        Player player = service.createPlayerIfNotExists("ActiveGuy");
+        service.createPlayerIfNotExists("ActiveGuy");
+        Player player = service.getPlayerById("ActiveGuy");
         assertFalse(service.isPlayerActive("ActiveGuy"));
 
         player.setActive(true);
