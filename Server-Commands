@@ -21,6 +21,7 @@ Beispiel:
 grp-13  12345  ... java -jar WebSocket-Server-0.0.1-SNAPSHOT.jar --server.port=53217
 Dann:
 kill 12345
+
 5. Neuen Server starten
 cd backend
 nohup java -jar WebSocket-Server-0.0.1-SNAPSHOT.jar --server.port=53217 > backend.log 2>&1 &
