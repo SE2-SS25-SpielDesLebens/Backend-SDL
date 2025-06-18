@@ -203,8 +203,8 @@ public class GameControllerTest {
         }
 
         @Override
-        public int getGameId() {
-            return 42;
+        public String getGameId() {
+            return "abc100";
         }
 
         public int getNextTurnCount() {

@@ -24,13 +24,13 @@ public class PlayerTurnManager {
         System.out.println("[BEREIT] " + playerId + " wartet auf Drehrad-Ergebnis und Feldaktion...");
     }
 
-    public void startWithCareer(String playerId, int gameId) {
+    public void startWithCareer(String playerId, String gameId) {
         boolean chooseUniversity = false;
         gameLogic.handleGameStartChoice(gameId, playerId, chooseUniversity);
         System.out.println("[START] " + playerId + " beginnt direkt mit einem Beruf.");
     }
 
-    public void startWithUniversity(String playerId, int gameId) {
+    public void startWithUniversity(String playerId, String gameId) {
         boolean chooseUniversity = true;
         gameLogic.handleGameStartChoice(gameId, playerId, chooseUniversity);
         System.out.println("[START] " + playerId + " entscheidet sich für das Studium.");

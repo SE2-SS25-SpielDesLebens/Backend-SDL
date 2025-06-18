@@ -1,5 +1,6 @@
 package at.aau.serg.websocketserver.game;
 
+import at.aau.serg.websocketserver.lobby.LobbyService;
 import at.aau.serg.websocketserver.session.board.FieldType;
 import at.aau.serg.websocketserver.player.Player;
 import at.aau.serg.websocketserver.session.board.BoardService;
@@ -12,19 +13,18 @@ import lombok.Setter;
 
 import java.security.SecureRandom;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Getter
 @Setter
 public class GameLogic {
 
-    private final Map<String, Player> players = new ConcurrentHashMap<>();
+    private Map<String, Player> players;
     private int currentPlayerIndex = 0;
     private boolean gameEnded = false;
     @Getter
     @Setter
-    private int gameId; // Wird beim Spielstart gesetzt
+    private String gameId; // Wird beim Spielstart gesetzt
 
     private JobService jobService;
     private GameController gameController;
@@ -32,24 +32,12 @@ public class GameLogic {
     private BoardService boardService;
 
     private static final List<String> CAR_COLORS = List.of("Rot", "Blau", "Gelb", "Grün");
-    private static final int MAX_PLAYERS = 4;
 
     private final List<String> retirementOrder = new ArrayList<>();
     private final Set<Integer> usedInvestmentSlots = new HashSet<>();
 
-    public boolean registerPlayer(String id) {
-        if (players.size() >= MAX_PLAYERS) return false;
-
-        Player player = new Player(id);
-        players.put(id, player);
-
-        int playerIndex = players.size();
-        player.setCarColor(CAR_COLORS.get(playerIndex - 1));
-        player.addMoney(250000);
-        return true;
-    }
-
     public void prepareGameStart() {
+        players = LobbyService.getInstance().getLobby(gameId).getPlayerMap();
         int i = 0;
         for (Player p : players.values()) {
             p.setActive(i == currentPlayerIndex);
@@ -57,7 +45,7 @@ public class GameLogic {
         }
     }
 
-    public void handleGameStartChoice(int gameId, String playerName, boolean chooseUniversity) {
+    public void handleGameStartChoice(String gameId, String playerName, boolean chooseUniversity) {
         Player player = getPlayerByName(playerName);
 
         if (chooseUniversity) {
@@ -74,7 +62,7 @@ public class GameLogic {
         }
     }
 
-    private void assignDefaultCareer(int gameId, String playerName) {
+    private void assignDefaultCareer(String gameId, String playerName) {
         JobRepository repo = jobService.getOrCreateRepository(gameId);
         List<Job> jobs = repo.getRandomAvailableJobs(false, 2);
 

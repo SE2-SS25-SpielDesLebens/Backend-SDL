@@ -6,23 +6,19 @@ import org.springframework.stereotype.Service;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Verwaltet pro Spiel‐ID (int) genau eine JobRepository‐Instanz.
- */
+
 @Service
 public class JobService {
 
-    private final Map<Integer, JobRepository> repositories = new ConcurrentHashMap<>();
+    private final Map<String, JobRepository> repositories = new ConcurrentHashMap<>();
     private final ObjectProvider<JobRepository> jobRepoProvider;
 
     public JobService(ObjectProvider<JobRepository> jobRepoProvider) {
         this.jobRepoProvider = jobRepoProvider;
     }
 
-    /**
-     * Holt das vorhandene Repository zur gameId oder legt ein neues an.
-     */
-    public JobRepository getOrCreateRepository(int gameId) {
+
+    public JobRepository getOrCreateRepository(String gameId) {
         return repositories.computeIfAbsent(gameId, id -> {
             JobRepository repo = jobRepoProvider.getObject();
             try {
@@ -36,10 +32,7 @@ public class JobService {
         });
     }
 
-    /**
-     * Entfernt das Repository, z. B. beim Beenden einer Spiel‐Session.
-     */
-    public void removeRepository(int gameId) {
+    public void removeRepository(String gameId) {
         repositories.remove(gameId);
     }
 }

@@ -14,5 +14,5 @@ public class JobMessage {
     private int bonusSalary;
     private boolean requiresDegree;
     private boolean taken;
-    private int gameId;
+    private String gameId;
 }

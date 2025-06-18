@@ -16,16 +16,16 @@ class JobMessageTest {
                 250,
                 true,
                 false,
-                99
+                "gameid"
         );
 
-        assertEquals(1,      msg.getJobId(),         "jobId sollte korrekt gesetzt sein");
-        assertEquals("Entwickler", msg.getTitle(),    "title sollte korrekt gesetzt sein");
-        assertEquals(4500,   msg.getSalary(),        "salary sollte korrekt gesetzt sein");
-        assertEquals(250,    msg.getBonusSalary(),   "bonusSalary sollte korrekt gesetzt sein");
-        assertTrue (msg.isRequiresDegree(),          "requiresDegree sollte true sein");
-        assertFalse(msg.isTaken(),                   "taken sollte false sein");
-        assertEquals(99,     msg.getGameId(),        "gameId sollte korrekt gesetzt sein");
+        assertEquals(1, msg.getJobId(), "jobId sollte korrekt gesetzt sein");
+        assertEquals("Entwickler", msg.getTitle(), "title sollte korrekt gesetzt sein");
+        assertEquals(4500, msg.getSalary(), "salary sollte korrekt gesetzt sein");
+        assertEquals(250, msg.getBonusSalary(), "bonusSalary sollte korrekt gesetzt sein");
+        assertTrue(msg.isRequiresDegree(), "requiresDegree sollte true sein");
+        assertFalse(msg.isTaken(), "taken sollte false sein");
+        assertEquals("gameid", msg.getGameId(), "gameId sollte korrekt gesetzt sein");
     }
 
     @Test
@@ -37,14 +37,14 @@ class JobMessageTest {
         msg.setBonusSalary(150);
         msg.setRequiresDegree(false);
         msg.setTaken(true);
-        msg.setGameId(7);
+        msg.setGameId("abc100");
 
-        assertEquals(2,      msg.getJobId());
+        assertEquals(2, msg.getJobId());
         assertEquals("Tester", msg.getTitle());
-        assertEquals(3000,   msg.getSalary());
-        assertEquals(150,    msg.getBonusSalary());
+        assertEquals(3000, msg.getSalary());
+        assertEquals(150, msg.getBonusSalary());
         assertFalse(msg.isRequiresDegree());
-        assertTrue (msg.isTaken());
-        assertEquals(7,      msg.getGameId());
+        assertTrue(msg.isTaken());
+        assertEquals("abc100", msg.getGameId());
     }
 }

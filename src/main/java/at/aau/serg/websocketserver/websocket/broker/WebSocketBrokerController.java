@@ -13,6 +13,8 @@ import at.aau.serg.websocketserver.messaging.dtos.*;
 import at.aau.serg.websocketserver.session.house.HouseService;
 import at.aau.serg.websocketserver.session.job.Job;
 import at.aau.serg.websocketserver.session.job.JobService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -34,6 +36,7 @@ public class WebSocketBrokerController {
     private final JobService jobService;
     private final PlayerService playerService;
     private final LobbyService lobbyService;
+    @Autowired
     private final SimpMessagingTemplate messagingTemplate;
     private final HouseService houseService;
 
@@ -71,7 +74,7 @@ public class WebSocketBrokerController {
      * Nur das Job-Repository für das gegebene Spiel anlegen, ohne das Spiel zu starten.
      */
     @MessageMapping("/game/createJobRepo/{gameId}")
-    public void handleJobRepoCreation(@DestinationVariable int gameId) {
+    public void handleJobRepoCreation(@DestinationVariable String gameId) {
         // Erzeugt (oder gibt zurück) das Job-Repository für dieses Spiel
         jobService.getOrCreateRepository(gameId);
 
@@ -289,20 +292,19 @@ public class WebSocketBrokerController {
 
 
     @MessageMapping("/players/check")
-    @SendTo("/queue/player/{playerid}/check")
+    @SendTo("/queue/player/check")
     public void handlePlayerExistenceCheckAndRegisterPlayer(@Payload LobbyRequestMessage message) {
         String playerId = message.getPlayerName();
         System.out.println("Player " + playerId + " hat sich angemeldet.");
         boolean success = playerService.createPlayerIfNotExists(playerId);
         PlayerCheckMessage return_message = new PlayerCheckMessage(playerId, success);
-        String destination = String.format("/queue/player/%s/check", playerId);
+        String destination = "/queue/player/check";
+        System.out.println(return_message);
 
         messagingTemplate.convertAndSendToUser(playerId, destination, return_message);
     }
 
 
-
-    @SendTo("/topic/{lobbyid}")
     public void sendLobbyUpdates(String lobbyid) {
         Lobby lobby = lobbyService.getLobby(lobbyid);
         String player1 = getPlayerIdSafe(lobby, 0);
@@ -312,8 +314,14 @@ public class WebSocketBrokerController {
 
         LobbyUpdateMessage message = new LobbyUpdateMessage(player1, player2, player3, player4, lobby.isStarted());
         System.out.println(message);
-        String destination = String.format("/topic/%s", lobbyid);
+        String destination = String.format("/topic/lobby/%s", lobbyid);
+        System.out.println(now());
         messagingTemplate.convertAndSend(destination, message);
+        try {
+            System.out.println(new ObjectMapper().writeValueAsString(message));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @MessageMapping("/{lobbyid}/leave")
@@ -334,41 +342,33 @@ public class WebSocketBrokerController {
                 new OutputMessage(message.getPlayerName(), message.getMessageText(), LocalDateTime.now().toString()));
     }
 
-    @MessageMapping("/game/start/{gameId}")
-    public void handleGameStart(@DestinationVariable int gameId) {
+    @MessageMapping("/game/start/{lobbyID}")
+    public void handleGameStart(@DestinationVariable String lobbyID) {
         // 1. Repository vorbereiten
-        jobService.getOrCreateRepository(gameId);
+        jobService.getOrCreateRepository(lobbyID);
+        System.out.println("Starte Spiel mit GameId: " + lobbyID);
 
         // 2. Lobby und Spieler holen
-        Lobby lobby = LobbyService.getInstance().getLobby(Integer.toString(gameId));
+        Lobby lobby = lobbyService.getLobby(lobbyID);
         if (lobby == null || lobby.isStarted()) {
-            System.out.println("[WARNUNG] Lobby nicht gefunden oder bereits gestartet: " + gameId);
+            System.out.println("[WARNUNG] Lobby nicht gefunden oder bereits gestartet: " + lobbyID);
             return;
         }
 
         // 3. GameLogic erzeugen
         GameLogic gameLogic = new GameLogic();
-        gameLogic.setGameId(gameId);
+        gameLogic.setGameId(lobbyID);
         gameLogic.setJobService(jobService);
         gameLogic.setBoardService(boardService);
         gameLogic.setGameController(new GameController(gameLogic, messagingTemplate));
         gameLogic.setTurnManager(new PlayerTurnManager(gameLogic));
 
-        for (Player player : lobby.getPlayers()) {
-            gameLogic.registerPlayer(player.getId());
-        }
 
         gameLogic.prepareGameStart();
         lobby.setStarted(true);
         lobby.setGameLogic(gameLogic);
 
-
-        // 4. Optional: Nachricht an alle senden
-        messagingTemplate.convertAndSend(
-                "/topic/game/" + gameId + "/status",
-                "Das Spiel wurde gestartet. Spieleranzahl: " + lobby.getPlayers().size()
-        );
-
+        sendLobbyUpdates(lobbyID);
     }
 
     @MessageMapping("/game/end/{gameId}")
@@ -397,7 +397,7 @@ public class WebSocketBrokerController {
 
 
     @MessageMapping("/jobs/{gameId}/{playerName}/request")
-    public void handleJobRequest(@DestinationVariable int gameId,
+    public void handleJobRequest(@DestinationVariable String gameId,
                                  @DestinationVariable String playerName,
                                  @Payload JobRequestMessage msg) {
         boolean hasDegree = false;
@@ -431,7 +431,7 @@ public class WebSocketBrokerController {
     }
 
     @MessageMapping("/jobs/{gameId}/{playerName}/select")
-    public void handleJobSelection(@DestinationVariable int gameId,
+    public void handleJobSelection(@DestinationVariable String gameId,
                                    @DestinationVariable String playerName,
                                    @Payload JobMessage msg) {
 

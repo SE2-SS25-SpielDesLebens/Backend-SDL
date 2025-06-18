@@ -32,7 +32,7 @@ class JobServiceTest {
     @Test
     void getOrCreateRepository_firstTime_loadsAndReturns() throws Exception {
         // repo1.loadJobs() wirft keine Exception
-        JobRepository result = service.getOrCreateRepository(42);
+        JobRepository result = service.getOrCreateRepository("abc123");
 
         // Rückgabe ist repo1
         assertThat(result).isSameAs(repo1);
@@ -46,9 +46,9 @@ class JobServiceTest {
     @Test
     void getOrCreateRepository_secondTime_sameInstanceNoReload() throws Exception {
         // Erstaufruf
-        JobRepository first = service.getOrCreateRepository(7);
+        JobRepository first = service.getOrCreateRepository("abc000");
         // Zweitaufruf
-        JobRepository second = service.getOrCreateRepository(7);
+        JobRepository second = service.getOrCreateRepository("abc000");
 
         assertThat(second).isSameAs(first);
 
@@ -60,16 +60,16 @@ class JobServiceTest {
     @Test
     void removeRepository_allowsRecreation() throws Exception {
         // Erstaufruf mit repo1
-        JobRepository first = service.getOrCreateRepository(1);
+        JobRepository first = service.getOrCreateRepository("abc000");
         assertThat(first).isSameAs(repo1);
         verify(provider, times(1)).getObject();
         verify(repo1, times(1)).loadJobs();
 
         // Repository entfernen
-        service.removeRepository(1);
+        service.removeRepository("abc000");
 
         // Nächster Aufruf für dieselbe gameId liefert neues repo
-        JobRepository second = service.getOrCreateRepository(1);
+        JobRepository second = service.getOrCreateRepository("abc000");
         assertThat(second).isSameAs(repo2);
         verify(provider, times(2)).getObject();
         verify(repo2, times(1)).loadJobs();
@@ -80,7 +80,7 @@ class JobServiceTest {
         // Stub: repo1.loadJobs() wirft Exception
         doThrow(new RuntimeException("I/O error")).when(repo1).loadJobs();
 
-        Throwable thrown = catchThrowable(() -> service.getOrCreateRepository(99));
+        Throwable thrown = catchThrowable(() -> service.getOrCreateRepository("gameid"));
 
         assertThat(thrown)
                 .isInstanceOf(IllegalStateException.class)
@@ -96,10 +96,10 @@ class JobServiceTest {
     @Test
     void removeRepository_nonExistingDoesNothing() {
         // Kein vorheriges Hinzufügen, remove darf nicht throwen
-        service.removeRepository(123);
+        service.removeRepository("abc100");
         // Nach Entfernen muss ein neuer Aufruf wieder ein Repo anlegen
         when(provider.getObject()).thenReturn(repo2);
-        JobRepository r = service.getOrCreateRepository(123);
+        JobRepository r = service.getOrCreateRepository("abc100");
         assertThat(r).isSameAs(repo2);
     }
 }

@@ -7,11 +7,8 @@ import lombok.Setter;
 
 import at.aau.serg.websocketserver.player.*;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
-//Klasse speichert Spieler in einer Lobby, reine Datenverwaltung
 @Getter
 public class Lobby {
     @Setter
@@ -22,12 +19,14 @@ public class Lobby {
 
     private final ArrayList<Player> players = new ArrayList<>();
     public static final int maxPlayers = 4;
+    public final Map<String, Player> playerMap = new HashMap<>();
 
     @Setter
     boolean isStarted = false;
 
     public Lobby(String id, Player player){
         this.id = id;
+        playerMap.put(player.getId(), player);
         players.add(player);
     }
 
@@ -35,6 +34,7 @@ public class Lobby {
         if(players.size() >= maxPlayers){
             return false;
         }
+        playerMap.put(player.getId(), player);
         return players.add(player);
     }
 
@@ -42,7 +42,6 @@ public class Lobby {
         return players.remove(player);
     }
 
-    //gibt nicht veränderbare Liste zurück, safety feature
     public synchronized List<Player> getPlayers(){
         return Collections.unmodifiableList(players);
     }

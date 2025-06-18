@@ -47,13 +47,13 @@ public class PlayerTurnManagerTest {
 
     @Test
     public void testStartWithCareer_triggersLogicCorrectly() {
-        manager.startWithCareer("1", 10);
+        manager.startWithCareer("1", "abc123");
         assertEquals("career", logic.getStartType());
     }
 
     @Test
     public void testStartWithUniversity_triggersLogicCorrectly() {
-        manager.startWithUniversity("1", 10);
+        manager.startWithUniversity("1", "abc123");
         assertEquals("university", logic.getStartType());
     }
 
@@ -161,11 +161,6 @@ public class PlayerTurnManagerTest {
         @Override
         public void repayLoan(String playerId) {
             this.repaymentPlayer = playerId;
-        }
-
-        @Override
-        public void handleGameStartChoice(int gameId, String playerId, boolean university) {
-            this.startType = university ? "university" : "career";
         }
 
         @Override

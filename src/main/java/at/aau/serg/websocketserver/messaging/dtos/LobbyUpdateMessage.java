@@ -1,12 +1,12 @@
 package at.aau.serg.websocketserver.messaging.dtos;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
 public class LobbyUpdateMessage {
     private String player1;
     private String player2;
