@@ -50,6 +50,12 @@ public class WebSocketBrokerController {
         this.playerService = PlayerService.getInstance();
         this.lobbyService  = LobbyService.getInstance();
     }
+    private static final String STATUS_SUFFIX = "/status";
+    private static final String SYSTEM = "System";
+    private static final String TOPIC_GAME = "/topic/game";
+
+
+
 
 
     /**
@@ -77,11 +83,11 @@ public class WebSocketBrokerController {
         jobService.getOrCreateRepository(gameId);
 
         // Optional: sende eine Statusmeldung an alle Clients
-        String destination = "/topic/game/" + gameId + "/status";
+        String destination = "/topic/game/" + gameId + STATUS_SUFFIX;
         messagingTemplate.convertAndSend(
                 destination,
                 new OutputMessage(
-                        "System",
+                        SYSTEM,
                         "Job-Repository für Spiel " + gameId + " wurde angelegt.",
                         now()
                 )
@@ -99,7 +105,7 @@ public class WebSocketBrokerController {
         try {
             playerId = Integer.parseInt(message.getPlayerName()); // Annahme: playerName = ID
         } catch (NumberFormatException e) {
-            messagingTemplate.convertAndSend("/topic/game",
+            messagingTemplate.convertAndSend(TOPIC_GAME,
                     new OutputMessage(message.getPlayerName(), "❌ Ungültige Spieler-ID", LocalDateTime.now().toString()));
             return;
         }
@@ -126,10 +132,10 @@ public class WebSocketBrokerController {
                         nextPossibleFieldIndices
                 );
 
-                messagingTemplate.convertAndSend("/topic/game", moveMessage);
+                messagingTemplate.convertAndSend(TOPIC_GAME, moveMessage);
                 return;
             } catch (Exception e) {
-                messagingTemplate.convertAndSend("/topic/game",
+                messagingTemplate.convertAndSend(TOPIC_GAME,
                         new OutputMessage(message.getPlayerName(), "❌ Fehler beim Betreten des Spielfelds", LocalDateTime.now().toString()));
                 return;
             }
@@ -152,14 +158,14 @@ public class WebSocketBrokerController {
                             LocalDateTime.now().toString(),
                             nextPossibleFieldIndices
                     );
-                    messagingTemplate.convertAndSend("/topic/game", moveMessage);
+                    messagingTemplate.convertAndSend(TOPIC_GAME, moveMessage);
                 } else {
-                    messagingTemplate.convertAndSend("/topic/game",
+                    messagingTemplate.convertAndSend(TOPIC_GAME,
                             new OutputMessage(message.getPlayerName(), "❌ Ungültiger Zug", LocalDateTime.now().toString()));
                 }
                 return;
             } catch (Exception e) {
-                messagingTemplate.convertAndSend("/topic/game",
+                messagingTemplate.convertAndSend(TOPIC_GAME,
                         new OutputMessage(message.getPlayerName(), "❌ Fehler bei der Bewegung", LocalDateTime.now().toString()));
                 return;
             }
@@ -170,7 +176,7 @@ public class WebSocketBrokerController {
         try {
             steps = Integer.parseInt(message.getAction().replaceAll("[^0-9]", ""));
         } catch (NumberFormatException e) {
-            messagingTemplate.convertAndSend("/topic/game",
+            messagingTemplate.convertAndSend(TOPIC_GAME,
                     new OutputMessage(message.getPlayerName(), "❌ Ungültige Würfelzahl", LocalDateTime.now().toString()));
             return;
         }
@@ -229,7 +235,7 @@ public class WebSocketBrokerController {
                 nextPossibleFieldIndices
         );
 
-        messagingTemplate.convertAndSend("/topic/game", moveMessage);
+        messagingTemplate.convertAndSend(TOPIC_GAME, moveMessage);
 
         Lobby lobby = LobbyService.getInstance().getLobby(message.getGameId());
         if (lobby != null && lobby.isStarted()) {
@@ -329,7 +335,7 @@ public class WebSocketBrokerController {
                 playerId,
                 "/queue/players/check",
                 new OutputMessage(
-                        "System",
+                        SYSTEM,
                         exists
                                 ? "✅ Spieler '" + playerId + "' ist registriert."
                                 : "❌ Spieler '" + playerId + "' ist noch nicht registriert.",
@@ -405,7 +411,7 @@ public class WebSocketBrokerController {
         // 4. Nachricht an alle senden
         String lobbyId = Integer.toString(gameId);
         messagingTemplate.convertAndSend(
-                "/topic/game/" + gameId + "/status",                "Das Spiel wurde gestartet. Spieleranzahl: " + lobby.getPlayers().size()
+                "/topic/game/" + gameId + STATUS_SUFFIX,                "Das Spiel wurde gestartet. Spieleranzahl: " + lobby.getPlayers().size()
         );
 
         // Wichtig: Sende auch ein Update an das Lobby-Topic, damit Clients über den Spielstart informiert werden
@@ -418,18 +424,18 @@ public class WebSocketBrokerController {
     public OutputMessage handleGameEnd(@DestinationVariable String gameId) {
         Lobby lobby = LobbyService.getInstance().getLobby(gameId);
         if (lobby == null || !lobby.isStarted()) {
-            return new OutputMessage("System", "Spiel nicht gefunden oder nicht gestartet", now());
+            return new OutputMessage(SYSTEM, "Spiel nicht gefunden oder nicht gestartet", now());
         }
 
         GameLogic game = lobby.getGameLogic();
         if (game == null) {
-            return new OutputMessage("System", "Keine Spielinstanz vorhanden", now());
+            return new OutputMessage(SYSTEM, "Keine Spielinstanz vorhanden", now());
         }
 
         game.endGame(); // ❗ Dies ruft die finale Auswertung auf
         lobby.setStarted(false); // Spiel wird beendet
 
-        return new OutputMessage("System", "Spiel wurde manuell beendet!", now());
+        return new OutputMessage(SYSTEM, "Spiel wurde manuell beendet!", now());
     }
 
     private String now() {
@@ -442,8 +448,7 @@ public class WebSocketBrokerController {
     public void handleJobRequest(@DestinationVariable int gameId,
                                  @DestinationVariable String playerName,
                                  @Payload JobRequestMessage msg) {
-        boolean hasDegree = false;
-        //boolean hasDegree = playerService.hasDegree(playerName);
+        boolean hasDegree = playerService.hasDegree(playerName);
         var repo = jobService.getOrCreateRepository(gameId);
         List<Job> jobsToSend = new ArrayList<>();
 
@@ -554,11 +559,11 @@ public class WebSocketBrokerController {
         houseService.getOrCreateRepository(gameId);
 
         // Optional: sende eine Statusmeldung an alle Clients
-        String destination = "/topic/game/" + gameId + "/status";
+        String destination = "/topic/game/" + gameId + STATUS_SUFFIX;
         messagingTemplate.convertAndSend(
                 destination,
                 new OutputMessage(
-                        "System",
+                        SYSTEM,
                         "House-Repository für Spiel " + gameId + " wurde angelegt.",
                         now()
                 )
@@ -578,7 +583,7 @@ public class WebSocketBrokerController {
         turnManager.startWithCareer(playerName, gameId);
 
         messagingTemplate.convertAndSend(
-                "/topic/game/" + gameId + "/status",
+                "/topic/game/" + gameId + STATUS_SUFFIX,
                 playerName + " beginnt mit einer Karriere."
         );
     }    @MessageMapping("/game/{gameId}/start-university")
@@ -594,7 +599,7 @@ public class WebSocketBrokerController {
         turnManager.startWithUniversity(playerName, gameId);
 
         messagingTemplate.convertAndSend(
-                "/topic/game/" + gameId + "/status",
+                "/topic/game/" + gameId + STATUS_SUFFIX,
                 playerName + " beginnt mit einem Studium."
         );
     }
@@ -615,7 +620,7 @@ public class WebSocketBrokerController {
             messagingTemplate.convertAndSendToUser(
                     playerName,
                     "/queue/errors",
-                    new OutputMessage("System", "Lobby existiert nicht", now())
+                    new OutputMessage(SYSTEM, "Lobby existiert nicht", now())
             );
             return;
         }
@@ -641,12 +646,12 @@ public class WebSocketBrokerController {
             messagingTemplate.convertAndSendToUser(
                     playerName,
                     "/queue/join/confirm",
-                    new OutputMessage("System", "Erfolgreich dem Spiel beigetreten", now())
+                    new OutputMessage(SYSTEM, "Erfolgreich dem Spiel beigetreten", now())
             );
 
             // 5. Alle Spieler über den Beitritt informieren
             messagingTemplate.convertAndSend(
-                    "/topic/game/" + gameId + "/status",
+                    "/topic/game/" + gameId + STATUS_SUFFIX,
                     playerName + " ist dem Spiel beigetreten."
             );
 
@@ -658,7 +663,7 @@ public class WebSocketBrokerController {
             messagingTemplate.convertAndSendToUser(
                     playerName,
                     "/queue/errors",
-                    new OutputMessage("System", "Fehler beim Beitritt: " + e.getMessage(), now())
+                    new OutputMessage(SYSTEM, "Fehler beim Beitritt: " + e.getMessage(), now())
             );
         }
     }

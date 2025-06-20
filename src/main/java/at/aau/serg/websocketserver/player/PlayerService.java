@@ -133,5 +133,12 @@ public class PlayerService {
         }
         player.removeMoney(amount);
     }
+    /**
+     * 🎓 Prüft, ob der Spieler einen Hochschulabschluss hat.
+     */
+    public boolean hasDegree(String playerId) {
+        Player player = players.get(playerId);
+        return player != null && player.hasDegree();
+    }
 
 }
