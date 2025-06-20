@@ -51,16 +51,14 @@ public class ActionCardService {
      * @param playerId the identifier of the player drawing the card
      */
     public ActionCard drawCard(String lobbyId, String playerId) {
-        //Does lobby exist? If so, does a deck for this game exist? If no, add one.
-        if(!lobbyService.isLobbyRegistered(lobbyId)) return null;
+        try {
+            lobbyExistsPlayerExistsPlayerInLobbyCheck(lobbyId, playerId);
+        } catch (Exception e) {
+            throw e;
+        }
+
+        //If lobby exists, does a deck for this lobby exist? If no, add one.
         if(!decks.containsKey(lobbyId)) decks.put(lobbyId, new ActionCardDeck());
-
-        //Does player exist in this lobby?
-        Lobby lobby = lobbyService.getLobby(lobbyId);
-        List<Player> players = lobby.getPlayers();
-        if(players.stream().noneMatch(player -> Objects.equals(player.getId(), playerId))) return null;
-
-        //TODO: Is it player's turn?
 
         //Get deck for this lobby
         ActionCardDeck deck = decks.get(lobbyId);
@@ -80,23 +78,37 @@ public class ActionCardService {
      * @param playerId the identifier of the player drawing the card
      */
     public void playCard(String lobbyId, String playerId, String decision) {
-        //Does lobby exist?
-        if(!lobbyService.isLobbyRegistered(lobbyId)) return;
-
-        //Does player exist?
-        if(!playerService.isPlayerRegistered(playerId)) return;
-
-        //Does player exist in this lobby?
-        Lobby lobby = lobbyService.getLobby(lobbyId);
-        List<Player> players = lobby.getPlayers();
-        if(players.stream().noneMatch(player -> Objects.equals(player.getId(), playerId))) return;
-
-        //TODO: Is it player's turn?
+        try {
+            lobbyExistsPlayerExistsPlayerInLobbyCheck(lobbyId, playerId);
+        } catch (Exception e) {
+            throw e;
+        }
 
         //Is a card currently pulled in this game?
         if(pulledCards.containsKey(lobbyId + playerId)) return;
         ActionCard actionCard = pulledCards.get(lobbyId + playerId);
 
         this.playActionCardLogic.playActionCard(actionCard, lobbyId, playerId, decision);
+    }
+
+    private void lobbyExistsPlayerExistsPlayerInLobbyCheck (String lobbyId, String playerId) throws ActionCardServiceException {
+        //Does lobby exist?
+        if(!lobbyService.isLobbyRegistered(lobbyId)) {
+            throw new ActionCardServiceException("The lobby ID: " + lobbyId + " does not exist!");
+        }
+
+        //Does player exist?
+        if(!playerService.isPlayerRegistered(playerId)) {
+            throw new ActionCardServiceException("The player ID: " + playerId + " does not exist!");
+        }
+
+        //Does player exist in this lobby?
+        Lobby lobby = lobbyService.getLobby(lobbyId);
+        List<Player> players = lobby.getPlayers();
+        if(players.stream().noneMatch(player -> Objects.equals(player.getId(), playerId))) {
+            throw new ActionCardServiceException("The player ID: " + playerId + " does not exist in lobby ID: " + lobbyId + "!");
+        }
+
+        //TODO: Is it player's turn?
     }
 }
