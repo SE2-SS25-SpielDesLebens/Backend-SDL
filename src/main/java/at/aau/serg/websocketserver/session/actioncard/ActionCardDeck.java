@@ -58,7 +58,7 @@ public class ActionCardDeck {
         try (InputStreamReader reader = new InputStreamReader(is)) {
             return gson.fromJson(reader, listType);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to load or parse actionCards.json", e);
+            throw new ActionCardDeckException("Failed to load or parse actionCards.json", e);
         }
     }
 
