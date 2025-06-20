@@ -51,6 +51,7 @@ public class WebSocketBrokerController {
         this.lobbyService  = LobbyService.getInstance();
     }
 
+
     /**
      * Liefert die aktuellen Spielbrettdaten an den Client.
      * Diese Methode kann vom Frontend aufgerufen werden, um die vollständigen Board-Daten zu erhalten.
@@ -89,7 +90,7 @@ public class WebSocketBrokerController {
     /**
      * Diese Methode wurde entfernt und mit der Implementation im MoveHandler ersetzt,
      * um doppelte MessageMapping-Definitionen zu vermeiden.
-     * 
+     *
      * @see at.aau.serg.websocketserver.websocket.broker.MoveHandler#handleMove(StompMessage)
      */
     // @MessageMapping("/move") - Entfernt wegen Konflikt mit MoveHandler
@@ -342,6 +343,11 @@ public class WebSocketBrokerController {
     @SendTo("/topic/{lobbyid}")
     public void sendLobbyUpdates(String lobbyid) {
         Lobby lobby = lobbyService.getLobby(lobbyid);
+        if (lobby == null) {
+            System.out.println("⚠️ Lobby mit ID '" + lobbyid + "' nicht gefunden.");
+            return;
+        }
+
         String player1 = getPlayerIdSafe(lobby, 0);
         String player2 = getPlayerIdSafe(lobby, 1);
         String player3 = getPlayerIdSafe(lobby, 2);
@@ -349,9 +355,11 @@ public class WebSocketBrokerController {
 
         LobbyUpdateMessage message = new LobbyUpdateMessage(player1, player2, player3, player4, lobby.isStarted());
         System.out.println(message);
+
         String destination = String.format("/topic/%s", lobbyid);
         messagingTemplate.convertAndSend(destination, message);
     }
+
 
     @MessageMapping("/{lobbyid}/leave")
     public void handlePlayerLeave(@DestinationVariable String lobbyid, @Payload LobbyRequestMessage request) {
@@ -399,7 +407,7 @@ public class WebSocketBrokerController {
         messagingTemplate.convertAndSend(
                 "/topic/game/" + gameId + "/status",                "Das Spiel wurde gestartet. Spieleranzahl: " + lobby.getPlayers().size()
         );
-        
+
         // Wichtig: Sende auch ein Update an das Lobby-Topic, damit Clients über den Spielstart informiert werden
         sendLobbyUpdates(Integer.toString(gameId));
 
@@ -480,7 +488,7 @@ public class WebSocketBrokerController {
                 .ifPresent(job -> repo.assignJobToPlayer(playerName, job));
     }
 
-    private String getPlayerIdSafe(Lobby lobby, int index) {
+    String getPlayerIdSafe(Lobby lobby, int index) {
         if (lobby == null || lobby.getPlayers() == null) {
             return "";
         }
@@ -568,7 +576,7 @@ public class WebSocketBrokerController {
         GameLogic gameLogic = lobby.getGameLogic();
         PlayerTurnManager turnManager = gameLogic.getTurnManager();
         turnManager.startWithCareer(playerName, gameId);
-        
+
         messagingTemplate.convertAndSend(
                 "/topic/game/" + gameId + "/status",
                 playerName + " beginnt mit einer Karriere."
@@ -584,13 +592,13 @@ public class WebSocketBrokerController {
         GameLogic gameLogic = lobby.getGameLogic();
         PlayerTurnManager turnManager = gameLogic.getTurnManager();
         turnManager.startWithUniversity(playerName, gameId);
-        
+
         messagingTemplate.convertAndSend(
                 "/topic/game/" + gameId + "/status",
                 playerName + " beginnt mit einem Studium."
         );
     }
-    
+
     /**
      * Handler für den Beitritt eines Spielers zu einem bereits laufenden Spiel.
      * Diese Methode synchronisiert den Spieler mit dem aktuellen Spielzustand.
@@ -599,7 +607,7 @@ public class WebSocketBrokerController {
     public void handleGameJoin(@DestinationVariable String gameId, @Payload StompMessage message) {
         String playerName = message.getPlayerName();
         System.out.println("👤 Spieler " + playerName + " tritt Spiel in Lobby " + gameId + " bei");
-        
+
         // 1. Lobby abrufen
         Lobby lobby = LobbyService.getInstance().getLobby(gameId);
         if (lobby == null) {
@@ -611,7 +619,7 @@ public class WebSocketBrokerController {
             );
             return;
         }
-        
+
         try {
             // 2. Spieler erstellen, wenn nicht vorhanden, und zur Lobby hinzufügen
             Player player = playerService.createPlayerIfNotExists(playerName);
@@ -619,7 +627,7 @@ public class WebSocketBrokerController {
                 lobby.addPlayer(player);
                 System.out.println("✅ Spieler " + playerName + " zur Lobby hinzugefügt");
             }
-            
+
             // 3. Wenn das Spiel läuft, Spieler auch zur GameLogic hinzufügen
             if (lobby.isStarted() && lobby.getGameLogic() != null) {
                 GameLogic gameLogic = lobby.getGameLogic();
@@ -628,23 +636,23 @@ public class WebSocketBrokerController {
                     System.out.println("✅ Spieler " + playerName + " zur GameLogic hinzugefügt");
                 }
             }
-            
+
             // 4. Bestätigung an den Client senden
             messagingTemplate.convertAndSendToUser(
                     playerName,
                     "/queue/join/confirm",
                     new OutputMessage("System", "Erfolgreich dem Spiel beigetreten", now())
             );
-            
+
             // 5. Alle Spieler über den Beitritt informieren
             messagingTemplate.convertAndSend(
                     "/topic/game/" + gameId + "/status",
                     playerName + " ist dem Spiel beigetreten."
             );
-            
+
             // 6. Lobby-Updates senden
             sendLobbyUpdates(gameId);
-            
+
         } catch (Exception e) {
             System.out.println("❌ Fehler beim Beitritt zum Spiel: " + e.getMessage());
             messagingTemplate.convertAndSendToUser(
