@@ -191,6 +191,7 @@ import static org.junit.jupiter.api.Assertions.*;
             this.currentPlayer = p;
         }
 
+        @Override
         public void setGameEnded(boolean b) {
             this.ended = b;
         }
