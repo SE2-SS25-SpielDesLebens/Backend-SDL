@@ -13,7 +13,7 @@ import static org.mockito.Mockito.*;
 /**
  * Testklasse für den BoardService, die zeigt, wie man mit Mockito-Mocks testen kann.
  */
-public class BoardServiceTest {
+ class BoardServiceTest {
 
     @Mock
     private BoardDataProvider mockBoardDataProvider;
@@ -22,7 +22,7 @@ public class BoardServiceTest {
     private List<Field> mockFields;
 
     @BeforeEach
-    public void setUp() {
+     void setUp() {
         MockitoAnnotations.openMocks(this);
 
         // Erstelle ein vereinfachtes Board für Tests
@@ -43,7 +43,7 @@ public class BoardServiceTest {
     }
 
     @Test
-    public void testAddPlayer() {
+     void testAddPlayer() {
         String playerId = "player1";
         int startFieldIndex = 1;
 
@@ -64,7 +64,7 @@ public class BoardServiceTest {
     }
 
     @Test
-    public void testGetMoveOptions() {
+     void testGetMoveOptions() {
         String playerId = "player1";
         boardService.addPlayer(playerId, 1);
 
@@ -75,7 +75,7 @@ public class BoardServiceTest {
     }
 
     @Test
-    public void testMovePlayerToField() {
+     void testMovePlayerToField() {
         String playerId = "player1";
         boardService.addPlayer(playerId, 1);
 
@@ -86,7 +86,7 @@ public class BoardServiceTest {
     }
 
     @Test
-    public void testMovePlayerToInvalidField() {
+     void testMovePlayerToInvalidField() {
         String playerId = "player1";
         boardService.addPlayer(playerId, 1);
 
@@ -99,7 +99,7 @@ public class BoardServiceTest {
 
 
     @Test
-    public void testGetPlayerField() {
+     void testGetPlayerField() {
         boardService.addPlayer("player1", 1);
 
         Field field = boardService.getPlayerField("player1");
@@ -109,7 +109,7 @@ public class BoardServiceTest {
     }
 
     @Test
-    public void testGetPlayerFieldWithUnknownPlayerDefaultsToField1() {
+     void testGetPlayerFieldWithUnknownPlayerDefaultsToField1() {
         Field field = boardService.getPlayerField("unknown");
 
         assertNotNull(field);
@@ -117,7 +117,7 @@ public class BoardServiceTest {
     }
 
     @Test
-    public void testMovePlayerMultipleSteps() {
+     void testMovePlayerMultipleSteps() {
         String playerId = "player1";
         boardService.addPlayer(playerId, 1);
 
@@ -128,7 +128,7 @@ public class BoardServiceTest {
     }
 
     @Test
-    public void testMovePlayerToFieldWithValidPath() {
+     void testMovePlayerToFieldWithValidPath() {
         String playerId = "player1";
         boardService.addPlayer(playerId, 1);
 
@@ -139,7 +139,7 @@ public class BoardServiceTest {
     }
 
     @Test
-    public void testSetPlayerPosition() {
+     void testSetPlayerPosition() {
         String playerId = "player1";
         boardService.addPlayer(playerId, 1);
 
@@ -148,7 +148,7 @@ public class BoardServiceTest {
         assertEquals(3, boardService.getPlayerPosition(playerId));
     }
     @Test
-    public void testGetValidNextFields() {
+     void testGetValidNextFields() {
         String playerId = "player1";
         boardService.addPlayer(playerId, 1);
 
@@ -159,7 +159,7 @@ public class BoardServiceTest {
     }
 
     @Test
-    public void testIsPlayerOnField() {
+     void testIsPlayerOnField() {
         String playerId = "player1";
         boardService.addPlayer(playerId, 2);
 
@@ -168,7 +168,7 @@ public class BoardServiceTest {
     }
 
     @Test
-    public void testGetPlayersOnField() {
+     void testGetPlayersOnField() {
         boardService.addPlayer("player1", 1);
         boardService.addPlayer("player2", 1);
         boardService.addPlayer("player3", 2);
@@ -181,7 +181,7 @@ public class BoardServiceTest {
     }
 
     @Test
-    public void testRemovePlayer() {
+     void testRemovePlayer() {
         String playerId = "player1";
         boardService.addPlayer(playerId, 1);
         boardService.removePlayer(playerId);
@@ -190,7 +190,7 @@ public class BoardServiceTest {
     }
 
     @Test
-    public void testIsAnyPlayerOnField() {
+     void testIsAnyPlayerOnField() {
         boardService.addPlayer("player1", 2);
 
         assertTrue(boardService.isAnyPlayerOnField(2));
@@ -198,7 +198,7 @@ public class BoardServiceTest {
     }
 
     @Test
-    public void testResetAllPlayerPositions() {
+     void testResetAllPlayerPositions() {
         boardService.addPlayer("player1", 1);
         boardService.addPlayer("player2", 2);
 
@@ -208,12 +208,12 @@ public class BoardServiceTest {
     }
 
     @Test
-    public void testGetBoardSize() {
+     void testGetBoardSize() {
         assertEquals(mockFields.size(), boardService.getBoardSize());
     }
 
     @Test
-    public void testGetBoard() {
+     void testGetBoard() {
         List<Field> board = boardService.getBoard();
         Field field1 = new Field(999, 0, 0, List.of(), FieldType.AKTION);
 

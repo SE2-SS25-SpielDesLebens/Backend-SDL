@@ -12,35 +12,35 @@ import java.util.TimerTask;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class GameControllerTest {
+ class GameControllerTest {
 
     private DummyGameLogic logic;
     private DummyMessagingTemplate messagingTemplate;
     private GameController controller;
 
     @BeforeEach
-    public void setup() {
+     void setup() {
         logic = new DummyGameLogic();
         messagingTemplate = new DummyMessagingTemplate();
         controller = new GameController(logic, messagingTemplate);
     }
 
     @Test
-    public void testIsPlayerTurn_returnsTrueIfCorrectPlayer() {
+     void testIsPlayerTurn_returnsTrueIfCorrectPlayer() {
         Player p = new Player("1");
         logic.setCurrentPlayer(p);
         assertTrue(controller.isPlayerTurn("1"));
     }
 
     @Test
-    public void testIsPlayerTurn_returnsFalseIfWrongPlayer() {
+     void testIsPlayerTurn_returnsFalseIfWrongPlayer() {
         Player p = new Player("1");
         logic.setCurrentPlayer(p);
         assertFalse(controller.isPlayerTurn("2"));
     }
 
     @Test
-    public void testCanPlayerAct_trueIfCorrectPlayerAndNotEnded() {
+     void testCanPlayerAct_trueIfCorrectPlayerAndNotEnded() {
         Player p = new Player("abc");
         logic.setCurrentPlayer(p);
         logic.setGameEnded(false);
@@ -48,7 +48,7 @@ public class GameControllerTest {
     }
 
     @Test
-    public void testCanPlayerAct_falseIfGameEnded() {
+     void testCanPlayerAct_falseIfGameEnded() {
         Player p = new Player("abc");
         logic.setCurrentPlayer(p);
         logic.setGameEnded(true);
@@ -56,7 +56,7 @@ public class GameControllerTest {
     }
 
     @Test
-    public void testAdvanceToNextTurnIfValid_advancesIfCorrectPlayer() {
+     void testAdvanceToNextTurnIfValid_advancesIfCorrectPlayer() {
         Player p = new Player("1");
         logic.setCurrentPlayer(p);
         controller.advanceToNextTurnIfValid("1");
@@ -64,7 +64,7 @@ public class GameControllerTest {
     }
 
     @Test
-    public void testAdvanceToNextTurnIfValid_doesNothingIfWrongPlayer() {
+     void testAdvanceToNextTurnIfValid_doesNothingIfWrongPlayer() {
         Player p = new Player("1");
         logic.setCurrentPlayer(p);
         controller.advanceToNextTurnIfValid("wrong");
@@ -72,7 +72,7 @@ public class GameControllerTest {
     }
 
     @Test
-    public void testStartPlayerTurn_correctPlayerLogsAction() {
+     void testStartPlayerTurn_correctPlayerLogsAction() {
         Player p = new Player("abc");
         logic.setCurrentPlayer(p);
         java.io.ByteArrayOutputStream outContent = new java.io.ByteArrayOutputStream();
@@ -92,7 +92,7 @@ public class GameControllerTest {
     }
 
     @Test
-    public void testStartPlayerTurn_wrongPlayerDoesNothing() {
+     void testStartPlayerTurn_wrongPlayerDoesNothing() {
         Player p = new Player("abc");
         logic.setCurrentPlayer(p);
         controller.startPlayerTurn("xyz", false);
@@ -100,7 +100,7 @@ public class GameControllerTest {
     }
 
     @Test
-    public void testCompletePlayerTurn_withCorrectPlayer_callsPerformTurn() {
+     void testCompletePlayerTurn_withCorrectPlayer_callsPerformTurn() {
         Player p = new Player("abc");
         logic.setCurrentPlayer(p);
         controller.completePlayerTurn("abc", 5);
@@ -108,7 +108,7 @@ public class GameControllerTest {
     }
 
     @Test
-    public void testCompletePlayerTurn_withWrongPlayer_doesNothing() {
+     void testCompletePlayerTurn_withWrongPlayer_doesNothing() {
         Player p = new Player("abc");
         logic.setCurrentPlayer(p);
         controller.completePlayerTurn("wrong", 8);
@@ -116,7 +116,7 @@ public class GameControllerTest {
     }
 
     @Test
-    public void testStartRepeatExamTurn_sendsExpectedMessage() {
+     void testStartRepeatExamTurn_sendsExpectedMessage() {
         Player p = new Player("abc");
         logic.setCurrentPlayer(p);
         controller.startRepeatExamTurn("abc");
@@ -127,7 +127,7 @@ public class GameControllerTest {
     }
 
     @Test
-    public void testRequestAdditionalSpin_sendsExpectedMessage() {
+     void testRequestAdditionalSpin_sendsExpectedMessage() {
         controller.requestAdditionalSpin("abc");
 
         OutputMessage msg = (OutputMessage) messagingTemplate.lastMessage;
@@ -136,7 +136,7 @@ public class GameControllerTest {
     }
 
     @Test
-    public void testTurnTimeout_callsNextTurn() {
+     void testTurnTimeout_callsNextTurn() {
         Player p = new Player("timeoutPlayer");
         logic.setCurrentPlayer(p);
 
@@ -147,7 +147,7 @@ public class GameControllerTest {
     }
 
     @Test
-    public void testAnonymousTimerTask_run_invokesNextTurn() {
+     void testAnonymousTimerTask_run_invokesNextTurn() {
         Player p = new Player("abc");
         logic.setCurrentPlayer(p);
 
@@ -168,7 +168,7 @@ public class GameControllerTest {
 
 
     @Test
-    public void testCreateTurnTimeout_returnsTimerTaskThatTriggersTurnAdvance() {
+     void testCreateTurnTimeout_returnsTimerTaskThatTriggersTurnAdvance() {
         Player p = new Player("timeoutPlayer");
         logic.setCurrentPlayer(p);
 
@@ -233,7 +233,7 @@ public class GameControllerTest {
         public String lastTopic;
         public Object lastMessage;
 
-        public DummyMessagingTemplate() {
+         DummyMessagingTemplate() {
             super(new MessageChannel() {
                 @Override
                 public boolean send(@org.springframework.lang.NonNull Message<?> message) {

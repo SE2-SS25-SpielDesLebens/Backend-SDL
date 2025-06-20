@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 import at.aau.serg.websocketserver.player.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class LobbyServiceTest {
+ class LobbyServiceTest {
     private LobbyService service;
 
     @BeforeEach
