@@ -83,7 +83,7 @@ public class WebSocketBrokerController {
         jobService.getOrCreateRepository(gameId);
 
         // Optional: sende eine Statusmeldung an alle Clients
-        String destination = TOPIC_GAME + gameId + STATUS_SUFFIX;
+        String destination = TOPIC_GAME +"/" + gameId + STATUS_SUFFIX;
         messagingTemplate.convertAndSend(
                 destination,
                 new OutputMessage(
@@ -411,7 +411,7 @@ public class WebSocketBrokerController {
         // 4. Nachricht an alle senden
         String lobbyId = Integer.toString(gameId);
         messagingTemplate.convertAndSend(
-                TOPIC_GAME + gameId + STATUS_SUFFIX,                "Das Spiel wurde gestartet. Spieleranzahl: " + lobby.getPlayers().size()
+                TOPIC_GAME + "/" + gameId + STATUS_SUFFIX,                "Das Spiel wurde gestartet. Spieleranzahl: " + lobby.getPlayers().size()
         );
 
         // Wichtig: Sende auch ein Update an das Lobby-Topic, damit Clients über den Spielstart informiert werden
@@ -559,7 +559,7 @@ public class WebSocketBrokerController {
         houseService.getOrCreateRepository(gameId);
 
         // Optional: sende eine Statusmeldung an alle Clients
-        String destination = TOPIC_GAME + gameId + STATUS_SUFFIX;
+        String destination = TOPIC_GAME + "/" + gameId + STATUS_SUFFIX;
         messagingTemplate.convertAndSend(
                 destination,
                 new OutputMessage(
@@ -583,7 +583,7 @@ public class WebSocketBrokerController {
         turnManager.startWithCareer(playerName, gameId);
 
         messagingTemplate.convertAndSend(
-                TOPIC_GAME + gameId + STATUS_SUFFIX,
+                TOPIC_GAME + "/" + gameId + STATUS_SUFFIX,
                 playerName + " beginnt mit einer Karriere."
         );
     }    @MessageMapping("/game/{gameId}/start-university")
@@ -599,7 +599,7 @@ public class WebSocketBrokerController {
         turnManager.startWithUniversity(playerName, gameId);
 
         messagingTemplate.convertAndSend(
-                TOPIC_GAME + gameId + STATUS_SUFFIX,
+                TOPIC_GAME + "/" + gameId + STATUS_SUFFIX,
                 playerName + " beginnt mit einem Studium."
         );
     }
@@ -651,7 +651,7 @@ public class WebSocketBrokerController {
 
             // 5. Alle Spieler über den Beitritt informieren
             messagingTemplate.convertAndSend(
-                    TOPIC_GAME + gameId + STATUS_SUFFIX,
+                    TOPIC_GAME +"/"+ gameId + STATUS_SUFFIX,
                     playerName + " ist dem Spiel beigetreten."
             );
 
