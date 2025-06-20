@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Testet die MoveMessage-Klasse, die für die Übertragung von Bewegungsdaten über WebSockets verwendet wird.
  */
-public class MoveMessageTest {
+ class MoveMessageTest {
     
     @Test
     void testConstructorWithoutNextPossibleFields() {

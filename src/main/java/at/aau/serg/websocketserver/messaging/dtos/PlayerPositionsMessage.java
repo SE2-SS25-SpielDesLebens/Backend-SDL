@@ -10,7 +10,7 @@ import java.util.HashMap;
 public class PlayerPositionsMessage {
     private final Map<String, Integer> playerPositions;
     private final String timestamp;
-    private final String type = "playerPositions";
+    private static final String TYPE = "playerPositions";
 
     /**
      * Erstellt eine neue Nachricht mit Spielerpositionen.
@@ -47,6 +47,6 @@ public class PlayerPositionsMessage {
      * @return Typ der Nachricht (immer "playerPositions")
      */
     public String getType() {
-        return type;
+        return TYPE;
     }
 }

@@ -7,8 +7,8 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Testklasse für das FieldType-Enum.
  */
-public class FieldTypeTest {    @Test
-    public void testEnumValues() {
+ class FieldTypeTest {    @Test
+     void testEnumValues() {
         // Es sollten alle definierten Feldtypen vorhanden sein
         assertEquals(25, FieldType.values().length, "Es sollten 25 verschiedene Feldtypen definiert sein");
         
@@ -32,7 +32,7 @@ public class FieldTypeTest {    @Test
     }
     
     @Test
-    public void testValueOf() {
+     void testValueOf() {
         // Die valueOf-Methode sollte den korrekten Enum-Wert für einen gegebenen String zurückgeben
         assertEquals(FieldType.AKTION, FieldType.valueOf("AKTION"), "valueOf sollte für AKTION funktionieren");
         assertEquals(FieldType.ZAHLTAG, FieldType.valueOf("ZAHLTAG"), "valueOf sollte für ZAHLTAG funktionieren");

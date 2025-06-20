@@ -45,11 +45,11 @@ public class HouseRepository {
      * Gibt alle Häuser eines Spielers zurück (falls vorhanden).
      */
     public List<House> getHousesForPlayer(String playerName) {
-        List<House> result = houses.stream()
+        return houses.stream()
                 .filter(h -> playerName.equals(h.getAssignedToPlayerName()))
                 .collect(Collectors.toList());
-        return result;
     }
+
 
     /**
      * Gibt eine bestimmte Anzahl zufälliger verfügbarer Häuser zurück.

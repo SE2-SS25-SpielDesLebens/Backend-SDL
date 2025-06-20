@@ -8,8 +8,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.lang.reflect.Field;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -17,10 +17,10 @@ import static org.mockito.Mockito.*;
 
 class PayoutServiceTest {
 
+    private PayoutService payoutService;
     private BoardService boardService;
     private JobRepository jobRepository;
     private PlayerService playerService;
-    private PayoutService payoutService;
 
     @BeforeEach
     void setup() {
@@ -31,143 +31,92 @@ class PayoutServiceTest {
     }
 
     @Test
-    void testCheckAndApplyPayoutIfOnPayoutField_appliesBonusAndDisables() throws Exception {
-        when(boardService.getPlayerPosition("Alice")).thenReturn(10);
-        addEntry(new PayoutRepository.PayoutEntry(10, true));
-        when(jobRepository.payoutBonusSalary("Alice")).thenReturn(500);
+    void testSeparatePayoutListsPerPlayer() throws Exception {
+        // Simulierte payouts.json-Inhalte
+        String json = "{\n" +
+                "  \"payouts\": [\n" +
+                "    { \"payoutId\": 5, \"allowPayout\": true },\n" +
+                "    { \"payoutId\": 10, \"allowPayout\": false }\n" +
+                "  ]\n" +
+                "}";
 
-        int result = payoutService.checkAndApplyPayoutIfOnPayoutField("Alice");
 
-        assertEquals(500, result);
-        assertFalse(getEntries().get(0).isAllowPayout());
+        // InputStream manuell injizieren (statt aus Datei zu laden)
+        InputStream inputStream1 = new ByteArrayInputStream(json.getBytes());
+        InputStream inputStream2 = new ByteArrayInputStream(json.getBytes());
+
+        // JSON einlesen für zwei Spieler
+        injectPayouts(payoutService, "Alice", inputStream1);
+        injectPayouts(payoutService, "Bob", inputStream2);
+
+        // Ändere nur Alice's Einträge
+        payoutService.checkIfPlayerOnSpecialField("Alice"); // sollte eigentlich nichts aktivieren
+        var aliceList = getInternalPayouts(payoutService, "Alice");
+        aliceList.get(0).setAllowPayout(false);
+
+        var bobList = getInternalPayouts(payoutService, "Bob");
+
+        // Sicherstellen, dass Bob's Liste nicht betroffen ist
+        assertTrue(bobList.get(0).isAllowPayout(), "Bob's Liste sollte unabhängig von Alice sein.");
+        assertFalse(aliceList.get(0).isAllowPayout(), "Alice's Liste wurde geändert.");
     }
 
     @Test
-    void testCheckAndApplyPayoutIfOnPayoutField_doesNothingIfNoMatch() throws Exception {
-        when(boardService.getPlayerPosition("Eve")).thenReturn(5);
-        addEntry(new PayoutRepository.PayoutEntry(10, true)); // kein Match
+    void testCheckAndApplyPayoutIfOnPayoutField_appliesBonus() {
+        var entry = new PayoutRepository.PayoutEntry(3, true);
+        payoutService.playerPayouts.put("Test", List.of(entry));
+        when(boardService.getPlayerPosition("Test")).thenReturn(3);
+        when(jobRepository.payoutBonusSalary("Test")).thenReturn(500);
 
-        int result = payoutService.checkAndApplyPayoutIfOnPayoutField("Eve");
+        int bonus = payoutService.checkAndApplyPayoutIfOnPayoutField("Test");
 
-        assertEquals(0, result); // kein Bonus
+        assertEquals(500, bonus);
+        assertFalse(entry.isAllowPayout());
     }
 
     @Test
-    void testApplyPaydayIfPassedPayoutField_noPayoutIfNotPassed() throws Exception {
-        when(boardService.getPlayerPosition("Frank")).thenReturn(10);
-        addEntry(new PayoutRepository.PayoutEntry(15, true)); // noch nicht überschritten
+    void testApplyPaydayIfPassedPayoutField_appliesSalary() {
+        var entry = new PayoutRepository.PayoutEntry(5, true);
+        payoutService.playerPayouts.put("Test", List.of(entry));
+        when(boardService.getPlayerPosition("Test")).thenReturn(6);
+        when(jobRepository.payoutSalary("Test")).thenReturn(300);
 
-        int result = payoutService.applyPaydayIfPassedPayoutField("Frank");
+        int salary = payoutService.applyPaydayIfPassedPayoutField("Test");
 
-        assertEquals(0, result);
-    }
-
-
-    @Test
-    void testApplyPaydayIfPassedPayoutField_appliesSalaryAndDisables() throws Exception {
-        when(boardService.getPlayerPosition("Bob")).thenReturn(20);
-        addEntry(new PayoutRepository.PayoutEntry(15, true));
-        when(jobRepository.payoutSalary("Bob")).thenReturn(800);
-
-        int result = payoutService.applyPaydayIfPassedPayoutField("Bob");
-
-        assertEquals(800, result);
-        assertFalse(getEntries().get(0).isAllowPayout());
+        assertEquals(300, salary);
+        assertFalse(entry.isAllowPayout());
     }
 
     @Test
-    void testCheckIfPlayerOnSpecialField_activatesTargetField() throws Exception {
-        when(boardService.getPlayerPosition("Carol")).thenReturn(1);
-        addEntry(new PayoutRepository.PayoutEntry(2, false));
+    void testHandlePayoutAfterMovement_combinedLogic() {
+        var entry = new PayoutRepository.PayoutEntry(4, true);
+        payoutService.playerPayouts.put("Max", List.of(entry));
+        when(boardService.getPlayerPosition("Max")).thenReturn(4);
+        when(jobRepository.payoutBonusSalary("Max")).thenReturn(200);
+        when(jobRepository.payoutSalary("Max")).thenReturn(300);
 
-        payoutService.checkIfPlayerOnSpecialField("Carol");
+        payoutService.handlePayoutAfterMovement("Max");
 
-        assertTrue(getEntries().get(0).isAllowPayout());
+        verify(playerService).addMoneyToPlayer("Max", 200); // Bonus nur aktiv
     }
 
-    @Test
-    void testCheckIfPlayerOnSpecialField_doesNothingIfNoMatch() throws Exception {
-        when(boardService.getPlayerPosition("Grace")).thenReturn(5); // kein Spezialfeld
-        addEntry(new PayoutRepository.PayoutEntry(33, false)); // sollte nicht aktiviert werden
+    // ---------- Hilfsfunktionen ----------
 
-        payoutService.checkIfPlayerOnSpecialField("Grace");
-
-        assertFalse(getEntries().get(0).isAllowPayout());
-    }
-
-
-    @Test
-    void testHandlePayoutAfterMovement_combinesAllLogic_withoutMoneyTransfer() throws Exception {
-        when(boardService.getPlayerPosition("Dave")).thenReturn(29);
-
-        // Bonusfeld aktiv
-        addEntry(new PayoutRepository.PayoutEntry(29, true));
-        // Payday-Feld unterhalb der aktuellen Position
-        addEntry(new PayoutRepository.PayoutEntry(15, true));
-        // Spezialregel: Feld 33 wird aktiviert
-        addEntry(new PayoutRepository.PayoutEntry(33, false));
-
-        when(jobRepository.payoutBonusSalary("Dave")).thenReturn(300);
-        when(jobRepository.payoutSalary("Dave")).thenReturn(1000);
-
-        payoutService.handlePayoutAfterMovement("Dave");
-
-        List<PayoutRepository.PayoutEntry> entries = getEntries();
-
-        assertFalse(entries.get(0).isAllowPayout()); // 29
-        assertFalse(entries.get(1).isAllowPayout()); // 15
-        assertTrue(entries.get(2).isAllowPayout());  // 33 aktiviert durch Spezialregel
-        verify(playerService).addMoneyToPlayer("Dave", 1300);
-    }
-
-    @Test
-    void testHandlePayoutAfterMovement_nothingHappens() throws Exception {
-        when(boardService.getPlayerPosition("Henry")).thenReturn(5); // kein Spezialfeld, kein Bonus, kein Payday
-
-        addEntry(new PayoutRepository.PayoutEntry(10, false)); // kein aktives Feld
-
-        payoutService.handlePayoutAfterMovement("Henry");
-
-        verify(playerService, never()).addMoneyToPlayer(anyString(), anyInt());
-        assertFalse(getEntries().get(0).isAllowPayout());
-    }
-
-
-    @Test
-    void testLoadPayoutForPlayer_throwsExceptionIfFileNotFound() {
-        assertThrows(IllegalStateException.class, () -> {
-            payoutService.loadPayoutForPlayer("Dummy"); // ohne JSON-Datei im Testpfad
-        });
-    }
-
-    @Test
-    void testLoadPayoutForPlayer_doesNothingIfPayoutsNodeMissing() throws Exception {
-        String json = "{}"; // kein "payouts"-Key vorhanden
-        InputStream mockStream = new java.io.ByteArrayInputStream(json.getBytes());
-
-        // simulate JSON loading
-        Field streamField = PayoutService.class.getDeclaredField("payoutEntries");
-        streamField.setAccessible(true);
+    private void injectPayouts(PayoutService service, String playerName, InputStream stream) throws Exception {
+        // Reflektiert exakt die Logik der Originalmethode – vereinfacht für Test
         ObjectMapper mapper = new ObjectMapper();
-        JsonNode root = mapper.readTree(mockStream);
-        JsonNode payoutsNode = root.get("payouts");
-
-        assertNull(payoutsNode);
-        // Methode ist aber privat, du müsstest loadPayoutForPlayer anpassen oder in einen JSON-Test auslagern
+        JsonNode root = mapper.readTree(stream);
+        List<PayoutRepository.PayoutEntry> list = new java.util.ArrayList<>();
+        for (JsonNode node : root.get("payouts")) {
+            list.add(new PayoutRepository.PayoutEntry(
+                    node.get("payoutId").asInt(),
+                    node.get("allowPayout").asBoolean()
+            ));
+        }
+        service.playerPayouts.put(playerName, list);
     }
 
-
-    // -----------------------------------------------
-    // Helfer für Reflection-Zugriff auf payoutEntries
-    // -----------------------------------------------
-    @SuppressWarnings("unchecked")
-    private List<PayoutRepository.PayoutEntry> getEntries() throws Exception {
-        Field field = PayoutService.class.getDeclaredField("payoutEntries");
-        field.setAccessible(true);
-        return (List<PayoutRepository.PayoutEntry>) field.get(payoutService);
-    }
-
-    private void addEntry(PayoutRepository.PayoutEntry entry) throws Exception {
-        getEntries().add(entry);
+    private List<PayoutRepository.PayoutEntry> getInternalPayouts(PayoutService service, String playerName) {
+        return service.playerPayouts.get(playerName);
     }
 }

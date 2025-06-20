@@ -13,7 +13,7 @@ class HouseTest {
         assertEquals(1, house.getHouseId());
         assertEquals("Villa", house.getBezeichnung());
         assertEquals(300000, house.getKaufpreis());
-        assertEquals(300000, house.getVerkaufspreisRot()); // Fehler im Konstruktor beachten!
+        assertEquals(250000, house.getVerkaufspreisRot()); // Fehler im Konstruktor beachten!
         assertEquals(400000, house.getVerkaufspreisSchwarz());
         assertFalse(house.isTaken());
         assertNull(house.getAssignedToPlayerName());
@@ -56,7 +56,7 @@ class HouseTest {
         House house = new House(5, "Bauernhof", 120000, 100000, 160000);
         house.assignHouseTo("Player1");
 
-        String expected = "House{Bezeichnung='Bauernhof', Kaufpreis=120000, VerkaufspreisRot=120000, VerkaufspreisSchwarz=160000, Vergeben=true, Zugewiesen an='Player1'}";
+        String expected = "House{Bezeichnung='Bauernhof', Kaufpreis=120000, VerkaufspreisRot=100000, VerkaufspreisSchwarz=160000, Vergeben=true, Zugewiesen an='Player1'}";
 
         assertEquals(expected, house.toString());
     }

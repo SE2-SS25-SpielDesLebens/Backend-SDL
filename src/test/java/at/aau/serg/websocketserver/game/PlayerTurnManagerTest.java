@@ -9,19 +9,19 @@ import java.io.PrintStream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class PlayerTurnManagerTest {
+ class PlayerTurnManagerTest {
 
     private DummyGameLogic logic;
     private PlayerTurnManager manager;
 
     @BeforeEach
-    public void setup() {
+     void setup() {
         logic = new DummyGameLogic();
         manager = new PlayerTurnManager(logic);
     }
 
     @Test
-    public void testStartTurn_correctPlayer_noError() {
+     void testStartTurn_correctPlayer_noError() {
         Player player = new Player("1");
         logic.setCurrentPlayer(player);
 
@@ -29,7 +29,7 @@ public class PlayerTurnManagerTest {
     }
 
     @Test
-    public void testStartTurn_wrongPlayer_printsBlocked() {
+     void testStartTurn_wrongPlayer_printsBlocked() {
         Player correct = new Player("1");
         Player wrong = new Player("2");
         logic.setCurrentPlayer(correct);
@@ -46,19 +46,19 @@ public class PlayerTurnManagerTest {
     }
 
     @Test
-    public void testStartWithCareer_triggersLogicCorrectly() {
+     void testStartWithCareer_triggersLogicCorrectly() {
         manager.startWithCareer("1", 10);
         assertEquals("career", logic.getStartType());
     }
 
     @Test
-    public void testStartWithUniversity_triggersLogicCorrectly() {
+     void testStartWithUniversity_triggersLogicCorrectly() {
         manager.startWithUniversity("1", 10);
         assertEquals("university", logic.getStartType());
     }
 
     @Test
-    public void testTakeLoan_successfulLoan() {
+     void testTakeLoan_successfulLoan() {
         logic.setLoanPossible(true);
 
         ByteArrayOutputStream outContent = new ByteArrayOutputStream();
@@ -73,7 +73,7 @@ public class PlayerTurnManagerTest {
     }
 
     @Test
-    public void testTakeLoan_failedLoan() {
+     void testTakeLoan_failedLoan() {
         logic.setLoanPossible(false);
 
         ByteArrayOutputStream outContent = new ByteArrayOutputStream();
@@ -88,13 +88,13 @@ public class PlayerTurnManagerTest {
     }
 
     @Test
-    public void testRepayLoan_triggersRepayment() {
+     void testRepayLoan_triggersRepayment() {
         manager.repayLoan("1");
         assertEquals("1", logic.getRepaymentPlayer());
     }
 
     @Test
-    public void testCompleteTurn_correctPlayer_callsSpin() {
+     void testCompleteTurn_correctPlayer_callsSpin() {
         Player player = new Player("1");
         logic.setCurrentPlayer(player);
 
@@ -104,7 +104,7 @@ public class PlayerTurnManagerTest {
     }
 
     @Test
-    public void testCompleteTurn_wrongPlayer_doesNothing() {
+     void testCompleteTurn_wrongPlayer_doesNothing() {
         Player correct = new Player("1");
         Player wrong = new Player("2");
         logic.setCurrentPlayer(correct);

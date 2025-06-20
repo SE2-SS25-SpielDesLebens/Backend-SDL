@@ -3,7 +3,7 @@ package at.aau.serg.websocketserver.messaging.dtos;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-public class LobbyRequestMessageTest {
+ class LobbyRequestMessageTest {
     @Test
     void testAllArgsConstructorAndGetter() {
         LobbyRequestMessage message = new LobbyRequestMessage("Alice");

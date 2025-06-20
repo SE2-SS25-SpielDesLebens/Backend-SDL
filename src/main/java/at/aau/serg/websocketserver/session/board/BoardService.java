@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
-import at.aau.serg.websocketserver.session.board.Field;
 
 /**
  * Service zur Verwaltung der Spiellogik und Spielerpositionen auf dem Spielbrett.
