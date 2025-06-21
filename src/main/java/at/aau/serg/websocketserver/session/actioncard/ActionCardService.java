@@ -1,10 +1,10 @@
 package at.aau.serg.websocketserver.session.actioncard;
 
+import at.aau.serg.websocketserver.game.GameLogic;
 import at.aau.serg.websocketserver.lobby.Lobby;
 import at.aau.serg.websocketserver.lobby.LobbyService;
 import at.aau.serg.websocketserver.player.Player;
 import at.aau.serg.websocketserver.player.PlayerService;
-import org.springframework.messaging.handler.annotation.DestinationVariable;
 
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -50,12 +50,8 @@ public class ActionCardService {
      * @param lobbyId the identifier for the game where card is drawn
      * @param playerId the identifier of the player drawing the card
      */
-    public ActionCard drawCard(String lobbyId, String playerId) {
-        try {
-            lobbyExistsPlayerExistsPlayerInLobbyCheck(lobbyId, playerId);
-        } catch (Exception e) {
-            throw e;
-        }
+    public ActionCard drawCard(String lobbyId, String playerId) throws ActionCardServiceException {
+        verifyPlayerTurnInLobby(lobbyId, playerId);
 
         //If lobby exists, does a deck for this lobby exist? If no, add one.
         if(!decks.containsKey(lobbyId)) decks.put(lobbyId, new ActionCardDeck());
@@ -77,12 +73,8 @@ public class ActionCardService {
      * @param lobbyId the identifier for the game where card is drawn
      * @param playerId the identifier of the player drawing the card
      */
-    public void playCard(String lobbyId, String playerId, String decision) {
-        try {
-            lobbyExistsPlayerExistsPlayerInLobbyCheck(lobbyId, playerId);
-        } catch (Exception e) {
-            throw e;
-        }
+    public void playCard(String lobbyId, String playerId, String decision) throws ActionCardServiceException {
+        verifyPlayerTurnInLobby(lobbyId, playerId);
 
         //Is a card currently pulled in this game?
         if(pulledCards.containsKey(lobbyId + playerId)) return;
@@ -91,7 +83,7 @@ public class ActionCardService {
         this.playActionCardLogic.playActionCard(actionCard, lobbyId, playerId, decision);
     }
 
-    private void lobbyExistsPlayerExistsPlayerInLobbyCheck (String lobbyId, String playerId) throws ActionCardServiceException {
+    private void verifyPlayerTurnInLobby (String lobbyId, String playerId) throws ActionCardServiceException {
         //Does lobby exist?
         if(!lobbyService.isLobbyRegistered(lobbyId)) {
             throw new ActionCardServiceException("The lobby ID: " + lobbyId + " does not exist!");
@@ -109,6 +101,10 @@ public class ActionCardService {
             throw new ActionCardServiceException("The player ID: " + playerId + " does not exist in lobby ID: " + lobbyId + "!");
         }
 
-        //TODO: Is it player's turn?
+        //Is it player's turn?
+        GameLogic gameLogic = lobby.getGameLogic();
+        if(!Integer.toString(gameLogic.getCurrentPlayerIndex()).equals(playerId)) {
+            throw new ActionCardServiceException("It's not the turn of the player ID: " + playerId + "!");
+        }
     }
 }
