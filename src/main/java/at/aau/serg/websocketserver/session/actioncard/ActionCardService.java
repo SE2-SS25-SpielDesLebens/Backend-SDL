@@ -80,7 +80,7 @@ public class ActionCardService {
         if(pulledCards.containsKey(lobbyId + playerId)) return;
         ActionCard actionCard = pulledCards.get(lobbyId + playerId);
 
-        this.playActionCardLogic.playActionCard(actionCard, lobbyId, playerId, decision);
+        playActionCardLogic.playActionCard(actionCard, lobbyId, playerId, decision);
     }
 
     private void verifyPlayerTurnInLobby (String lobbyId, String playerId) throws ActionCardServiceException {
