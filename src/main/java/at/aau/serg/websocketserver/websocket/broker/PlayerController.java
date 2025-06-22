@@ -62,6 +62,19 @@ public class PlayerController {
     }
 
     /**
+     * Gibt das aktuelle Guthaben (money) des Spielers zurück.
+     */
+    @GetMapping("/{id}/money")
+    public ResponseEntity<Map<String, Integer>> getPlayerMoney(@PathVariable String id) {
+        Player player = playerService.getPlayerById(id);
+        if (player == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(Map.of("money", player.getMoney()));
+    }
+
+
+    /**
      * Fügt ein Kind hinzu, falls Platz vorhanden.
      */
     @PutMapping("/{id}/add-child")
