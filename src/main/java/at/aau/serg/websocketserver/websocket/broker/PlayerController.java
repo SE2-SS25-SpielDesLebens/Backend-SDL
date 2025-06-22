@@ -73,6 +73,20 @@ public class PlayerController {
         return ResponseEntity.ok(Map.of("money", player.getMoney()));
     }
 
+    //Zahlt geld an die Spieler aus, wenn sie auf ein Zahltagfeld fahren
+    @PutMapping("/{id}/salary")
+    public ResponseEntity<String> receiveSalary(@PathVariable String id) {
+        Player player = playerService.getPlayerById(id);
+        if (player == null) return ResponseEntity.notFound().build();
+
+        int salaryAmount = 50000; // Zahltagsbetrag festlegen
+        player.setMoney(player.getMoney() + salaryAmount);
+
+        return ResponseEntity.ok("💰 Zahltag! +" + salaryAmount + "€");
+    }
+
+
+
 
     /**
      * Fügt ein Kind hinzu, falls Platz vorhanden.

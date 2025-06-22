@@ -23,7 +23,7 @@ public class PayoutService {
 
 
     // Nur eine globale Liste von PayoutEntries → KEINE MAP → einfach eine ArrayList
-    private final List<PayoutRepository.PayoutEntry> payoutEntries = new ArrayList<>();
+    private static final List<PayoutRepository.PayoutEntry> payoutEntries = new ArrayList<>();
 
     /**
      * Lädt die Payout-Liste aus payouts.json für einen bestimmten Spieler. Am Start des Spiels auszuführen
@@ -110,6 +110,14 @@ public class PayoutService {
      * 2. Ob der Spieler direkt auf einem aktiven Payout-Feld steht und zahlt ggf. Bonusgehalt aus.
      * 3. Ob der Spieler ein aktives Zahltag-Feld (Payday) überquert hat und zahlt ggf. normales Gehalt aus.
      */
+    /**
+     * Prüft, ob ein bestimmtes Feld derzeit als aktives Zahltag-Feld gilt.
+     */
+    public static boolean isPaydayField(int fieldIndex) {
+        return payoutEntries.stream()
+                .anyMatch(entry -> entry.getPayoutId() == fieldIndex && entry.isAllowPayout());
+    }
+
 
     public void handlePayoutAfterMovement(String playerName) {
         int totalPayout = 0;
