@@ -50,6 +50,13 @@ public class WebSocketBrokerController {
         this.playerService = PlayerService.getInstance();
         this.lobbyService  = LobbyService.getInstance();
     }
+    private static final String STATUS_SUFFIX = "/status";
+    private static final String SYSTEM = "System";
+    private static final String TOPIC_GAME = "/topic/game";
+
+
+
+
 
     /**
      * Liefert die aktuellen Spielbrettdaten an den Client.
@@ -76,11 +83,11 @@ public class WebSocketBrokerController {
         jobService.getOrCreateRepository(gameId);
 
         // Optional: sende eine Statusmeldung an alle Clients
-        String destination = "/topic/game/" + gameId + "/status";
+        String destination = TOPIC_GAME +"/" + gameId + STATUS_SUFFIX;
         messagingTemplate.convertAndSend(
                 destination,
                 new OutputMessage(
-                        "System",
+                        SYSTEM,
                         "Job-Repository für Spiel " + gameId + " wurde angelegt.",
                         now()
                 )
@@ -175,7 +182,7 @@ public class WebSocketBrokerController {
                 playerId,
                 "/queue/players/check",
                 new OutputMessage(
-                        "System",
+                        SYSTEM,
                         exists
                                 ? "✅ Spieler '" + playerId + "' ist registriert."
                                 : "❌ Spieler '" + playerId + "' ist noch nicht registriert.",
@@ -189,6 +196,11 @@ public class WebSocketBrokerController {
     @SendTo("/topic/{lobbyid}")
     public void sendLobbyUpdates(String lobbyid) {
         Lobby lobby = lobbyService.getLobby(lobbyid);
+        if (lobby == null) {
+            System.out.println("⚠️ Lobby mit ID '" + lobbyid + "' nicht gefunden.");
+            return;
+        }
+
         String player1 = getPlayerIdSafe(lobby, 0);
         String player2 = getPlayerIdSafe(lobby, 1);
         String player3 = getPlayerIdSafe(lobby, 2);
@@ -196,9 +208,11 @@ public class WebSocketBrokerController {
 
         LobbyUpdateMessage message = new LobbyUpdateMessage(player1, player2, player3, player4, lobby.isStarted());
         System.out.println(message);
+
         String destination = String.format("/topic/%s", lobbyid);
         messagingTemplate.convertAndSend(destination, message);
     }
+
 
     @MessageMapping("/{lobbyid}/leave")
     public void handlePlayerLeave(@DestinationVariable String lobbyid, @Payload LobbyRequestMessage request) {
@@ -236,18 +250,19 @@ public class WebSocketBrokerController {
 
         for (Player player : lobby.getPlayers()) {
             gameLogic.registerPlayer(player.getId());
-        }
-
-        gameLogic.prepareGameStart();
+        }        gameLogic.prepareGameStart();
         lobby.setStarted(true);
         lobby.setGameLogic(gameLogic);
 
 
-        // 4. Optional: Nachricht an alle senden
+        // 4. Nachricht an alle senden
+        String lobbyId = Integer.toString(gameId);
         messagingTemplate.convertAndSend(
-                "/topic/game/" + gameId + "/status",
-                "Das Spiel wurde gestartet. Spieleranzahl: " + lobby.getPlayers().size()
+                TOPIC_GAME + "/" + gameId + STATUS_SUFFIX,                "Das Spiel wurde gestartet. Spieleranzahl: " + lobby.getPlayers().size()
         );
+
+        // Wichtig: Sende auch ein Update an das Lobby-Topic, damit Clients über den Spielstart informiert werden
+        sendLobbyUpdates(Integer.toString(gameId));
 
     }
 
@@ -256,18 +271,18 @@ public class WebSocketBrokerController {
     public OutputMessage handleGameEnd(@DestinationVariable String gameId) {
         Lobby lobby = LobbyService.getInstance().getLobby(gameId);
         if (lobby == null || !lobby.isStarted()) {
-            return new OutputMessage("System", "Spiel nicht gefunden oder nicht gestartet", now());
+            return new OutputMessage(SYSTEM, "Spiel nicht gefunden oder nicht gestartet", now());
         }
 
         GameLogic game = lobby.getGameLogic();
         if (game == null) {
-            return new OutputMessage("System", "Keine Spielinstanz vorhanden", now());
+            return new OutputMessage(SYSTEM, "Keine Spielinstanz vorhanden", now());
         }
 
         game.endGame(); // ❗ Dies ruft die finale Auswertung auf
         lobby.setStarted(false); // Spiel wird beendet
 
-        return new OutputMessage("System", "Spiel wurde manuell beendet!", now());
+        return new OutputMessage(SYSTEM, "Spiel wurde manuell beendet!", now());
     }
 
     private String now() {
@@ -280,8 +295,7 @@ public class WebSocketBrokerController {
     public void handleJobRequest(@DestinationVariable int gameId,
                                  @DestinationVariable String playerName,
                                  @Payload JobRequestMessage msg) {
-        boolean hasDegree = false;
-        //boolean hasDegree = playerService.hasDegree(playerName);
+        boolean hasDegree = playerService.hasDegree(playerName);
         var repo = jobService.getOrCreateRepository(gameId);
         List<Job> jobsToSend = new ArrayList<>();
 
@@ -326,7 +340,7 @@ public class WebSocketBrokerController {
                 .ifPresent(job -> repo.assignJobToPlayer(playerName, job));
     }
 
-    private String getPlayerIdSafe(Lobby lobby, int index) {
+    String getPlayerIdSafe(Lobby lobby, int index) {
         if (lobby == null || lobby.getPlayers() == null) {
             return "";
         }
@@ -372,11 +386,11 @@ public class WebSocketBrokerController {
     public void finalizeHouseAction(@DestinationVariable int gameId,
                                     @DestinationVariable String playerName,
                                     @Payload HouseMessage houseMsg) {
-        // Aufruf auf der Bean-Instanz, nicht statisch
+        // übergebe das ganze Objekt, nicht nur die ID
         HouseMessage confirmation = houseService.finalizeHouseAction(
                 gameId,
                 playerName,
-                houseMsg.getHouseId()
+                houseMsg
         );
 
         String dest = String.format("/topic/%d/houses/%s/confirmation",
@@ -385,21 +399,136 @@ public class WebSocketBrokerController {
         );
         messagingTemplate.convertAndSend(dest, confirmation);
     }
+
     @MessageMapping("/game/createHouseRepo/{gameId}")
     public void handleHouseRepoCreation(@DestinationVariable int gameId) {
         // Erstelle (oder liefere zurück) das House-Repository
         houseService.getOrCreateRepository(gameId);
 
         // Optional: sende eine Statusmeldung an alle Clients
-        String destination = "/topic/game/" + gameId + "/status";
+        String destination = TOPIC_GAME + "/" + gameId + STATUS_SUFFIX;
         messagingTemplate.convertAndSend(
                 destination,
                 new OutputMessage(
-                        "System",
+                        SYSTEM,
                         "House-Repository für Spiel " + gameId + " wurde angelegt.",
                         now()
                 )
         );
     }
 
+    @MessageMapping("/game/{gameId}/start-career")
+    public void handleStartCareer(@DestinationVariable int gameId, @Payload String playerName) {
+        Lobby lobby = LobbyService.getInstance().getLobby(Integer.toString(gameId));
+        if (lobby == null || !lobby.isStarted() || lobby.getGameLogic() == null) {
+            System.out.println("[FEHLER] Keine aktive Spiellogik für Career-Start Anfrage von " + playerName);
+            return;
+        }
+
+        GameLogic gameLogic = lobby.getGameLogic();
+        PlayerTurnManager turnManager = gameLogic.getTurnManager();
+        turnManager.startWithCareer(playerName, gameId);
+
+        messagingTemplate.convertAndSend(
+                TOPIC_GAME + "/" + gameId + STATUS_SUFFIX,
+                playerName + " beginnt mit einer Karriere."
+        );
+    }    @MessageMapping("/game/{gameId}/start-university")
+    public void handleStartUniversity(@DestinationVariable int gameId, @Payload String playerName) {
+        Lobby lobby = LobbyService.getInstance().getLobby(Integer.toString(gameId));
+        if (lobby == null || !lobby.isStarted() || lobby.getGameLogic() == null) {
+            System.out.println("[FEHLER] Keine aktive Spiellogik für University-Start Anfrage von " + playerName);
+            return;
+        }
+
+        GameLogic gameLogic = lobby.getGameLogic();
+        PlayerTurnManager turnManager = gameLogic.getTurnManager();
+        turnManager.startWithUniversity(playerName, gameId);
+
+        messagingTemplate.convertAndSend(
+                TOPIC_GAME + "/" + gameId + STATUS_SUFFIX,
+                playerName + " beginnt mit einem Studium."
+        );
+    }
+
+    /**
+     * Handler für den Beitritt eines Spielers zu einem bereits laufenden Spiel.
+     * Diese Methode synchronisiert den Spieler mit dem aktuellen Spielzustand.
+     */
+    @MessageMapping("/game/{gameId}/join")
+    public void handleGameJoin(@DestinationVariable String gameId, @Payload StompMessage message) {
+        String playerName = message.getPlayerName();
+        System.out.println("👤 Spieler " + playerName + " tritt Spiel in Lobby " + gameId + " bei");
+
+        // 1. Lobby abrufen
+        Lobby lobby = LobbyService.getInstance().getLobby(gameId);
+        if (lobby == null) {
+            System.out.println("❌ Lobby " + gameId + " existiert nicht");
+            messagingTemplate.convertAndSendToUser(
+                    playerName,
+                    "/queue/errors",
+                    new OutputMessage(SYSTEM, "Lobby existiert nicht", now())
+            );
+            return;
+        }
+
+        try {
+            // 2. Spieler erstellen, wenn nicht vorhanden, und zur Lobby hinzufügen
+            Player player = playerService.createPlayerIfNotExists(playerName);
+            if (!lobby.getPlayers().contains(player) && !lobby.isFull()) {
+                lobby.addPlayer(player);
+                System.out.println("✅ Spieler " + playerName + " zur Lobby hinzugefügt");
+            }
+
+            // 3. Wenn das Spiel läuft, Spieler auch zur GameLogic hinzufügen
+            if (lobby.isStarted() && lobby.getGameLogic() != null) {
+                GameLogic gameLogic = lobby.getGameLogic();
+                if (!gameLogic.registerPlayer(playerName)) {
+                    gameLogic.registerPlayer(playerName);
+                    System.out.println("✅ Spieler " + playerName + " zur GameLogic hinzugefügt");
+                }
+            }
+
+            // 4. Bestätigung an den Client senden
+            messagingTemplate.convertAndSendToUser(
+                    playerName,
+                    "/queue/join/confirm",
+                    new OutputMessage(SYSTEM, "Erfolgreich dem Spiel beigetreten", now())
+            );
+
+            // 5. Alle Spieler über den Beitritt informieren
+            messagingTemplate.convertAndSend(
+                    TOPIC_GAME +"/"+ gameId + STATUS_SUFFIX,
+                    playerName + " ist dem Spiel beigetreten."
+            );
+
+            // 6. Lobby-Updates senden
+            sendLobbyUpdates(gameId);
+
+        } catch (Exception e) {
+            System.out.println("❌ Fehler beim Beitritt zum Spiel: " + e.getMessage());
+            messagingTemplate.convertAndSendToUser(
+                    playerName,
+                    "/queue/errors",
+                    new OutputMessage(SYSTEM, "Fehler beim Beitritt: " + e.getMessage(), now())
+            );
+        }
+    }
+
+    /**
+     * Liefert die aktuellen Positionen aller Spieler an den Client.
+     * Diese Methode kann vom Frontend aufgerufen werden, um die Spielerpositionen zu synchronisieren.
+     */
+    @MessageMapping("/players/positions/request")
+    public void handlePlayerPositionsRequest() {
+        // Erstelle eine neue PlayerPositionsMessage mit den aktuellen Positionen
+        PlayerPositionsMessage positionsMessage = new PlayerPositionsMessage(
+                boardService.getAllPlayerPositions(),
+                now()
+        );
+
+        // Sende die Nachricht an alle verbundenen Clients
+        messagingTemplate.convertAndSend("/topic/players/positions", positionsMessage);
+        System.out.println("👥 Sende Spielerpositionen auf Anfrage: " + positionsMessage.getPlayerPositions().size() + " Spieler");
+    }
 }

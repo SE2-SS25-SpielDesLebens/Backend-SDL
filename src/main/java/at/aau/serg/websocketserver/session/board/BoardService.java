@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
-import at.aau.serg.websocketserver.session.board.Field;
 
 /**
  * Service zur Verwaltung der Spiellogik und Spielerpositionen auf dem Spielbrett.
@@ -111,9 +110,7 @@ public class BoardService {
      */
     public Field getFieldByIndex(int fieldIndex) {
         return boardDataProvider.getFieldByIndex(fieldIndex);
-    }
-
-    /**
+    }    /**
      * Bewegt einen Spieler um die angegebene Anzahl an Schritten mit Entscheidungslogik für Verzweigungen.
      *
      * @param playerId Die ID des Spielers
@@ -152,8 +149,8 @@ public class BoardService {
                 } else {
                     // Für steps>2 müssten wir weiter rekursiv vorgehen
                     // (Hier vereinfacht implementiert - in der Praxis würde man das rekursiv lösen)
-                    if (!firstStepField.getNextFields().isEmpty()) {
-                        result.add(firstStepField.getNextFields().get(0));
+                    for (Integer nextFieldIndex : firstStepField.getNextFields()) {
+                        result.add(nextFieldIndex);
                     }
                 }
             }
@@ -216,7 +213,7 @@ public class BoardService {
             return boardDataProvider.getFieldByIndex(1);
         }
         return boardDataProvider.getFieldByIndex(position);
-    }/**
+    }    /**
      * Gibt das Feld zurück, auf dem sich ein Spieler befindet.
      *
      * @param playerId Die ID des Spielers als Integer
@@ -233,12 +230,11 @@ public class BoardService {
             return getFieldByIndex(fieldIndex);
         }
         
-        // Fall 2: Wenn keine Spieler-ID passt, versuchen wir den Parameter als Feld-Index zu interpretieren
-        if (playerId != null && playerId > 0 && playerId <= board.size()) {
-            for (Field field : board) {
-                if (field.getIndex() == playerId) {
-                    return field;
-                }
+        // Fall 2: Wenn keine Spieler-ID passt, interpretieren wir den Parameter als Feld-Index
+        if (playerId != null) {
+            Field field = getFieldByIndex(playerId);
+            if (field != null) {
+                return field;
             }
         }
         
@@ -248,7 +244,7 @@ public class BoardService {
         }
         
         return null;
-    }    /**
+    }/**
      * Bewegt einen Spieler zu einem spezifischen Feld.
      *
      * @param playerId Die ID des Spielers

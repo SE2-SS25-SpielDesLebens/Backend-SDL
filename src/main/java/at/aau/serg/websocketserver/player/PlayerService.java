@@ -111,4 +111,34 @@ public class PlayerService {
         Player player = players.get(playerId);
         return player != null && player.isActive();
     }
+
+    /**
+     * 💰 Fügt einem Spieler einen bestimmten Geldbetrag hinzu.
+     */
+    public void addMoneyToPlayer(String playerId, int amount) {
+        Player player = players.get(playerId);
+        if (player == null) {
+            throw new IllegalArgumentException("❌ Spieler nicht gefunden: " + playerId);
+        }
+        player.addMoney(amount);
+    }
+
+    /**
+     * 💸 Zieht einem Spieler einen bestimmten Geldbetrag ab.
+     */
+    public void removeMoneyFromPlayer(String playerId, int amount) {
+        Player player = players.get(playerId);
+        if (player == null) {
+            throw new IllegalArgumentException("❌ Spieler nicht gefunden: " + playerId);
+        }
+        player.removeMoney(amount);
+    }
+    /**
+     * 🎓 Prüft, ob der Spieler einen Hochschulabschluss hat.
+     */
+    public boolean hasDegree(String playerId) {
+        Player player = players.get(playerId);
+        return player != null && player.hasDegree();
+    }
+
 }

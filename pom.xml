@@ -29,17 +29,8 @@
         <sonar.projectKey>SE2-SS25-SpielDesLebens_Backend-SDL</sonar.projectKey>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
         <sonar.exclusions>
-            src/main/java/at/aau/serg/websocketserver/messaging/dtos/OutputMessage.java,
             src/main/java/at/aau/serg/websocketserver/websocket/broker/WebSocketBrokerConfig.java,
             src/main/java/at/aau/serg/websocketserver/messaging/dtos/WebSocketServerApplication.java,
-            src/main/java/at/aau/serg/websocketserver/websocket/broker/WebSocketBrokerController.java,
-            src/main/java/at/aau/serg/websocketserver/game/GameLogic.java,
-            src/main/java/at/aau/serg/websocketserver/session/JobService.java,
-            src/main/java/at/aau/serg/websocketserver/messaging/dtos/MoveMessage.java,
-            src/main/java/at/aau/serg/websocketserver/messaging/dtos/StartMessage.java,
-            src/main/java/at/aau/serg/websocketserver/websocket/broker/PlayerController.java,
-            src/main/java/at/aau/serg/websocketserver/actioncard/ActionCard.java,
-            src/main/java/at/aau/serg/websocketserver/actioncard/ActionCardController.java
         </sonar.exclusions>
         <kotlin.version>2.1.20</kotlin.version>
     </properties>

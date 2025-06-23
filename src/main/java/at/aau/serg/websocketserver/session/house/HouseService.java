@@ -63,12 +63,12 @@ public class HouseService {
         if (buyElseSell) {
             List<House> available = repo.getRandomAvailableHouses(2);
             for (House h : available) {
-                messages.add(mapToDto(h, gameId));
+                messages.add(mapToDto(h, gameId, false));
             }
         } else {
             List<House> owned = repo.getHousesForPlayer(playerId);
             for (House h : owned) {
-                messages.add(mapToDto(h, gameId));
+                messages.add(mapToDto(h, gameId, false));
             }
         }
 
@@ -82,25 +82,31 @@ public class HouseService {
      */
     public HouseMessage finalizeHouseAction(int gameId,
                                             String playerName,
-                                            int houseId) {
+                                            HouseMessage houseMessage) {
+
         HouseRepository repo = getOrCreateRepository(gameId);
-        House house = repo.findHouseById(houseId)
+        House house = repo.findHouseById(houseMessage.getHouseId())
                 .orElseThrow(() -> new NoSuchElementException(
-                        HAUS_NICHT_GEFUNDEN + houseId));
+                        HAUS_NICHT_GEFUNDEN + houseMessage.getHouseId()));
 
         House result;
         if (house.isTaken() && playerName.equals(house.getAssignedToPlayerName())) {
-            // ToDo: colorValue aus Wheel of Fortune einsetzen, hier als Platzhalter 1
-            result = sellHouse(gameId, playerName, houseId, 1);
+            // isSellPrice == true → Schwarzer Verkaufspreis verwenden
+            int sellValue = houseMessage.isSellPrice()
+                    ? house.getVerkaufspreisSchwarz()
+                    : house.getVerkaufspreisRot();
+
+            result = sellHouse(gameId, playerName, house.getHouseId(), sellValue);
+
         } else {
-            result = buyHouse(gameId, playerName, houseId);
+            result = buyHouse(gameId, playerName, house.getHouseId());
         }
 
-        return mapToDto(result, gameId);
+        return mapToDto(result, gameId, houseMessage.isSellPrice());
     }
 
     /** Domänen-Logik: Haus kaufen */
-    public House buyHouse(int gameId, String playerId, int houseId) {
+    public House buyHouse(int gameId, String playerName, int houseId) {
         HouseRepository repo = getOrCreateRepository(gameId);
         House house = repo.findHouseById(houseId)
                 .orElseThrow(() -> new NoSuchElementException(
@@ -109,13 +115,13 @@ public class HouseService {
             throw new IllegalStateException("Haus bereits vergeben: " + houseId);
         }
         // Abbuchung vom Spieler
-        // playerService.removeMoneyFromPlayer(playerId, price);
+        playerService.removeMoneyFromPlayer(playerName, house.getKaufpreis());
 
-        repo.assignHouseToPlayer(playerId, house);
+        repo.assignHouseToPlayer(playerName, house);
         return house;
     }
 
-    public House sellHouse(int gameId, String playerId, int houseId, int colorValue) {
+    public House sellHouse(int gameId, String playerName, int houseId, int sellPrice) {
         HouseRepository repo = getOrCreateRepository(gameId);
 
         // Explizites Haus anhand seiner ID holen
@@ -124,19 +130,13 @@ public class HouseService {
                         HAUS_NICHT_GEFUNDEN + houseId));
 
         // Sicherstellen, dass der Spieler tatsächlich dieses Haus besitzt
-        if (!playerId.equals(house.getAssignedToPlayerName())) {
+        if (!playerName.equals(house.getAssignedToPlayerName())) {
             throw new IllegalStateException(
-                    "Spieler " + playerId + " besitzt nicht das Haus-ID " + houseId);
+                    "Spieler " + playerName + " besitzt nicht das Haus-ID " + houseId);
         }
 
-        // Verkaufspreis berechnen
-        boolean isBlack = (colorValue % 2 != 0);
-        int price = isBlack
-                ? house.getVerkaufspreisSchwarz()
-                : house.getVerkaufspreisRot();
-
         // Auszahlung an den Spieler (bezogen auf PlayerService)
-        //playerService.addMoneyToPlayer(playerId, price);
+        playerService.addMoneyToPlayer(playerName, sellPrice);
 
         // Haus freigeben
         repo.releaseHouse(house);
@@ -144,7 +144,7 @@ public class HouseService {
     }
 
     /** Helfer: konvertiert Domain → DTO */
-    private HouseMessage mapToDto(House house, int gameId) {
+    private HouseMessage mapToDto(House house, int gameId, boolean sellPrice) {
         return new HouseMessage(
                 house.getHouseId(),
                 house.getBezeichnung(),
@@ -153,7 +153,8 @@ public class HouseService {
                 house.getVerkaufspreisSchwarz(),
                 house.isTaken(),
                 house.getAssignedToPlayerName(),
-                gameId
+                gameId,
+                sellPrice
         );
     }
 }
