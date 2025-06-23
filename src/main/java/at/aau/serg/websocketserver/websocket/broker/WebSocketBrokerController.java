@@ -6,7 +6,6 @@ import at.aau.serg.websocketserver.game.PlayerTurnManager;
 import at.aau.serg.websocketserver.player.Player;
 import at.aau.serg.websocketserver.player.PlayerService;
 import at.aau.serg.websocketserver.session.board.BoardService;
-import at.aau.serg.websocketserver.session.board.Field;
 import at.aau.serg.websocketserver.lobby.Lobby;
 import at.aau.serg.websocketserver.lobby.LobbyService;
 import at.aau.serg.websocketserver.messaging.dtos.*;
@@ -36,9 +35,10 @@ public class WebSocketBrokerController {
     private final LobbyService lobbyService;
     private final SimpMessagingTemplate messagingTemplate;
     private final HouseService houseService;
+    @Autowired
+    private final BoardService boardService;
 
     @Autowired
-    private final BoardService boardService;    @Autowired
     public WebSocketBrokerController(JobService jobService,
                                      SimpMessagingTemplate messagingTemplate,
                                      BoardService boardService,
