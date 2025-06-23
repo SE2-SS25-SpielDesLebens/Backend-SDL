@@ -3,21 +3,32 @@ package at.aau.serg.websocketserver.session.actioncard;
 import at.aau.serg.websocketserver.lobby.Lobby;
 import at.aau.serg.websocketserver.lobby.LobbyService;
 import at.aau.serg.websocketserver.player.Player;
+import lombok.Setter;
+
 import java.security.SecureRandom;
 import java.util.List;
 import java.util.Map;
+import java.util.function.IntUnaryOperator;
 import java.util.stream.Collectors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class PlayActionCardLogic {
     private static final String BANK = "BANK";
-    private final LobbyService lobbyService;
+    @Setter
+    private LobbyService lobbyService;
     private final SecureRandom random = new SecureRandom();
+    /**
+     * -- SETTER --
+     *  Allows tests to inject a deterministic random supplier.
+     */
+    @Setter
+    private IntUnaryOperator randomSupplier;
     private static final Logger logger = Logger.getLogger(PlayActionCardLogic.class.getName());
 
     public PlayActionCardLogic() {
         this.lobbyService = LobbyService.getInstance();
+        this.randomSupplier = bound -> 1 + random.nextInt(bound);
     }
 
     public void playActionCard(ActionCard actionCard, String lobbyId, String playerId, String decision) {
@@ -286,7 +297,7 @@ public class PlayActionCardLogic {
 
 
     private void spinAndTransfer(String playerId, String toId, int multiplier) {
-        int spin = 1 + random.nextInt(10);
+        int spin = randomSupplier.applyAsInt(10);
         transferMoney(BANK.equals(toId) ? playerId : BANK,
                 BANK.equals(toId) ? toId : playerId,
                 spin * multiplier);
@@ -299,7 +310,7 @@ public class PlayActionCardLogic {
     }
 
     private void spinColorOutcome(String playerId) {
-        int spin = 1 + random.nextInt(10);
+        int spin = randomSupplier.applyAsInt(10);
         if (spin % 2 == 1) transferMoney(BANK, playerId, 30_000);
         else               transferMoney(playerId, BANK, 30_000);
     }

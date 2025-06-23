@@ -107,4 +107,8 @@ public class ActionCardService {
             throw new ActionCardServiceException("It's not the turn of the player ID: " + playerId + "!");
         }
     }
+
+    public ActionCard getPulledCard(String lobbyId, String playerId) {
+        return pulledCards.get(lobbyId + playerId);
+    }
 }
