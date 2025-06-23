@@ -15,7 +15,7 @@ import static org.mockito.Mockito.*;
 /**
  * Erweiterte Tests für den BoardService mit komplexeren Spielsituationen.
  */
-public class BoardServiceComplexTest {
+ class BoardServiceComplexTest {
 
     private BoardDataProvider mockBoardDataProvider;
     private BoardService boardService;
@@ -23,7 +23,7 @@ public class BoardServiceComplexTest {
     private Map<String, Integer> initialPlayerPositions;
 
     @BeforeEach
-    public void setUp() {
+     void setUp() {
         mockBoardDataProvider = mock(BoardDataProvider.class);
         initialPlayerPositions = new HashMap<>();
         
@@ -55,7 +55,7 @@ public class BoardServiceComplexTest {
     }
 
     @Test
-    public void testGetMoveOptionsWithBranch() {
+     void testGetMoveOptionsWithBranch() {
         // Ein Spieler auf dem Startfeld sollte bei einem Schritt zwei Optionen haben
         List<Integer> options = boardService.getMoveOptions("player1", 1);
         assertEquals(2, options.size(), "Es sollten zwei Bewegungsoptionen vorhanden sein");
@@ -64,21 +64,21 @@ public class BoardServiceComplexTest {
     }
 
     @Test
-    public void testGetMoveOptionsWithMultipleSteps() {
+     void testGetMoveOptionsWithMultipleSteps() {
         // Bei zwei Schritten sollten wir auf Feld 3 und Feld 11 landen können
         List<Integer> options = boardService.getMoveOptions("player1", 2);
         assertEquals(2, options.size(), "Nach zwei Schritten sollten zwei Optionen verfügbar sein");
         assertTrue(options.contains(3), "Eine Option sollte Feld 3 sein");
         assertTrue(options.contains(11), "Eine Option sollte Feld 11 sein");
     }    @Test
-    public void testIsPlayerOnField() {
+     void testIsPlayerOnField() {
         assertTrue(boardService.isPlayerOnField("player1", 1), "Spieler 1 sollte auf Feld 1 sein");
         assertTrue(boardService.isPlayerOnField("player2", 3), "Spieler 2 sollte auf Feld 3 sein");
         assertFalse(boardService.isPlayerOnField("player1", 2), "Spieler 1 sollte nicht auf Feld 2 sein");
     }
 
     @Test
-    public void testGetPlayersOnField() {
+     void testGetPlayersOnField() {
         List<String> playersOnField1 = boardService.getPlayersOnField(1);
         assertEquals(1, playersOnField1.size(), "Es sollte ein Spieler auf Feld 1 sein");
         assertEquals("player1", playersOnField1.get(0), "Spieler 1 sollte auf Feld 1 sein");
@@ -92,7 +92,7 @@ public class BoardServiceComplexTest {
     }
 
     @Test
-    public void testMovePlayerToBranch() {
+     void testMovePlayerToBranch() {
         // Spieler 1 kann sich zu Feld 2 oder Feld 10 bewegen
         assertTrue(boardService.movePlayerToField("player1", 2), "Bewegung zu Feld 2 sollte erfolgreich sein");
         assertEquals(2, boardService.getPlayerPosition("player1"), "Spieler sollte jetzt auf Feld 2 sein");
@@ -106,7 +106,7 @@ public class BoardServiceComplexTest {
     }
 
     @Test
-    public void testGetAllPlayerPositions() {
+     void testGetAllPlayerPositions() {
         Map<String, Integer> positions = boardService.getAllPlayerPositions();
         assertEquals(2, positions.size(), "Es sollten zwei Spielerpositionen vorhanden sein");
         assertEquals(1, positions.get("player1").intValue(), "Spieler 1 sollte auf Feld 1 sein");
@@ -114,21 +114,21 @@ public class BoardServiceComplexTest {
     }
 
     @Test
-    public void testResetAllPlayerPositions() {
+     void testResetAllPlayerPositions() {
         boardService.resetAllPlayerPositions();
         Map<String, Integer> positions = boardService.getAllPlayerPositions();
         assertTrue(positions.isEmpty(), "Nach dem Reset sollten keine Spielerpositionen vorhanden sein");
     }
 
     @Test
-    public void testIsAnyPlayerOnField() {
+     void testIsAnyPlayerOnField() {
         assertTrue(boardService.isAnyPlayerOnField(1), "Es sollte ein Spieler auf Feld 1 sein");
         assertTrue(boardService.isAnyPlayerOnField(3), "Es sollte ein Spieler auf Feld 3 sein");
         assertFalse(boardService.isAnyPlayerOnField(2), "Es sollte kein Spieler auf Feld 2 sein");
     }
 
     @Test
-    public void testGetPlayerField() {
+     void testGetPlayerField() {
         Field field = boardService.getPlayerField("player1");
         assertNotNull(field, "Das Feld des Spielers sollte nicht null sein");
         assertEquals(1, field.getIndex(), "Spieler 1 sollte auf Feld 1 sein");

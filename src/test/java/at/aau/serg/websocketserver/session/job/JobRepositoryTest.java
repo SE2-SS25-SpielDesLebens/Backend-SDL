@@ -55,7 +55,7 @@ class JobRepositoryTest {
     }
 
     @Test
-    void testFindJobByIdWhenIdNotExists() throws Exception {
+    void testFindJobByIdWhenIdNotExists() {
         Optional<Job> result = repo.findJobById(99);
         assertTrue(result.isEmpty(), "Expected no job for non-existent id");
     }

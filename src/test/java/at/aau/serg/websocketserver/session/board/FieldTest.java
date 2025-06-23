@@ -11,10 +11,10 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Testklasse für die Field-Klasse.
  */
-public class FieldTest {
+ class FieldTest {
 
     @Test
-    public void testFieldCreation() {
+     void testFieldCreation() {
         // Arrangement
         int index = 5;
         double x = 0.25;
@@ -36,7 +36,7 @@ public class FieldTest {
 
     
     @Test
-    public void testSetters() {
+     void testSetters() {
         // Arrangement
         Field field = new Field(1, 0.1, 0.1, Collections.singletonList(2), FieldType.AKTION);
         

@@ -2,7 +2,10 @@ package at.aau.serg.websocketserver.session.actioncard;
 
 public class ActionCard {
     private int id;
-    private String handle, headline, action, imageName;
+    private String handle;
+    private String headline;
+    private String action;
+    private String imageName;
     private String[] reactions;
 
     public ActionCard(int id, String handle, String headline, String action, String imageName, String[] reactions) {

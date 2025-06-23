@@ -10,15 +10,15 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Testklasse für die BoardData-Implementation des BoardDataProviders.
  */
-public class BoardDataTest {
+ class BoardDataTest {
 
     private BoardData boardData;
 
     @BeforeEach
-    public void setUp() {
+     void setUp() {
         boardData = new BoardData();
     }    @Test
-    public void testGetBoard() {
+     void testGetBoard() {
         List<Field> board = boardData.getBoard();
 
         assertNotNull(board, "Das Board sollte nicht null sein");
@@ -30,7 +30,7 @@ public class BoardDataTest {
     }
     
     @Test
-    public void testGetFieldByIndex_ValidIndex() {
+     void testGetFieldByIndex_ValidIndex() {
         // Action
         Field field = boardData.getFieldByIndex(1);
         
@@ -41,7 +41,7 @@ public class BoardDataTest {
     }
     
     @Test
-    public void testGetFieldByIndex_InvalidIndex() {
+     void testGetFieldByIndex_InvalidIndex() {
         // Action
         Field field = boardData.getFieldByIndex(999);
         
@@ -50,7 +50,7 @@ public class BoardDataTest {
     }
     
     @Test
-    public void testStaticCompatibilityMethods() {
+     void testStaticCompatibilityMethods() {
         // Action & Assert für statische Methoden, die für Abwärtskompatibilität vorgesehen sind
         List<Field> staticBoard = BoardData.getBoardStatic();
         assertNotNull(staticBoard, "Die statische getBoard-Methode sollte funktionieren");
@@ -61,7 +61,7 @@ public class BoardDataTest {
         assertEquals(boardData.getFieldByIndex(1).getIndex(), staticField.getIndex(), 
                 "Statische und Instanzmethode sollten das gleiche Feld zurückgeben");
     }    @Test
-    public void testBoardStructure() {
+     void testBoardStructure() {
         Field field1 = boardData.getFieldByIndex(1);
         assertNotNull(field1, "Feld 1 sollte existieren");
         assertTrue(field1.getNextFields().contains(2), "Feld 1 sollte zu Feld 2 führen");

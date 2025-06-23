@@ -9,8 +9,6 @@ import org.springframework.messaging.support.MessageHeaderAccessor;
 
 import org.springframework.stereotype.Component;
 
-import java.security.Principal;
-
 @Component
 public class StompLoginInterceptor implements ChannelInterceptor {
     @Override

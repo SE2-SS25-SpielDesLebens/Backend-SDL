@@ -3,10 +3,10 @@ package at.aau.serg.websocketserver.messaging.dtos;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class OutputMessageTest {
+ class OutputMessageTest {
 
     @Test
-    public void testConstructorAndGetters() {
+     void testConstructorAndGetters() {
         OutputMessage message = new OutputMessage("Alice", "Hallo!", "2025-04-06T10:15:30");
 
         assertEquals("Alice", message.getPlayerName());
@@ -15,7 +15,7 @@ public class OutputMessageTest {
     }
 
     @Test
-    public void testSetters() {
+     void testSetters() {
         OutputMessage message = new OutputMessage(null, null, null);
 
         message.setPlayerName("Bob");
