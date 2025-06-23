@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Tests für die BoardDataMessage-Klasse, die für die Übertragung von Spielbrettdaten über WebSocket verwendet wird.
  */
-public class BoardDataMessageTest {
+ class BoardDataMessageTest {
 
     @Test
     void testConstructorAndGetters() {
@@ -73,45 +73,37 @@ public class BoardDataMessageTest {
         String timestamp = "2025-05-28T12:30:45";
         BoardDataMessage message = new BoardDataMessage(originalFields, timestamp);
 
-        // Beachte: Die aktuelle Implementierung der BoardDataMessage erstellt keine defensive Kopie
-        // Das folgende zeigt, dass es in der aktuellen Implementierung eine Referenz-Schwachstelle gibt
-
-        // Wir müssen eine modifizierbare Liste verwenden, daher ArrayList statt Arrays.asList
+        // Größe der internen Liste zum Zeitpunkt der Erstellung merken
         int originalSize = message.getFields().size();
+
+        // Externe Liste nach der Konstruktion des Objekts verändern
         originalFields.add(new Field(1, 30.0, 40.0, Arrays.asList(2), FieldType.AKTION));
 
-        // Dieser Test wird mit der aktuellen Implementierung fehlschlagen, aber das ist beabsichtigt
-        // Es zeigt potenzielle Verbesserungsmöglichkeiten für die Klasse auf
-        // assertEquals(originalSize, message.getFields().size());
-        // Kommentiert aus, damit der Test bestanden wird
+        // Erwartetes Verhalten: Die interne Liste sollte sich nicht ändern, wenn eine defensive Kopie verwendet wird.
+        // Aktuelles Verhalten: Die Liste wird geteilt, daher wird die Größe unterschiedlich sein
+        // Diese Assertion dokumentiert die Schwäche der aktuellen Implementierung
+        assertNotEquals(originalSize, message.getFields().size(),
+                "Die BoardDataMessage-Klasse teilt die Referenz der übergebenen Liste. Eine defensive Kopie wäre besser.");
     }
+
 
     @Test
     void testNullHandling() {
-        // In der aktuellen Implementierung erfolgt keine Null-Prüfung
-        // Aber es ist eine gute Praxis, diese zu testen
-
         String timestamp = "2025-05-28T12:30:45";
 
-        // Test, was passiert wenn fields null ist
-        try {
-            new BoardDataMessage(null, timestamp);
-            // Falls keine Exception geworfen wird, sollte dieser Test bestehen
-        } catch (NullPointerException e) {
-            // Falls eine NullPointerException geworfen wird, ist das auch akzeptabel
-            // Wir wollen nur dokumentieren, was passiert
-        }
+        // null fields erlaubt?
+        BoardDataMessage message1 = new BoardDataMessage(null, timestamp);
+        assertNull(message1.getFields(), "Fields sollten null sein, wenn null übergeben wurde.");
+        assertEquals(timestamp, message1.getTimestamp());
 
-        // Test, was passiert wenn timestamp null ist
-        List<Field> fields = Arrays.asList(
-                new Field(0, 10.0, 20.0, Arrays.asList(1), FieldType.STARTNORMAL)
+        // null timestamp erlaubt?
+        List<Field> fields = List.of(
+                new Field(0, 10.0, 20.0, List.of(1), FieldType.STARTNORMAL)
         );
-
-        try {
-            new BoardDataMessage(fields, null);
-            // Falls keine Exception geworfen wird, sollte dieser Test bestehen
-        } catch (NullPointerException e) {
-            // Falls eine NullPointerException geworfen wird, ist das auch akzeptabel
-        }
+        BoardDataMessage message2 = new BoardDataMessage(fields, null);
+        assertEquals(fields, message2.getFields());
+        assertNull(message2.getTimestamp(), "Timestamp sollte null sein, wenn null übergeben wurde.");
     }
+
+
 }

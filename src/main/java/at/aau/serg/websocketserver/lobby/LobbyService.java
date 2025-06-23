@@ -57,14 +57,14 @@ public class LobbyService {
 
     //generiert user-friendly ID
     private String generateLobbyID() {
-        String CHAR_POOL = "ABCDEFGHIJKLMNPQRSTUVWXYZ123456789";
-        int ID_LENGTH = 6;
+        String charPool  = "ABCDEFGHIJKLMNPQRSTUVWXYZ123456789";
+        int idLength = 6;
         SecureRandom random = new SecureRandom();
 
-        StringBuilder id = new StringBuilder(ID_LENGTH);
-        for (int i = 0; i < ID_LENGTH; i++) {
-            int index = random.nextInt(CHAR_POOL.length());
-            id.append(CHAR_POOL.charAt(index));
+        StringBuilder id = new StringBuilder(idLength);
+        for (int i = 0; i < idLength; i++) {
+            int index = random.nextInt(charPool.length());
+            id.append(charPool.charAt(index));
         }
         return id.toString();
     }

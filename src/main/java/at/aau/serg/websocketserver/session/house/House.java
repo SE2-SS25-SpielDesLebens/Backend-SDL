@@ -19,7 +19,7 @@ public class House {
         this.houseId = houseId;
         this.bezeichnung = bezeichnung;
         this.kaufpreis = kaufpreis;
-        this.verkaufspreisRot = kaufpreis;
+        this.verkaufspreisRot = verkaufspreisRot;
         this.verkaufspreisSchwarz = verkaufspreisSchwarz;
         this.isTaken = false;
         this.assignedToPlayerName = null;

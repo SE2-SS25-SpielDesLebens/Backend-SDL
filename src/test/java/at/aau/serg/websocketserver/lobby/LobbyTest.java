@@ -7,7 +7,7 @@ import at.aau.serg.websocketserver.player.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class LobbyTest {
+ class LobbyTest {
     private Player host;
     private Lobby lobby;
 
