@@ -6,7 +6,6 @@ import at.aau.serg.websocketserver.game.PlayerTurnManager;
 import at.aau.serg.websocketserver.player.Player;
 import at.aau.serg.websocketserver.player.PlayerService;
 import at.aau.serg.websocketserver.session.board.BoardService;
-import at.aau.serg.websocketserver.session.board.Field;
 import at.aau.serg.websocketserver.lobby.Lobby;
 import at.aau.serg.websocketserver.lobby.LobbyService;
 import at.aau.serg.websocketserver.messaging.dtos.*;
@@ -36,9 +35,10 @@ public class WebSocketBrokerController {
     private final LobbyService lobbyService;
     private final SimpMessagingTemplate messagingTemplate;
     private final HouseService houseService;
+    @Autowired
+    private final BoardService boardService;
 
     @Autowired
-    private final BoardService boardService;    @Autowired
     public WebSocketBrokerController(JobService jobService,
                                      SimpMessagingTemplate messagingTemplate,
                                      BoardService boardService,
@@ -93,160 +93,7 @@ public class WebSocketBrokerController {
                 )
         );    }
 
-    /**
-     * Diese Methode wurde entfernt und mit der Implementation im MoveHandler ersetzt,
-     * um doppelte MessageMapping-Definitionen zu vermeiden.
-     *
-     * @see at.aau.serg.websocketserver.websocket.broker.MoveHandler#handleMove(StompMessage)
-     */
-    // @MessageMapping("/move") - Entfernt wegen Konflikt mit MoveHandler
-    public void handleLegacyMove(StompMessage message) {
-        int playerId;
-        try {
-            playerId = Integer.parseInt(message.getPlayerName()); // Annahme: playerName = ID
-        } catch (NumberFormatException e) {
-            messagingTemplate.convertAndSend(TOPIC_GAME,
-                    new OutputMessage(message.getPlayerName(), "❌ Ungültige Spieler-ID", LocalDateTime.now().toString()));
-            return;
-        }
 
-        String action = message.getAction();
-        // Prüfe, ob es ein "join:X" Befehl ist (Spieler betritt das Spielfeld)
-        if (action != null && action.startsWith("join:")) {
-            try {
-                int startFieldIndex = Integer.parseInt(action.substring(5));
-                boardService.addPlayer(playerId, startFieldIndex);
-                Field currentField = boardService.getPlayerField(playerId);
-
-                // Get the possible next fields
-                List<Integer> nextPossibleFieldIndices = new ArrayList<>();
-                for (Field nextField : boardService.getValidNextFields(playerId)) {
-                    nextPossibleFieldIndices.add(nextField.getIndex());
-                }
-
-                MoveMessage moveMessage = new MoveMessage(
-                        message.getPlayerName(),
-                        currentField.getIndex(),
-                        currentField.getType(),
-                        LocalDateTime.now().toString(),
-                        nextPossibleFieldIndices
-                );
-
-                messagingTemplate.convertAndSend(TOPIC_GAME, moveMessage);
-                return;
-            } catch (Exception e) {
-                messagingTemplate.convertAndSend(TOPIC_GAME,
-                        new OutputMessage(message.getPlayerName(), "❌ Fehler beim Betreten des Spielfelds", LocalDateTime.now().toString()));
-                return;
-            }
-        }        // Prüfe, ob es eine direkte Bewegung zu einem bestimmten Feld ist
-        if (action != null && action.startsWith("move:")) {
-            try {
-                int targetFieldIndex = Integer.parseInt(action.substring(5));
-                boolean success = boardService.movePlayerToField(String.valueOf(playerId), targetFieldIndex);
-                if (success) {
-                    Field currentField = boardService.getPlayerField(playerId);
-                    List<Integer> nextPossibleFieldIndices = new ArrayList<>();
-                    for (Field nextField : boardService.getValidNextFields(playerId)) {
-                        nextPossibleFieldIndices.add(nextField.getIndex());
-                    }
-
-                    MoveMessage moveMessage = new MoveMessage(
-                            message.getPlayerName(),
-                            currentField.getIndex(),
-                            currentField.getType(),
-                            LocalDateTime.now().toString(),
-                            nextPossibleFieldIndices
-                    );
-                    messagingTemplate.convertAndSend(TOPIC_GAME, moveMessage);
-                } else {
-                    messagingTemplate.convertAndSend(TOPIC_GAME,
-                            new OutputMessage(message.getPlayerName(), "❌ Ungültiger Zug", LocalDateTime.now().toString()));
-                }
-                return;
-            } catch (Exception e) {
-                messagingTemplate.convertAndSend(TOPIC_GAME,
-                        new OutputMessage(message.getPlayerName(), "❌ Fehler bei der Bewegung", LocalDateTime.now().toString()));
-                return;
-            }
-        }
-
-        // Reguläre Bewegung mit Würfel
-        int steps;
-        try {
-            steps = Integer.parseInt(message.getAction().replaceAll("[^0-9]", ""));
-        } catch (NumberFormatException e) {
-            messagingTemplate.convertAndSend(TOPIC_GAME,
-                    new OutputMessage(message.getPlayerName(), "❌ Ungültige Würfelzahl", LocalDateTime.now().toString()));
-            return;
-        }
-
-        // Prüfe ob eine bestimmte Ausgangsposition mitgeschickt wurde
-        int currentFieldIndex;
-        if (message.getAction().contains(":")) {
-            String[] parts = message.getAction().split(":");
-            if (parts.length > 1) {
-                try {
-                    currentFieldIndex = Integer.parseInt(parts[1]);
-                    // Wenn eine gültige aktuelle Position mitgeschickt wurde, setzen wir diese
-                    if (currentFieldIndex >= 0 && currentFieldIndex < boardService.getBoardSize()) {
-                        boardService.setPlayerPosition(playerId, currentFieldIndex);
-                    }
-                } catch (NumberFormatException e) {
-                    // Ignoriere Fehler hier
-                }
-            }
-        }        // Anstatt direkt zu bewegen, berechnen wir die möglichen Zielfelder
-        List<Integer> moveOptions = boardService.getMoveOptions(String.valueOf(playerId), steps);
-
-        // Aktuelle Position und Feld des Spielers
-        Field currentField = boardService.getPlayerField(playerId);
-
-        // Bestimme das Zielfeld basierend auf der gewürfelten Zahl
-        int targetIndex;
-
-        // Prüfe, ob wir direkt auf ein Feld basierend auf der Würfelzahl (steps) setzen können
-        if (steps > 0 && steps <= moveOptions.size()) {
-            // Die gewürfelte Zahl ist im gültigen Bereich der Optionen
-            // Wir verwenden steps-1 als Index, da die Liste bei 0 beginnt, aber die Würfelzahl bei 1
-            targetIndex = moveOptions.get(steps - 1);
-            boardService.movePlayerToField(String.valueOf(playerId), targetIndex);
-            currentField = boardService.getPlayerField(playerId); // Aktualisiere das Feld nach der Bewegung
-        } else if (steps > moveOptions.size() && !moveOptions.isEmpty()) {
-            // Die gewürfelte Zahl ist größer als die Anzahl der Optionen
-            // Wir bewegen zum letzten verfügbaren Feld (Stop-Feld)
-            targetIndex = moveOptions.get(moveOptions.size() - 1);
-            boardService.movePlayerToField(String.valueOf(playerId), targetIndex);
-            currentField = boardService.getPlayerField(playerId); // Aktualisiere das Feld nach der Bewegung
-        }
-
-        // Hole die nächsten möglichen Felder nach der Bewegung
-        List<Integer> nextPossibleFieldIndices = new ArrayList<>();
-        for (Field nextField : boardService.getValidNextFields(playerId)) {
-            nextPossibleFieldIndices.add(nextField.getIndex());
-        }
-
-        // Erstelle die Nachricht für den Client
-        MoveMessage moveMessage = new MoveMessage(
-                message.getPlayerName(),
-                currentField.getIndex(),
-                currentField.getType(),
-                LocalDateTime.now().toString(),
-                nextPossibleFieldIndices
-        );
-
-        messagingTemplate.convertAndSend(TOPIC_GAME, moveMessage);
-
-        Lobby lobby = LobbyService.getInstance().getLobby(message.getGameId());
-        if (lobby != null && lobby.isStarted()) {
-            GameLogic logic = lobby.getGameLogic();
-            if (logic != null) {
-                Player player = logic.getPlayerByName(message.getPlayerName());
-                logic.performTurn(player, steps);
-            }
-        }
-
-    }
 
     @MessageMapping("/lobby")
     public void handleLobby(@Payload StompMessage message) {
