@@ -28,8 +28,9 @@ public class PlayerController {
     // ➕ Spieler erstellen (mit Startwerten)
     @PostMapping
     public ResponseEntity<Player> createPlayer(@RequestBody Player request) {
-        boolean isNew = !playerService.isPlayerRegistered(request.getId());
         Player player = playerService.createPlayerIfNotExists(request.getId());
+        boolean isNew = !player.isActive();
+
 
         if (isNew) {
             player.setMoney(250000);
