@@ -195,6 +195,9 @@ public class Player {
         this.isActive = false;
     }
 
+    public void setFieldId(int fieldId) {
+    }
+
     // 🎯 Ereignisse
     public void handleEvent(String eventType) {
         switch (eventType.toLowerCase()) {
@@ -234,5 +237,6 @@ public class Player {
     @JsonProperty("jobId") public Job getJobId() { return job; }
     @JsonProperty("houseId") public Map<Integer, Integer> getHouseId() { return houseID; }
     @JsonProperty("fieldId") public int getFieldID() { return fieldId; }
+
 
 }
