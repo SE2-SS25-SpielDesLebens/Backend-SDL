@@ -41,6 +41,12 @@ public class Player {
     @Getter
     private int autoPassengers = 0; // Max 5 weitere erlaubt
 
+    @JsonProperty("fieldId")
+    public void setFieldID(int fieldId) {
+        this.fieldId = fieldId;
+    }
+
+
     public Player(String id) {
         this.id = id;
         this.money = 0;

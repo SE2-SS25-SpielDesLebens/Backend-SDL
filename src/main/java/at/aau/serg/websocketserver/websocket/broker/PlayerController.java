@@ -60,6 +60,17 @@ public class PlayerController {
         return ResponseEntity.noContent().build();
     }
 
+    // 📍 Spielerposition aktualisieren
+    @PutMapping("/{id}/field/{fieldId}")
+    public ResponseEntity<String> updatePlayerField(@PathVariable String id, @PathVariable int fieldId) {
+        Player player = playerService.getPlayerById(id);
+        if (player == null) return ResponseEntity.notFound().build();
+
+        player.setFieldId(fieldId);
+        return ResponseEntity.ok("📍 Spielerposition aktualisiert auf Feld " + fieldId);
+    }
+
+
     // 💰 Geld abrufen
     @GetMapping("/{id}/money")
     public ResponseEntity<Map<String, Integer>> getPlayerMoney(@PathVariable String id) {
