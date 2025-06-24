@@ -6,6 +6,7 @@ import at.aau.serg.websocketserver.player.Player;
 import java.security.SecureRandom;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -313,17 +314,31 @@ public class PlayActionCardLogic {
     private void contestWinFromBank(Lobby lobby, int prize) {
         Map<String, Integer> spins = lobby.getPlayers().stream()
                 .collect(Collectors.toMap(Player::getId, p -> 1 + random.nextInt(10)));
-        String winner = spins.entrySet().stream()
-                .max(Map.Entry.comparingByValue()).get().getKey();
-        transferMoney(BANK, winner, prize);
+
+        Optional<Map.Entry<String, Integer>> maybeWinner =
+                spins.entrySet().stream().max(Map.Entry.comparingByValue());
+
+        if (maybeWinner.isPresent()) {
+            String winner = maybeWinner.get().getKey();
+            transferMoney(BANK, winner, prize);
+        }
     }
 
     private void contestCollectFromPlayers(Lobby lobby, int amount) {
         Map<String, Integer> spins = lobby.getPlayers().stream()
                 .collect(Collectors.toMap(Player::getId, p -> 1 + random.nextInt(10)));
-        String winner = spins.entrySet().stream()
-                .max(Map.Entry.comparingByValue()).get().getKey();
-        for (Player p : lobby.getPlayers()) if (!p.getId().equals(winner)) transferMoney(p.getId(), winner, amount);
+
+        Optional<Map.Entry<String, Integer>> maybeWinner =
+                spins.entrySet().stream().max(Map.Entry.comparingByValue());
+
+        if (maybeWinner.isPresent()) {
+            String winner = maybeWinner.get().getKey();
+            for (Player p : lobby.getPlayers()) {
+                if (!p.getId().equals(winner)) {
+                    transferMoney(p.getId(), winner, amount);
+                }
+            }
+        }
     }
 
     private int priceForHandle(String handle) {
