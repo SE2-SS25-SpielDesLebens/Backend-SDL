@@ -19,7 +19,7 @@ class HouseRepositoryTest {
     }
 
     @Test
-    void testLoadHouses() throws Exception {
+    void testLoadHouses() {
         // already covered in @BeforeEach, but we assert it:
         List<House> houses = houseRepository.getRandomAvailableHouses(100);
         assertFalse(houses.isEmpty());

@@ -115,7 +115,7 @@ public class HouseService {
             throw new IllegalStateException("Haus bereits vergeben: " + houseId);
         }
         // Abbuchung vom Spieler
-        // playerService.removeMoneyFromPlayer(playerName, price);
+        playerService.removeMoneyFromPlayer(playerName, house.getKaufpreis());
 
         repo.assignHouseToPlayer(playerName, house);
         return house;

@@ -20,7 +20,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-public class MoveHandlerTest {
+ class MoveHandlerTest {
 
     @Mock
     private BoardService boardService;
@@ -28,7 +28,7 @@ public class MoveHandlerTest {
     @InjectMocks
     private MoveHandler moveHandler;
     @BeforeEach
-    public void setUp() {
+     void setUp() {
         // Verwende Standard-Mocking statt Inline-Mocking
         System.setProperty("mockito.mock.serializable", "false");
         System.setProperty("mockito.mockmaker", "mock-maker-default");
@@ -36,7 +36,7 @@ public class MoveHandlerTest {
     }
 
     @Test
-    public void testHandleMove_ValidDiceRoll_UpdatesPosition() {
+     void testHandleMove_ValidDiceRoll_UpdatesPosition() {
         // Arrange
         String playerName = "testPlayer";
         int diceRoll = 3;
@@ -72,7 +72,7 @@ public class MoveHandlerTest {
     }
 
     @Test
-    public void testHandleMove_InvalidFormat_ReturnsFallback() {
+     void testHandleMove_InvalidFormat_ReturnsFallback() {
         // Arrange
         String playerName = "testPlayer";
 
@@ -95,7 +95,7 @@ public class MoveHandlerTest {
     }
 
     @Test
-    public void testHandleMove_NoCurrentFieldIndex_UsesDefault() {
+     void testHandleMove_NoCurrentFieldIndex_UsesDefault() {
         // Arrange
         String playerName = "testPlayer";
         int diceRoll = 3;
@@ -129,7 +129,7 @@ public class MoveHandlerTest {
     }
 
     @Test
-    public void testWalkSteps_WithinNextFieldsSize() {
+     void testWalkSteps_WithinNextFieldsSize() {
         // Arrange
         int startFieldIndex = 1;
         int steps = 2;
@@ -157,7 +157,7 @@ public class MoveHandlerTest {
     }
 
     @Test
-    public void testWalkSteps_StepsGreaterThanNextFieldsSize() {
+     void testWalkSteps_StepsGreaterThanNextFieldsSize() {
         // Arrange
         int startFieldIndex = 1;
         int steps = 5;  // Größer als die Anzahl der nextFields
@@ -185,7 +185,7 @@ public class MoveHandlerTest {
     }
 
     @Test
-    public void testWalkSteps_EmptyNextFields() {
+     void testWalkSteps_EmptyNextFields() {
         // Arrange
         int fieldIndex = 10;
         int steps = 3;
@@ -210,7 +210,7 @@ public class MoveHandlerTest {
     }
 
     @Test
-    public void testWalkSteps_TargetFieldNotFound() {
+     void testWalkSteps_TargetFieldNotFound() {
         // Arrange
         int startFieldIndex = 1;
         int steps = 2;
