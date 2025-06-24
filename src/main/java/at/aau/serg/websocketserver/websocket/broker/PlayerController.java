@@ -31,7 +31,7 @@ public class PlayerController {
         Player player = playerService.createPlayerIfNotExists(request.getId());
 
         // Nur wenn wirklich neu erstellt (Startwerte setzen)
-        if (player.getMoney() == 0 && player.getSalary() == 0) {
+        if (!playerService.isPlayerRegistered(request.getId())) {
             player.setMoney(250000);
             player.setSalary(50000);
             player.setActive(true);
