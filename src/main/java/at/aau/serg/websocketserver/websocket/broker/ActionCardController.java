@@ -1,11 +1,6 @@
 package at.aau.serg.websocketserver.websocket.broker;
 
-import at.aau.serg.websocketserver.lobby.Lobby;
-import at.aau.serg.websocketserver.lobby.LobbyService;
-import at.aau.serg.websocketserver.player.Player;
-import at.aau.serg.websocketserver.player.PlayerService;
 import at.aau.serg.websocketserver.session.actioncard.ActionCard;
-import at.aau.serg.websocketserver.session.actioncard.ActionCardDeck;
 import at.aau.serg.websocketserver.session.actioncard.ActionCardService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -13,26 +8,11 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
-import java.util.ArrayList;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Objects;
-
 /**
  * Controller to handle drawing of action cards over WebSocket.
  */
 @Controller
 public class ActionCardController {
-
-    private final IdentityHashMap<String, ActionCardDeck> decks;
-    /**
-     * Key for decks HashMap is lobbyId
-     */
-
-    private final IdentityHashMap<String, ActionCard> pulledCards;
-    /**
-     * Key for pulledCards HashMap is lobbyId + playerId
-     */
 
     private final SimpMessagingTemplate messagingTemplate;
 
@@ -40,8 +20,6 @@ public class ActionCardController {
 
     @Autowired
     public ActionCardController(SimpMessagingTemplate messagingTemplate) {
-        this.decks = new IdentityHashMap<>();
-        this.pulledCards = new IdentityHashMap<>();
         this.messagingTemplate = messagingTemplate;
 
         this.actionCardService = ActionCardService.getInstance();
