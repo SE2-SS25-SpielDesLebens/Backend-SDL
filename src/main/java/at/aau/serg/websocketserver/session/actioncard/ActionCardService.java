@@ -6,18 +6,19 @@ import at.aau.serg.websocketserver.lobby.LobbyService;
 import at.aau.serg.websocketserver.player.Player;
 import at.aau.serg.websocketserver.player.PlayerService;
 
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Objects;
 
 public class ActionCardService {
 
-    private final IdentityHashMap<String, ActionCardDeck> decks;
+    private final HashMap<String, ActionCardDeck> decks;
     /**
      * Key for decks HashMap is lobbyId
      */
 
-    private final IdentityHashMap<String, ActionCard> pulledCards;
+    private final HashMap<String, ActionCard> pulledCards;
     /**
      * Key for pulledCards HashMap is lobbyId + playerId
      */
@@ -30,8 +31,8 @@ public class ActionCardService {
     private static final ActionCardService actionCardService = new ActionCardService();
 
     private ActionCardService () {
-        this.decks = new IdentityHashMap<>();
-        this.pulledCards = new IdentityHashMap<>();
+        this.decks = new HashMap<>();
+        this.pulledCards = new HashMap<>();
 
         this.playerService = PlayerService.getInstance();
         this.lobbyService = LobbyService.getInstance();
@@ -77,10 +78,14 @@ public class ActionCardService {
         verifyPlayerTurnInLobby(lobbyId, playerId);
 
         //Is a card currently pulled in this game?
-        if(pulledCards.containsKey(lobbyId + playerId)) return;
+        if(!pulledCards.containsKey(lobbyId + playerId)) {
+            throw new ActionCardServiceException("There is no card currently played for Lobby ID: " + lobbyId + " and Player ID: " + playerId + "!");
+        }
         ActionCard actionCard = pulledCards.get(lobbyId + playerId);
 
         playActionCardLogic.playActionCard(actionCard, lobbyId, playerId, decision);
+
+        pulledCards.remove(lobbyId + playerId, actionCard);
     }
 
     private void verifyPlayerTurnInLobby (String lobbyId, String playerId) throws ActionCardServiceException {
