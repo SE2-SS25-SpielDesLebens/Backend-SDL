@@ -174,17 +174,19 @@ public class MoveHandler {
 
         // Erkenne, ob das Feld ein Zahltag-Feld ist (aktiv laut PayoutService)
         FieldType reportedType = targetField.getType();
-        if (PayoutService.isPaydayField(targetField.getIndex())) {
+        if (payoutService.isActivePaydayField(playerName, targetField.getIndex())) {
             reportedType = FieldType.ZAHLTAG;
             System.out.println("💸 Feld " + targetField.getIndex() + " ist ein Zahltag!");
         }
+
+        payoutService.handlePayoutAfterMovement(playerName);
 
 
         // MoveMessage mit neuem Feld und möglichen nächsten Feldern zurückgeben
         return new MoveMessage(
             playerName, 
-            targetField.getIndex(), 
-            targetField.getType(), 
+            targetField.getIndex(),
+                reportedType,
             timestamp, 
             nextPossibleFields
         );
