@@ -15,43 +15,42 @@ public class PlayerController {
     private final PlayerService playerService;
 
     public PlayerController() {
-        this.playerService = PlayerService.getInstance(); // Singleton verwenden
+        this.playerService = PlayerService.getInstance(); // Singleton
     }
 
-    /**
-     * Gibt alle registrierten Spieler zurück.
-     */
+    // 📋 Alle Spieler abrufen
     @GetMapping
     public ResponseEntity<List<Player>> getAllPlayers() {
         List<Player> players = playerService.getAllPlayers();
-        if (players.isEmpty()) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.ok(players);
+        return players.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(players);
     }
 
-    /**
-     * Erstellt einen neuen Spieler oder gibt bestehenden zurück.
-     */
+    // ➕ Spieler erstellen (mit Startwerten)
     @PostMapping
     public ResponseEntity<Player> createPlayer(@RequestBody Player request) {
         Player player = playerService.createPlayerIfNotExists(request.getId());
+        boolean isNew = !player.isActive();
+
+
+        if (isNew) {
+            player.setMoney(250000);
+            player.setSalary(50000);
+            player.setActive(true);
+            System.out.println("🎮 Neuer Spieler erstellt: " + player.getId() + " mit Startgeld.");
+        }
+
         return ResponseEntity.status(201).body(player);
     }
 
-    /**
-     * Gibt einen Spieler anhand der ID zurück.
-     */
+
+    // 🔍 Spieler nach ID abrufen
     @GetMapping("/{id}")
     public ResponseEntity<Player> getPlayerById(@PathVariable String id) {
         Player player = playerService.getPlayerById(id);
-        if (player == null) return ResponseEntity.notFound().build();
-        return ResponseEntity.ok(player);
+        return player != null ? ResponseEntity.ok(player) : ResponseEntity.notFound().build();
     }
 
-    /**
-     * Entfernt einen Spieler anhand der ID.
-     */
+    // 🗑️ Spieler löschen
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePlayer(@PathVariable String id) {
         if (!playerService.isPlayerRegistered(id)) {
@@ -61,13 +60,44 @@ public class PlayerController {
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * Fügt ein Kind hinzu, falls Platz vorhanden.
-     */
+    // 📍 Spielerposition aktualisieren
+    @PutMapping("/{id}/field/{fieldId}")
+    public ResponseEntity<String> updatePlayerField(@PathVariable String id, @PathVariable int fieldId) {
+        Player player = playerService.getPlayerById(id);
+        if (player == null) return ResponseEntity.notFound().build();
+
+        player.setFieldId(fieldId);
+        return ResponseEntity.ok("📍 Spielerposition aktualisiert auf Feld " + fieldId);
+    }
+
+
+    // 💰 Geld abrufen
+    @GetMapping("/{id}/money")
+    public ResponseEntity<Map<String, Integer>> getPlayerMoney(@PathVariable String id) {
+        Player player = playerService.getPlayerById(id);
+        return player != null
+                ? ResponseEntity.ok(Map.of("money", player.getMoney()))
+                : ResponseEntity.notFound().build();
+    }
+
+    // 💸 Zahltag auslösen
+    @PutMapping("/{id}/salary")
+    public ResponseEntity<String> receiveSalary(@PathVariable String id) {
+        Player player = playerService.getPlayerById(id);
+        if (player == null) return ResponseEntity.notFound().build();
+
+        int salaryAmount = 50000;
+        player.setMoney(player.getMoney() + salaryAmount);
+
+        return ResponseEntity.ok("💰 Zahltag! +" + salaryAmount + "€");
+    }
+
+    // 👶 Kind hinzufügen
     @PutMapping("/{id}/add-child")
     public ResponseEntity<String> addChild(@PathVariable String id) {
         Player player = playerService.getPlayerById(id);
         if (player == null) return ResponseEntity.notFound().build();
+
         try {
             player.addChildrenWithCarCheck(1);
             return ResponseEntity.ok("👶 Kind erfolgreich hinzugefügt.");
@@ -76,13 +106,12 @@ public class PlayerController {
         }
     }
 
-    /**
-     * Verheiratet den Spieler, wenn er noch nicht verheiratet ist.
-     */
+    // 💍 Heiraten
     @PutMapping("/{id}/marry")
     public ResponseEntity<String> marryPlayer(@PathVariable String id) {
         Player player = playerService.getPlayerById(id);
         if (player == null) return ResponseEntity.notFound().build();
+
         try {
             player.marry();
             return ResponseEntity.ok("💍 Spieler erfolgreich verheiratet.");
@@ -91,13 +120,12 @@ public class PlayerController {
         }
     }
 
-    /**
-     * Führt eine Investition durch, falls noch nicht investiert.
-     */
+    // 📈 Investieren
     @PutMapping("/{id}/invest")
     public ResponseEntity<String> invest(@PathVariable String id) {
         Player player = playerService.getPlayerById(id);
         if (player == null) return ResponseEntity.notFound().build();
+
         try {
             player.investMoney(50000);
             return ResponseEntity.ok("📈 Investition erfolgreich durchgeführt.");
@@ -106,13 +134,12 @@ public class PlayerController {
         }
     }
 
-    /**
-     * Simuliert ein Ereignis über handleEvent.
-     */
+    // 🎲 Ereignis triggern
     @PutMapping("/{id}/event/{eventType}")
     public ResponseEntity<String> triggerEvent(@PathVariable String id, @PathVariable String eventType) {
         Player player = playerService.getPlayerById(id);
         if (player == null) return ResponseEntity.notFound().build();
+
         try {
             player.handleEvent(eventType);
             return ResponseEntity.ok("✅ Ereignis erfolgreich verarbeitet: " + eventType);

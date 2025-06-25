@@ -41,6 +41,12 @@ public class Player {
     @Getter
     private int autoPassengers = 0; // Max 5 weitere erlaubt
 
+    @JsonProperty("fieldId")
+    public void setFieldID(int fieldId) {
+        this.fieldId = fieldId;
+    }
+
+
     public Player(String id) {
         this.id = id;
         this.money = 0;
@@ -189,6 +195,10 @@ public class Player {
         this.isActive = false;
     }
 
+    public void setFieldId(int fieldId) {
+        this.fieldId = fieldId;
+    }
+
     // 🎯 Ereignisse
     public void handleEvent(String eventType) {
         switch (eventType.toLowerCase()) {
@@ -228,5 +238,6 @@ public class Player {
     @JsonProperty("jobId") public Job getJobId() { return job; }
     @JsonProperty("houseId") public Map<Integer, Integer> getHouseId() { return houseID; }
     @JsonProperty("fieldId") public int getFieldID() { return fieldId; }
+
 
 }

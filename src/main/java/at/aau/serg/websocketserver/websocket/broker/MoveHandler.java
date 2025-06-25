@@ -11,6 +11,7 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
+import at.aau.serg.websocketserver.session.payout.PayoutService;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -27,12 +28,15 @@ public class MoveHandler {
     private final BoardService boardService;
     private final SimpMessagingTemplate messagingTemplate;
     private static final Pattern DICE_ROLL_PATTERN = Pattern.compile("^(10|[1-9]) gewürfelt(?::(1[0-4][0-9]|[1-9]?[0-9]))?$");
-    
+    private final PayoutService payoutService;
+
     @Autowired
-    public MoveHandler(BoardService boardService, SimpMessagingTemplate messagingTemplate) {
+    public MoveHandler(BoardService boardService, SimpMessagingTemplate messagingTemplate, PayoutService payoutService) {
         this.boardService = boardService;
         this.messagingTemplate = messagingTemplate;
+        this.payoutService = payoutService;
     }
+
 
     /**
      * Verarbeitet eine Bewegungsnachricht vom Client
@@ -157,15 +161,32 @@ public class MoveHandler {
         
         // Position des Spielers aktualisieren
         boardService.updatePlayerPosition(playerName, targetField.getIndex());
-        
+
+        // 💸 Prüfe auf Auszahlung bei Zahltag
+        if (targetField.getType() == FieldType.ZAHLTAG) {
+            payoutService.handlePayoutAfterMovement(playerName);
+        }
+
+
         // Liste der möglichen nächsten Felder bestimmen
         List<Integer> nextPossibleFields = targetField.getNextFields();
-        
+
+
+        // Erkenne, ob das Feld ein Zahltag-Feld ist (aktiv laut PayoutService)
+        FieldType reportedType = targetField.getType();
+        if (payoutService.isActivePaydayField(playerName, targetField.getIndex())) {
+            reportedType = FieldType.ZAHLTAG;
+            System.out.println("💸 Feld " + targetField.getIndex() + " ist ein Zahltag!");
+        }
+
+        payoutService.handlePayoutAfterMovement(playerName);
+
+
         // MoveMessage mit neuem Feld und möglichen nächsten Feldern zurückgeben
         return new MoveMessage(
             playerName, 
-            targetField.getIndex(), 
-            targetField.getType(), 
+            targetField.getIndex(),
+                reportedType,
             timestamp, 
             nextPossibleFields
         );

@@ -65,6 +65,18 @@ public class PayoutService {
         return 0;
     }
 
+    public boolean isActivePaydayField(String playerName, int fieldIndex) {
+        List<PayoutRepository.PayoutEntry> entries = playerPayouts.getOrDefault(playerName, List.of());
+
+        for (PayoutRepository.PayoutEntry entry : entries) {
+            if (entry.getPayoutId() == fieldIndex && entry.isAllowPayout()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
     public int applyPaydayIfPassedPayoutField(String playerName) {
         int currentPosition = boardService.getPlayerPosition(playerName);
         List<PayoutRepository.PayoutEntry> entries = playerPayouts.getOrDefault(playerName, List.of());
