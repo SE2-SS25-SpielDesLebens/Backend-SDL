@@ -196,6 +196,7 @@ public class Player {
     }
 
     public void setFieldId(int fieldId) {
+        this.fieldId = fieldId;
     }
 
     // 🎯 Ereignisse
